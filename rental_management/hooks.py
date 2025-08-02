@@ -141,6 +141,9 @@ doc_events = {
 	"Item": {
 		"before_save": "rental_management.automations.item_automation.before_item_save",
 		"after_insert": "rental_management.automations.item_automation.after_item_insert"
+	},
+	"Customer": {
+		"before_save": "rental_management.automations.customer_automation.before_customer_save"
 	}
 }
 
