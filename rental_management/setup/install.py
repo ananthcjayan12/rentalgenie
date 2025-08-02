@@ -46,32 +46,47 @@ def setup_rental_accounts():
 def create_rental_warehouses():
     """Create default warehouses for rental inventory management"""
     try:
-        company = frappe.defaults.get_global_default("company")
-        if not company:
-            company = frappe.db.get_value("Company", {"disabled": 0}, "name")
+        # Get all companies
+        companies = frappe.get_all("Company", filters={"disabled": 0}, fields=["name"])
         
-        if not company:
-            print("No company found. Skipping warehouse creation.")
+        if not companies:
+            print("No active companies found. Skipping warehouse creation.")
             return
         
         warehouses = [
-            {"warehouse_name": "Rental Store", "warehouse_type": "Stock"},
-            {"warehouse_name": "Rental Display", "warehouse_type": "Stock"},
-            {"warehouse_name": "Rental Maintenance", "warehouse_type": "Stock"}
+            {"warehouse_name": "Rental Store"},
+            {"warehouse_name": "Rental Display"},
+            {"warehouse_name": "Rental Maintenance"}
         ]
         
-        for wh in warehouses:
-            full_warehouse_name = f"{wh['warehouse_name']} - {company}"
-            if not frappe.db.exists("Warehouse", full_warehouse_name):
-                warehouse = frappe.get_doc({
-                    "doctype": "Warehouse",
-                    "warehouse_name": wh['warehouse_name'],
-                    "company": company,
-                    "warehouse_type": wh['warehouse_type'],
-                    "is_group": 0
-                })
-                warehouse.insert()
-                print(f"Created warehouse: {full_warehouse_name}")
+        for company_doc in companies:
+            company = company_doc.name
+            print(f"Creating warehouses for company: {company}")
+            
+            for wh in warehouses:
+                warehouse_name = wh['warehouse_name']
+                full_warehouse_name = f"{warehouse_name} - {company}"
+                
+                if not frappe.db.exists("Warehouse", full_warehouse_name):
+                    try:
+                        warehouse = frappe.get_doc({
+                            "doctype": "Warehouse",
+                            "warehouse_name": warehouse_name,
+                            "company": company,
+                            "is_group": 0
+                        })
+                        warehouse.insert()
+                        frappe.db.commit()
+                        print(f"✅ Created warehouse: {full_warehouse_name}")
+                    except Exception as e:
+                        print(f"❌ Error creating warehouse {full_warehouse_name}: {str(e)}")
+                else:
+                    print(f"⚠️ Warehouse already exists: {full_warehouse_name}")
     
     except Exception as e:
-        print(f"Error creating warehouses: {str(e)}")
+        print(f"❌ Error in warehouse creation process: {str(e)}")
+        frappe.log_error(f"Warehouse creation error: {str(e)}")
+
+def create_warehouses_manually():
+    """Manual function to create warehouses - can be called from console"""
+    create_rental_warehouses()
