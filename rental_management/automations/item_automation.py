@@ -14,7 +14,7 @@ def before_item_save(doc, method):
         if not doc.stock_uom:
             doc.stock_uom = "Nos"
         
-        # Set default item group
+        # Set default item group based on category
         if not doc.item_group or doc.item_group == "All Item Groups":
             if doc.rental_item_type:
                 if doc.rental_item_type in ["Dress", "Dresses"]:
@@ -29,9 +29,34 @@ def before_item_save(doc, method):
         # Validate rental rate
         if not doc.rental_rate_per_day or doc.rental_rate_per_day <= 0:
             frappe.throw(_("Rental Rate Per Day is mandatory for rental items"))
+        
+        # Enhanced validations for third-party items
+        if doc.is_third_party_item:
+            if not doc.owner_commission_percent or doc.owner_commission_percent <= 0:
+                frappe.throw(_("Owner Commission % is mandatory for third-party items"))
+            
+            if doc.owner_commission_percent > 100:
+                frappe.throw(_("Owner Commission % cannot exceed 100%"))
+        
+        # Auto-generate item description if not provided
+        if not doc.description:
+            category = doc.rental_item_type or "Item"
+            party_type = "Third-party" if doc.is_third_party_item else "In-house"
+            doc.description = f"{party_type} {category} available for rental at ₹{doc.rental_rate_per_day}/day"
+        
+        # Set default approval status for new items
+        if not doc.approval_status:
+            doc.approval_status = "Pending Approval"
     
-    # Item automation logic here - no automatic caution deposit calculation
-    # Caution deposit is manually entered by salesman at invoice level
+    # For non-rental items, ensure rental fields are cleared
+    else:
+        doc.rental_rate_per_day = 0
+        doc.rental_item_type = ""
+        doc.current_rental_status = ""
+        doc.approval_status = ""
+        doc.is_third_party_item = 0
+        doc.owner_commission_percent = 0
+        doc.third_party_supplier = ""
 
 def after_item_insert(doc, method):
     """Perform post-creation tasks for rental items"""
@@ -106,5 +131,45 @@ def handle_third_party_supplier(item_doc):
 
 def create_initial_stock_entry(item_doc):
     """Create initial stock entry for the rental item"""
-    # We'll implement this when we handle stock management
-    pass
+    if not item_doc.is_rental_item:
+        return
+    
+    try:
+        # Get default warehouse for the company
+        company = frappe.defaults.get_global_default("company")
+        default_warehouse = frappe.db.get_value("Company", company, "default_warehouse")
+        
+        if not default_warehouse:
+            # Try to get any warehouse for the company
+            default_warehouse = frappe.db.get_value("Warehouse", 
+                                                  {"company": company, "is_group": 0}, 
+                                                  "name")
+        
+        if not default_warehouse:
+            frappe.log_error(f"No warehouse found for company {company}. Cannot create stock entry for {item_doc.name}")
+            return
+        
+        # Create stock entry for initial inventory (assuming 1 quantity for rental items)
+        stock_entry = frappe.get_doc({
+            "doctype": "Stock Entry",
+            "stock_entry_type": "Material Receipt",
+            "company": company,
+            "title": f"Initial Stock - {item_doc.item_name}",
+            "items": [{
+                "item_code": item_doc.item_code,
+                "qty": 1,  # Default quantity for rental items
+                "t_warehouse": default_warehouse,
+                "basic_rate": item_doc.rental_rate_per_day * 30,  # Estimated value (30 days rental)
+                "cost_center": frappe.db.get_value("Company", company, "cost_center")
+            }]
+        })
+        
+        stock_entry.insert()
+        # Auto-submit the stock entry
+        stock_entry.submit()
+        
+        frappe.msgprint(f"Initial stock entry created: {stock_entry.name}")
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating stock entry for {item_doc.name}: {str(e)}")
+        frappe.msgprint(f"Warning: Could not create initial stock entry. Please create manually.", alert=True)

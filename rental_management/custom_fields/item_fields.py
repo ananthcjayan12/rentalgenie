@@ -91,15 +91,81 @@ def create_item_custom_fields():
             "depends_on": "is_third_party_item",
             "default": 30,
             "insert_after": "is_third_party_item"
-        },
-        {
+        },        {
             "doctype": "Item",
             "fieldname": "third_party_supplier",
             "label": "Owner (Supplier)",
-            "fieldtype": "Link", 
+            "fieldtype": "Link",
             "options": "Supplier",
             "depends_on": "is_third_party_item",
             "insert_after": "owner_commission_percent"
+        },
+        # Additional Management Fields
+        {
+            "doctype": "Item",
+            "fieldname": "item_management_section",
+            "label": "Item Management",
+            "fieldtype": "Section Break",
+            "depends_on": "is_rental_item",
+            "collapsible": 1,
+            "insert_after": "third_party_supplier"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "purchase_date",
+            "label": "Purchase Date",
+            "fieldtype": "Date",
+            "depends_on": "is_rental_item",
+            "insert_after": "item_management_section"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "purchase_cost",
+            "label": "Purchase Cost",
+            "fieldtype": "Currency",
+            "depends_on": "is_rental_item",
+            "insert_after": "purchase_date"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "condition_rating",
+            "label": "Current Condition (1-5)",
+            "fieldtype": "Rating",
+            "depends_on": "is_rental_item",
+            "insert_after": "purchase_cost"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "column_break_management",
+            "fieldtype": "Column Break",
+            "insert_after": "condition_rating"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "last_maintenance_date",
+            "label": "Last Maintenance Date",
+            "fieldtype": "Date",
+            "depends_on": "is_rental_item",
+            "read_only": 1,
+            "insert_after": "column_break_management"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "next_maintenance_due",
+            "label": "Next Maintenance Due",
+            "fieldtype": "Date",
+            "depends_on": "is_rental_item",
+            "insert_after": "last_maintenance_date"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "total_rental_count",
+            "label": "Total Times Rented",
+            "fieldtype": "Int",
+            "depends_on": "is_rental_item",
+            "read_only": 1,
+            "default": 0,
+            "insert_after": "next_maintenance_due"
         }
     ]
     

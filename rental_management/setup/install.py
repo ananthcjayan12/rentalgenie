@@ -14,6 +14,9 @@ def after_install():
     # Setup default accounts template
     setup_rental_accounts()
     
+    # Create default warehouses for rental items
+    create_rental_warehouses()
+    
     print("Rental Management setup completed!")
 
 def create_rental_item_groups():
@@ -39,3 +42,36 @@ def setup_rental_accounts():
     """Setup rental-specific account templates"""
     # This will be expanded in later phases
     pass
+
+def create_rental_warehouses():
+    """Create default warehouses for rental inventory management"""
+    try:
+        company = frappe.defaults.get_global_default("company")
+        if not company:
+            company = frappe.db.get_value("Company", {"disabled": 0}, "name")
+        
+        if not company:
+            print("No company found. Skipping warehouse creation.")
+            return
+        
+        warehouses = [
+            {"warehouse_name": "Rental Store", "warehouse_type": "Stock"},
+            {"warehouse_name": "Rental Display", "warehouse_type": "Stock"},
+            {"warehouse_name": "Rental Maintenance", "warehouse_type": "Stock"}
+        ]
+        
+        for wh in warehouses:
+            full_warehouse_name = f"{wh['warehouse_name']} - {company}"
+            if not frappe.db.exists("Warehouse", full_warehouse_name):
+                warehouse = frappe.get_doc({
+                    "doctype": "Warehouse",
+                    "warehouse_name": wh['warehouse_name'],
+                    "company": company,
+                    "warehouse_type": wh['warehouse_type'],
+                    "is_group": 0
+                })
+                warehouse.insert()
+                print(f"Created warehouse: {full_warehouse_name}")
+    
+    except Exception as e:
+        print(f"Error creating warehouses: {str(e)}")
