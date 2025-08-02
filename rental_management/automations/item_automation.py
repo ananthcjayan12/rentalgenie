@@ -67,12 +67,23 @@ def create_rental_service_item(item_doc):
         "is_stock_item": 0,  # Service item
         "is_sales_item": 1,
         "include_item_in_manufacturing": 0,
-        "description": f"Rental service for {item_doc.item_name}",
-        "standard_rate": item_doc.rental_rate_per_day
+        "description": f"Rental service for {item_doc.item_name}"
     })
     service_item.insert()
     
+    # Create Item Price for the service item
+    if item_doc.rental_rate_per_day:
+        item_price = frappe.get_doc({
+            "doctype": "Item Price",
+            "item_code": service_item_code,
+            "price_list": "Standard Selling",
+            "price_list_rate": item_doc.rental_rate_per_day,
+            "currency": frappe.defaults.get_global_default("currency") or "INR"
+        })
+        item_price.insert()
+    
     # Link service item back to original item
+    frappe.db.set_value("Item", item_doc.name, "rental_service_item", service_item.name)
     frappe.db.set_value("Item", item_doc.name, "rental_service_item", service_item.name)
 
 def handle_third_party_supplier(item_doc):
