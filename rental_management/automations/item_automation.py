@@ -135,21 +135,39 @@ def create_initial_stock_entry(item_doc):
         return
     
     try:
-        # Get default warehouse for the company
+        # Get default company
         company = frappe.defaults.get_global_default("company")
-        default_warehouse = frappe.db.get_value("Company", company, "default_warehouse")
+        if not company:
+            # Get the first company if no default
+            company = frappe.db.get_value("Company", {}, "name")
         
-        if not default_warehouse:
-            # Try to get any warehouse for the company
-            default_warehouse = frappe.db.get_value("Warehouse", 
-                                                  {"company": company, "is_group": 0}, 
-                                                  "name")
+        if not company:
+            frappe.log_error(f"No company found. Cannot create stock entry for {item_doc.name}")
+            return
         
-        if not default_warehouse:
+        # Try to find a rental warehouse first, otherwise use any warehouse
+        rental_warehouse = f"Rental Store - {company}"
+        if not frappe.db.exists("Warehouse", rental_warehouse):
+            # Get any warehouse for the company
+            rental_warehouse = frappe.db.get_value("Warehouse", 
+                                                 {"company": company, "is_group": 0}, 
+                                                 "name")
+        
+        if not rental_warehouse:
             frappe.log_error(f"No warehouse found for company {company}. Cannot create stock entry for {item_doc.name}")
             return
         
-        # Create stock entry for initial inventory (assuming 1 quantity for rental items)
+        # Get cost center
+        cost_center = frappe.db.get_value("Company", company, "cost_center")
+        if not cost_center:
+            cost_center = frappe.db.get_value("Cost Center", {"company": company}, "name")
+        
+        # Calculate basic rate (use rental rate * 30 as estimated value)
+        basic_rate = float(item_doc.rental_rate_per_day or 0) * 30
+        if basic_rate <= 0:
+            basic_rate = 1000  # Default fallback value
+        
+        # Create stock entry for initial inventory
         stock_entry = frappe.get_doc({
             "doctype": "Stock Entry",
             "stock_entry_type": "Material Receipt",
@@ -158,18 +176,23 @@ def create_initial_stock_entry(item_doc):
             "items": [{
                 "item_code": item_doc.item_code,
                 "qty": 1,  # Default quantity for rental items
-                "t_warehouse": default_warehouse,
-                "basic_rate": item_doc.rental_rate_per_day * 30,  # Estimated value (30 days rental)
-                "cost_center": frappe.db.get_value("Company", company, "cost_center")
+                "t_warehouse": rental_warehouse,
+                "basic_rate": basic_rate,
+                "uom": item_doc.stock_uom or "Nos"
             }]
         })
+        
+        # Add cost center if available
+        if cost_center:
+            stock_entry.items[0].cost_center = cost_center
         
         stock_entry.insert()
         # Auto-submit the stock entry
         stock_entry.submit()
         
-        frappe.msgprint(f"Initial stock entry created: {stock_entry.name}")
+        frappe.msgprint(f"✅ Initial stock entry created: {stock_entry.name}")
         
     except Exception as e:
-        frappe.log_error(f"Error creating stock entry for {item_doc.name}: {str(e)}")
-        frappe.msgprint(f"Warning: Could not create initial stock entry. Please create manually.", alert=True)
+        error_msg = f"Error creating stock entry for {item_doc.name}: {str(e)}"
+        frappe.log_error(error_msg)
+        frappe.msgprint(f"⚠️ Warning: Could not create initial stock entry. Error: {str(e)}", alert=True)
