@@ -1,0 +1,1693 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>STEP_BY_STEP_IMPLEMENTATION</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(50, 48, 44, 1);
+}
+.highlight-gray {
+	color: rgba(115, 114, 110, 1);
+	fill: rgba(115, 114, 110, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(205, 60, 58, 1);
+	fill: rgba(205, 60, 58, 1);
+}
+.highlight-default_background {
+	color: rgba(50, 48, 44, 1);
+}
+.highlight-gray_background {
+	background: rgba(248, 248, 247, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(248, 243, 252, 1);
+}
+.highlight-pink_background {
+	background: rgba(252, 241, 246, 1);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(115, 114, 110, 1);
+	fill: rgba(115, 114, 110, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(205, 60, 58, 1);
+	fill: rgba(205, 60, 58, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(248, 248, 247, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(248, 243, 252, 1);
+}
+.block-color-pink_background {
+	background: rgba(252, 241, 246, 1);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-default { background-color: rgba(84, 72, 49, 0.08); }
+.select-value-color-gray { background-color: rgba(84, 72, 49, 0.15); }
+.select-value-color-brown { background-color: rgba(210, 162, 141, 0.35); }
+.select-value-color-orange { background-color: rgba(224, 124, 57, 0.27); }
+.select-value-color-yellow { background-color: rgba(236, 191, 66, 0.39); }
+.select-value-color-green { background-color: rgba(123, 183, 129, 0.27); }
+.select-value-color-blue { background-color: rgba(93, 165, 206, 0.27); }
+.select-value-color-purple { background-color: rgba(168, 129, 197, 0.27); }
+.select-value-color-pink { background-color: rgba(225, 136, 179, 0.27); }
+.select-value-color-red { background-color: rgba(244, 171, 159, 0.4); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="23fcfee5-be51-80ae-98ba-eff0e30d1acb" class="page sans"><header><h1 class="page-title">STEP_BY_STEP_IMPLEMENTATION</h1><p class="page-description"></p></header><div class="page-body"><h1 id="23fcfee5-be51-811f-b0fe-c713f8498896" class="">Step-by-Step Implementation Guide</h1><h2 id="23fcfee5-be51-81a6-a548-d2090262c114" class="">🚀 Getting Started with Rental Management on ERPNext</h2><p id="23fcfee5-be51-8103-bedf-e9427689049a" class="">This guide will walk you through implementing the rental management system step by step, leveraging existing ERPNext functionality.</p><hr id="23fcfee5-be51-8168-a696-c5c9d9a5774a"/><h2 id="23fcfee5-be51-8175-bab3-fb5f1bbe63f5" class="">📋 Prerequisites</h2><h3 id="23fcfee5-be51-8111-b043-d8e31683598e" class="">1. Development Environment Setup</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-815b-b079-d649ff21f0fa" class="code code-wrap"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all"># Install Frappe/ERPNext development environment# Follow the official guide: https://frappeframework.com/docs/user/en/installation# Create a new site for developmentbench new-site rental-dev.localhost
+bench --site rental-dev.localhost install-app erpnext
+# Enable developer modebench --site rental-dev.localhost set-config developer_mode 1
+bench --site rental-dev.localhost clear-cache</code></pre><h3 id="23fcfee5-be51-8175-94eb-c8f3a7d9e3fe" class="">2. Create Your Custom App</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-81ac-8848-cade38f7e6ec" class="code code-wrap"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all"># Create the rental management appbench new-app rental_management
+# Install the app on your sitebench --site rental-dev.localhost install-app rental_management</code></pre><hr id="23fcfee5-be51-8175-b6f1-fcc606d6d7b1"/><h2 id="23fcfee5-be51-8118-a4e7-ed94f0c6be83" class="">🎯 Phase 1: Basic Setup (Day 1-2)</h2><h3 id="23fcfee5-be51-8190-9234-d32117057e23" class="">Step 1.1: Create Basic App Structure</h3><p id="23fcfee5-be51-8149-9e9b-f09d0319f874" class="">Create the following file structure in your app:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8197-9d68-ea8670cc5d87" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">apps/rental_management/rental_management/
+├── __init__.py
+├── custom_fields/
+│   ├── __init__.py
+│   ├── item_fields.py
+│   ├── customer_fields.py
+│   └── sales_invoice_fields.py
+├── automations/
+│   ├── __init__.py
+│   ├── item_automation.py
+│   ├── customer_automation.py
+│   └── booking_automation.py
+├── validations/
+│   ├── __init__.py
+│   └── booking_validations.py
+└── utils/
+    ├── __init__.py
+    └── rental_utils.py</code></pre><h3 id="23fcfee5-be51-811c-9a4d-c6b150152b53" class="">Step 1.2: Setup Custom Fields</h3><p id="23fcfee5-be51-817e-b18c-f59e1537206a" class=""><strong>File: </strong><code><strong>rental_management/custom_fields/item_fields.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-81d0-9db6-d9458b455893" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+def create_item_custom_fields():
+    &quot;&quot;&quot;Create custom fields for Item doctype&quot;&quot;&quot;    custom_fields = [
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;rental_section&quot;,
+            &quot;label&quot;: &quot;Rental Configuration&quot;,
+            &quot;fieldtype&quot;: &quot;Section Break&quot;,
+            &quot;insert_after&quot;: &quot;image&quot;,
+            &quot;collapsible&quot;: 1        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;is_rental_item&quot;,
+            &quot;label&quot;: &quot;Enable for Rental&quot;,
+            &quot;fieldtype&quot;: &quot;Check&quot;,
+            &quot;default&quot;: 0,
+            &quot;insert_after&quot;: &quot;rental_section&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;rental_rate_per_day&quot;,
+            &quot;label&quot;: &quot;Rental Rate (₹/day)&quot;,
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_item&quot;,
+            &quot;mandatory_depends_on&quot;: &quot;is_rental_item&quot;,
+            &quot;insert_after&quot;: &quot;is_rental_item&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;caution_deposit_amount&quot;,
+            &quot;label&quot;: &quot;Caution Deposit (₹)&quot;,
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_item&quot;,
+            &quot;insert_after&quot;: &quot;rental_rate_per_day&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;rental_item_type&quot;,
+            &quot;label&quot;: &quot;Item Category&quot;,
+            &quot;fieldtype&quot;: &quot;Select&quot;,
+            &quot;options&quot;: &quot;\nDress\nOrnament\nAccessory\nOther&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_item&quot;,
+            &quot;insert_after&quot;: &quot;caution_deposit_amount&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;column_break_rental_1&quot;,
+            &quot;fieldtype&quot;: &quot;Column Break&quot;,
+            &quot;insert_after&quot;: &quot;rental_item_type&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;current_rental_status&quot;,
+            &quot;label&quot;: &quot;Current Status&quot;,
+            &quot;fieldtype&quot;: &quot;Select&quot;,
+            &quot;options&quot;: &quot;Available\nBooked\nOut for Rental\nUnder Dry Wash\nMaintenance&quot;,
+            &quot;default&quot;: &quot;Available&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_item&quot;,
+            &quot;insert_after&quot;: &quot;column_break_rental_1&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;approval_status&quot;,
+            &quot;label&quot;: &quot;Approval Status&quot;,
+            &quot;fieldtype&quot;: &quot;Select&quot;,
+            &quot;options&quot;: &quot;Pending Approval\nApproved\nRejected&quot;,
+            &quot;default&quot;: &quot;Pending Approval&quot;,
+            &quot;read_only&quot;: 1,
+            &quot;insert_after&quot;: &quot;current_rental_status&quot;        },
+        # Third Party Section        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;third_party_section&quot;,
+            &quot;label&quot;: &quot;Third Party Owner Details&quot;,
+            &quot;fieldtype&quot;: &quot;Section Break&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_item&quot;,
+            &quot;collapsible&quot;: 1,
+            &quot;insert_after&quot;: &quot;approval_status&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;is_third_party_item&quot;,
+            &quot;label&quot;: &quot;Third Party Owned&quot;,
+            &quot;fieldtype&quot;: &quot;Check&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_item&quot;,
+            &quot;insert_after&quot;: &quot;third_party_section&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;owner_commission_percent&quot;,
+            &quot;label&quot;: &quot;Owner Commission %&quot;,
+            &quot;fieldtype&quot;: &quot;Percent&quot;,
+            &quot;depends_on&quot;: &quot;is_third_party_item&quot;,
+            &quot;default&quot;: 30,
+            &quot;insert_after&quot;: &quot;is_third_party_item&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Item&quot;,
+            &quot;fieldname&quot;: &quot;third_party_supplier&quot;,
+            &quot;label&quot;: &quot;Owner (Supplier)&quot;,
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Supplier&quot;,
+            &quot;depends_on&quot;: &quot;is_third_party_item&quot;,
+            &quot;insert_after&quot;: &quot;owner_commission_percent&quot;        }
+    ]
+    for field in custom_fields:
+        if not frappe.db.exists(&quot;Custom Field&quot;, {&quot;dt&quot;: field[&quot;doctype&quot;], &quot;fieldname&quot;: field[&quot;fieldname&quot;]}):
+            custom_field = frappe.get_doc({
+                &quot;doctype&quot;: &quot;Custom Field&quot;,
+                &quot;dt&quot;: field[&quot;doctype&quot;],
+                &quot;fieldname&quot;: field[&quot;fieldname&quot;],
+                &quot;label&quot;: field[&quot;label&quot;],
+                &quot;fieldtype&quot;: field[&quot;fieldtype&quot;],
+                &quot;options&quot;: field.get(&quot;options&quot;),
+                &quot;default&quot;: field.get(&quot;default&quot;),
+                &quot;insert_after&quot;: field[&quot;insert_after&quot;],
+                &quot;depends_on&quot;: field.get(&quot;depends_on&quot;),
+                &quot;mandatory_depends_on&quot;: field.get(&quot;mandatory_depends_on&quot;),
+                &quot;read_only&quot;: field.get(&quot;read_only&quot;, 0),
+                &quot;collapsible&quot;: field.get(&quot;collapsible&quot;, 0)
+            })
+            custom_field.insert()
+    frappe.db.commit()
+    print(&quot;Item custom fields created successfully!&quot;)
+# Call this function during app installationif __name__ == &quot;__main__&quot;:
+    create_item_custom_fields()</code></pre><h3 id="23fcfee5-be51-81f5-9079-c1eafff37d14" class="">Step 1.3: Update Hooks File</h3><p id="23fcfee5-be51-8125-ba4c-e582c4e80ff7" class=""><strong>File: </strong><code><strong>rental_management/hooks.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-81a0-a7c5-f78d09fd24b1" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">app_name = &quot;rental_management&quot;app_title = &quot;Rental Management&quot;app_publisher = &quot;Your Company&quot;app_description = &quot;Rental Management System for ERPNext&quot;app_version = &quot;0.1.0&quot;# Document Events - We&#x27;ll add these as we implementdoc_events = {
+    &quot;Item&quot;: {
+        &quot;before_save&quot;: &quot;rental_management.automations.item_automation.before_item_save&quot;,
+        &quot;after_insert&quot;: &quot;rental_management.automations.item_automation.after_item_insert&quot;    }
+}
+# Installation hooksafter_install = &quot;rental_management.setup.install.after_install&quot;# Include js, css files in header of desk.html# app_include_css = &quot;/assets/rental_management/css/rental_management.css&quot;# app_include_js = &quot;/assets/rental_management/js/rental_management.js&quot;</code></pre><h3 id="23fcfee5-be51-8138-bbc3-f6eead55e155" class="">Step 1.4: Create Installation Script</h3><p id="23fcfee5-be51-81cd-81bf-dae238952a63" class=""><strong>File: </strong><code><strong>rental_management/setup/__init__.py</strong></code> (empty file)</p><p id="23fcfee5-be51-813d-8e92-d51e0e768e60" class=""><strong>File: </strong><code><strong>rental_management/setup/install.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-81ce-8df9-ed95399669f7" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from rental_management.custom_fields.item_fields import create_item_custom_fields
+def after_install():
+    &quot;&quot;&quot;Setup custom fields and configurations after app installation&quot;&quot;&quot;    print(&quot;Setting up Rental Management...&quot;)
+    # Create custom fields    create_item_custom_fields()
+    # Create default item groups if they don&#x27;t exist    create_rental_item_groups()
+    # Setup default accounts template    setup_rental_accounts()
+    print(&quot;Rental Management setup completed!&quot;)
+def create_rental_item_groups():
+    &quot;&quot;&quot;Create rental-specific item groups&quot;&quot;&quot;    item_groups = [
+        {&quot;item_group_name&quot;: &quot;Rental Items&quot;, &quot;parent_item_group&quot;: &quot;All Item Groups&quot;},
+        {&quot;item_group_name&quot;: &quot;Dresses&quot;, &quot;parent_item_group&quot;: &quot;Rental Items&quot;},
+        {&quot;item_group_name&quot;: &quot;Ornaments&quot;, &quot;parent_item_group&quot;: &quot;Rental Items&quot;},
+        {&quot;item_group_name&quot;: &quot;Accessories&quot;, &quot;parent_item_group&quot;: &quot;Rental Items&quot;}
+    ]
+    for group in item_groups:
+        if not frappe.db.exists(&quot;Item Group&quot;, group[&quot;item_group_name&quot;]):
+            item_group = frappe.get_doc({
+                &quot;doctype&quot;: &quot;Item Group&quot;,
+                &quot;item_group_name&quot;: group[&quot;item_group_name&quot;],
+                &quot;parent_item_group&quot;: group[&quot;parent_item_group&quot;],
+                &quot;is_group&quot;: 1 if group[&quot;item_group_name&quot;] == &quot;Rental Items&quot; else 0            })
+            item_group.insert()
+def setup_rental_accounts():
+    &quot;&quot;&quot;Setup rental-specific account templates&quot;&quot;&quot;    # This will be expanded in later phases    pass</code></pre><hr id="23fcfee5-be51-8194-9fc3-e8b65ac31eb9"/><h2 id="23fcfee5-be51-819e-896d-d69cb799ee76" class="">🎯 Phase 2: Item Management (Day 3-5)</h2><h3 id="23fcfee5-be51-81cb-8e0e-c9ee982f90c5" class="">Step 2.1: Item Automation Logic</h3><p id="23fcfee5-be51-8116-a933-dfccb0888041" class=""><strong>File: </strong><code><strong>rental_management/automations/item_automation.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8156-a993-d9ec5e299214" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from frappe import _
+from frappe.utils import cstr
+def before_item_save(doc, method):
+    &quot;&quot;&quot;Validate and set defaults for rental items&quot;&quot;&quot;    if doc.is_rental_item:
+        # Set mandatory fields for rental items        doc.is_stock_item = 1  # Must maintain stock        doc.include_item_in_manufacturing = 0  # Not a manufacturing item        doc.is_fixed_asset = 0  # Not a fixed asset        # Set default UOM if not set        if not doc.stock_uom:
+            doc.stock_uom = &quot;Nos&quot;        # Set default item group        if not doc.item_group or doc.item_group == &quot;All Item Groups&quot;:
+            if doc.rental_item_type:
+                if doc.rental_item_type in [&quot;Dress&quot;, &quot;Dresses&quot;]:
+                    doc.item_group = &quot;Dresses&quot;                elif doc.rental_item_type in [&quot;Ornament&quot;, &quot;Ornaments&quot;]:
+                    doc.item_group = &quot;Ornaments&quot;                elif doc.rental_item_type in [&quot;Accessory&quot;, &quot;Accessories&quot;]:
+                    doc.item_group = &quot;Accessories&quot;                else:
+                    doc.item_group = &quot;Rental Items&quot;        # Validate rental rate        if not doc.rental_rate_per_day or doc.rental_rate_per_day &lt;= 0:
+            frappe.throw(_(&quot;Rental Rate Per Day is mandatory for rental items&quot;))
+        # Set default caution deposit if not set (20% of rental rate)        if not doc.caution_deposit_amount:
+            doc.caution_deposit_amount = doc.rental_rate_per_day * 0.2def after_item_insert(doc, method):
+    &quot;&quot;&quot;Perform post-creation tasks for rental items&quot;&quot;&quot;    if doc.is_rental_item:
+        try:
+            # 1. Create rental service item            create_rental_service_item(doc)
+            # 2. Handle third party supplier creation            if doc.is_third_party_item:
+                handle_third_party_supplier(doc)
+            # 3. Create initial stock entry            create_initial_stock_entry(doc)
+        except Exception as e:
+            frappe.log_error(f&quot;Error in after_item_insert for {doc.name}: {str(e)}&quot;)
+def create_rental_service_item(item_doc):
+    &quot;&quot;&quot;Create corresponding service item for rental billing&quot;&quot;&quot;    service_item_code = f&quot;{item_doc.item_code}-RENTAL&quot;    # Check if service item already exists    if frappe.db.exists(&quot;Item&quot;, service_item_code):
+        return    service_item = frappe.get_doc({
+        &quot;doctype&quot;: &quot;Item&quot;,
+        &quot;item_code&quot;: service_item_code,
+        &quot;item_name&quot;: f&quot;{item_doc.item_name} - Rental Service&quot;,
+        &quot;item_group&quot;: &quot;Services&quot;,
+        &quot;stock_uom&quot;: &quot;Nos&quot;,
+        &quot;is_stock_item&quot;: 0,  # Service item        &quot;is_sales_item&quot;: 1,
+        &quot;include_item_in_manufacturing&quot;: 0,
+        &quot;description&quot;: f&quot;Rental service for {item_doc.item_name}&quot;,
+        &quot;standard_rate&quot;: item_doc.rental_rate_per_day
+    })
+    service_item.insert()
+    # Link service item back to original item    frappe.db.set_value(&quot;Item&quot;, item_doc.name, &quot;rental_service_item&quot;, service_item.name)
+def handle_third_party_supplier(item_doc):
+    &quot;&quot;&quot;Create or link third party supplier&quot;&quot;&quot;    if not item_doc.third_party_supplier:
+        # Auto-create supplier if not provided        supplier_name = f&quot;Owner-{item_doc.item_code}&quot;        if not frappe.db.exists(&quot;Supplier&quot;, supplier_name):
+            supplier = frappe.get_doc({
+                &quot;doctype&quot;: &quot;Supplier&quot;,
+                &quot;supplier_name&quot;: supplier_name,
+                &quot;supplier_type&quot;: &quot;Individual&quot;,
+                &quot;supplier_group&quot;: &quot;Local&quot;            })
+            supplier.insert()
+            # Update item with supplier reference            frappe.db.set_value(&quot;Item&quot;, item_doc.name, &quot;third_party_supplier&quot;, supplier.name)
+def create_initial_stock_entry(item_doc):
+    &quot;&quot;&quot;Create initial stock entry for the rental item&quot;&quot;&quot;    # We&#x27;ll implement this when we handle stock management    pass</code></pre><h3 id="23fcfee5-be51-8108-b65c-cf48c486f090" class="">Step 2.2: Test Your Setup</h3><ol type="1" id="23fcfee5-be51-81dc-a1ed-c0133aea5366" class="numbered-list" start="1"><li><strong>Install the app:</strong></li></ol><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-81b1-ac8d-fdc0ba21eb10" class="code code-wrap"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">bench --site rental-dev.localhost install-app rental_management</code></pre><ol type="1" id="23fcfee5-be51-8161-884d-f4fae08b768e" class="numbered-list" start="1"><li><strong>Restart and clear cache:</strong></li></ol><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8194-9e7f-e6e958250e5b" class="code code-wrap"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">bench restart
+bench --site rental-dev.localhost clear-cache</code></pre><ol type="1" id="23fcfee5-be51-81fb-9ddd-d7b7dbd90de9" class="numbered-list" start="1"><li><strong>Test the Item form:</strong><ul id="23fcfee5-be51-814e-8408-ef9dfacade17" class="bulleted-list"><li style="list-style-type:disc">Go to Stock → Item → New</li></ul><ul id="23fcfee5-be51-81d1-acab-d6a65e38310b" class="bulleted-list"><li style="list-style-type:disc">You should see the new “Rental Configuration” section</li></ul><ul id="23fcfee5-be51-81dc-bbf3-fe48b38e6a3b" class="bulleted-list"><li style="list-style-type:disc">Check “Enable for Rental” and fill in the fields</li></ul><ul id="23fcfee5-be51-81f1-888b-e36c3ab7000d" class="bulleted-list"><li style="list-style-type:disc">Save the item and verify automation works</li></ul></li></ol><hr id="23fcfee5-be51-817a-9ef4-f90f336412f8"/><h2 id="23fcfee5-be51-815b-8006-d9eea9081476" class="">🎯 Phase 3: Customer Enhancement (Day 6-7)</h2><h3 id="23fcfee5-be51-81b7-844b-f10907a4098d" class="">Step 3.1: Customer Custom Fields</h3><p id="23fcfee5-be51-8106-83a3-d52be3a9dd93" class=""><strong>File: </strong><code><strong>rental_management/custom_fields/customer_fields.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8184-9f6d-faeeaa5fcf7d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+def create_customer_custom_fields():
+    &quot;&quot;&quot;Create custom fields for Customer doctype&quot;&quot;&quot;    custom_fields = [
+        {
+            &quot;doctype&quot;: &quot;Customer&quot;,
+            &quot;fieldname&quot;: &quot;mobile_number&quot;,
+            &quot;label&quot;: &quot;Mobile Number&quot;,
+            &quot;fieldtype&quot;: &quot;Data&quot;,
+            &quot;insert_after&quot;: &quot;customer_name&quot;,
+            &quot;reqd&quot;: 1        },
+        {
+            &quot;doctype&quot;: &quot;Customer&quot;,
+            &quot;fieldname&quot;: &quot;customer_unique_id&quot;,
+            &quot;label&quot;: &quot;Unique Customer ID&quot;,
+            &quot;fieldtype&quot;: &quot;Data&quot;,
+            &quot;read_only&quot;: 1,
+            &quot;unique&quot;: 1,
+            &quot;insert_after&quot;: &quot;mobile_number&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Customer&quot;,
+            &quot;fieldname&quot;: &quot;rental_history_section&quot;,
+            &quot;label&quot;: &quot;Rental History&quot;,
+            &quot;fieldtype&quot;: &quot;Section Break&quot;,
+            &quot;collapsible&quot;: 1,
+            &quot;insert_after&quot;: &quot;more_info&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Customer&quot;,
+            &quot;fieldname&quot;: &quot;total_bookings&quot;,
+            &quot;label&quot;: &quot;Total Bookings&quot;,
+            &quot;fieldtype&quot;: &quot;Int&quot;,
+            &quot;read_only&quot;: 1,
+            &quot;default&quot;: 0,
+            &quot;insert_after&quot;: &quot;rental_history_section&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Customer&quot;,
+            &quot;fieldname&quot;: &quot;last_booking_date&quot;,
+            &quot;label&quot;: &quot;Last Booking Date&quot;,
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;read_only&quot;: 1,
+            &quot;insert_after&quot;: &quot;total_bookings&quot;        }
+    ]
+    for field in custom_fields:
+        if not frappe.db.exists(&quot;Custom Field&quot;, {&quot;dt&quot;: field[&quot;doctype&quot;], &quot;fieldname&quot;: field[&quot;fieldname&quot;]}):
+            custom_field = frappe.get_doc({
+                &quot;doctype&quot;: &quot;Custom Field&quot;,
+                &quot;dt&quot;: field[&quot;doctype&quot;],
+                &quot;fieldname&quot;: field[&quot;fieldname&quot;],
+                &quot;label&quot;: field[&quot;label&quot;],
+                &quot;fieldtype&quot;: field[&quot;fieldtype&quot;],
+                &quot;insert_after&quot;: field[&quot;insert_after&quot;],
+                &quot;reqd&quot;: field.get(&quot;reqd&quot;, 0),
+                &quot;read_only&quot;: field.get(&quot;read_only&quot;, 0),
+                &quot;unique&quot;: field.get(&quot;unique&quot;, 0),
+                &quot;default&quot;: field.get(&quot;default&quot;),
+                &quot;collapsible&quot;: field.get(&quot;collapsible&quot;, 0)
+            })
+            custom_field.insert()
+    frappe.db.commit()
+    print(&quot;Customer custom fields created successfully!&quot;)</code></pre><h3 id="23fcfee5-be51-818f-9d41-d2fb0c3c1bc6" class="">Step 3.2: Customer Automation</h3><p id="23fcfee5-be51-815e-976d-f92b72c5dc7d" class=""><strong>File: </strong><code><strong>rental_management/automations/customer_automation.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8129-9b3b-f5bacfc1142e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from frappe import _
+import re
+def before_customer_save(doc, method):
+    &quot;&quot;&quot;Generate unique customer ID and validate mobile number&quot;&quot;&quot;    # Validate mobile number format    if doc.mobile_number:
+        # Remove any spaces or special characters except +        mobile = re.sub(r&#x27;[^0-9+]&#x27;, &#x27;&#x27;, doc.mobile_number)
+        # Basic Indian mobile validation        if not re.match(r&#x27;^(\+91|91)?[6-9]\d{9}$&#x27;, mobile):
+            frappe.throw(_(&quot;Please enter a valid Indian mobile number&quot;))
+        # Standardize format        if mobile.startswith(&#x27;+91&#x27;):
+            doc.mobile_number = mobile
+        elif mobile.startswith(&#x27;91&#x27;) and len(mobile) == 12:
+            doc.mobile_number = &#x27;+&#x27; + mobile
+        elif len(mobile) == 10:
+            doc.mobile_number = &#x27;+91&#x27; + mobile
+    # Generate unique customer ID    if not doc.customer_unique_id:
+        generate_unique_customer_id(doc)
+    # Check for duplicate mobile numbers    validate_unique_mobile(doc)
+def generate_unique_customer_id(doc):
+    &quot;&quot;&quot;Generate unique customer ID based on name and mobile&quot;&quot;&quot;    if not doc.customer_name or not doc.mobile_number:
+        return    # Extract first 3 characters from customer name (remove spaces)    name_part = &#x27;&#x27;.join(doc.customer_name.split()).upper()[:3]
+    # Get last 4 digits of mobile    mobile_part = doc.mobile_number[-4:] if doc.mobile_number else &quot;0000&quot;    # Create base unique ID    base_id = f&quot;{name_part}{mobile_part}&quot;    # Check if this ID already exists, if yes, add a counter    counter = 1    unique_id = base_id
+    while frappe.db.exists(&quot;Customer&quot;, {&quot;customer_unique_id&quot;: unique_id, &quot;name&quot;: [&quot;!=&quot;, doc.name]}):
+        unique_id = f&quot;{base_id}{counter:02d}&quot;        counter += 1        if counter &gt; 99:  # Safety check            unique_id = f&quot;{base_id}{frappe.utils.random_string(2)}&quot;            break    doc.customer_unique_id = unique_id
+def validate_unique_mobile(doc):
+    &quot;&quot;&quot;Ensure mobile number is unique&quot;&quot;&quot;    if doc.mobile_number:
+        existing = frappe.db.get_value(&quot;Customer&quot;,
+                                     {&quot;mobile_number&quot;: doc.mobile_number, &quot;name&quot;: [&quot;!=&quot;, doc.name]},
+                                     &quot;name&quot;)
+        if existing:
+            frappe.throw(_(&quot;Customer with mobile number {0} already exists: {1}&quot;)
+                        .format(doc.mobile_number, existing))
+def update_customer_booking_stats(customer, booking_date=None):
+    &quot;&quot;&quot;Update customer booking statistics&quot;&quot;&quot;    # Count total bookings    total_bookings = frappe.db.count(&quot;Sales Invoice&quot;,
+                                    {&quot;customer&quot;: customer, &quot;is_rental_booking&quot;: 1, &quot;docstatus&quot;: 1})
+    # Get last booking date    last_booking = frappe.db.get_value(&quot;Sales Invoice&quot;,
+                                      {&quot;customer&quot;: customer, &quot;is_rental_booking&quot;: 1, &quot;docstatus&quot;: 1},
+                                      &quot;posting_date&quot;,
+                                      order_by=&quot;posting_date desc&quot;)
+    # Update customer record    frappe.db.set_value(&quot;Customer&quot;, customer, {
+        &quot;total_bookings&quot;: total_bookings,
+        &quot;last_booking_date&quot;: last_booking
+    })</code></pre><h3 id="23fcfee5-be51-8185-9e0f-cb016f48ac14" class="">Step 3.3: Update Installation Script</h3><p id="23fcfee5-be51-81ae-8ba9-d0b5f7b631f5" class=""><strong>Update: </strong><code><strong>rental_management/setup/install.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-810f-bbe0-f7a5d4ec0ca6" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from rental_management.custom_fields.item_fields import create_item_custom_fields
+from rental_management.custom_fields.customer_fields import create_customer_custom_fields
+def after_install():
+    &quot;&quot;&quot;Setup custom fields and configurations after app installation&quot;&quot;&quot;    print(&quot;Setting up Rental Management...&quot;)
+    # Create custom fields    create_item_custom_fields()
+    create_customer_custom_fields()
+    # Create default item groups if they don&#x27;t exist    create_rental_item_groups()
+    # Setup default accounts template    setup_rental_accounts()
+    print(&quot;Rental Management setup completed!&quot;)
+def create_rental_item_groups():
+    &quot;&quot;&quot;Create rental-specific item groups&quot;&quot;&quot;    item_groups = [
+        {&quot;item_group_name&quot;: &quot;Rental Items&quot;, &quot;parent_item_group&quot;: &quot;All Item Groups&quot;},
+        {&quot;item_group_name&quot;: &quot;Dresses&quot;, &quot;parent_item_group&quot;: &quot;Rental Items&quot;},
+        {&quot;item_group_name&quot;: &quot;Ornaments&quot;, &quot;parent_item_group&quot;: &quot;Rental Items&quot;},
+        {&quot;item_group_name&quot;: &quot;Accessories&quot;, &quot;parent_item_group&quot;: &quot;Rental Items&quot;}
+    ]
+    for group in item_groups:
+        if not frappe.db.exists(&quot;Item Group&quot;, group[&quot;item_group_name&quot;]):
+            item_group = frappe.get_doc({
+                &quot;doctype&quot;: &quot;Item Group&quot;,
+                &quot;item_group_name&quot;: group[&quot;item_group_name&quot;],
+                &quot;parent_item_group&quot;: group[&quot;parent_item_group&quot;],
+                &quot;is_group&quot;: 1 if group[&quot;item_group_name&quot;] == &quot;Rental Items&quot; else 0            })
+            item_group.insert()
+def setup_rental_accounts():
+    &quot;&quot;&quot;Setup rental-specific account templates&quot;&quot;&quot;    # This will be expanded in later phases    pass</code></pre><h3 id="23fcfee5-be51-81f1-b3ab-c1387e73c340" class="">Step 3.4: Update Hooks</h3><p id="23fcfee5-be51-8161-8f33-d683b4a9f9e0" class=""><strong>Update: </strong><code><strong>rental_management/hooks.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8164-b1fc-d7a4aa2e3fd7" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Add customer eventsdoc_events = {
+    &quot;Item&quot;: {
+        &quot;before_save&quot;: &quot;rental_management.automations.item_automation.before_item_save&quot;,
+        &quot;after_insert&quot;: &quot;rental_management.automations.item_automation.after_item_insert&quot;    },
+    &quot;Customer&quot;: {
+        &quot;before_save&quot;: &quot;rental_management.automations.customer_automation.before_customer_save&quot;    }
+}</code></pre><hr id="23fcfee5-be51-814e-b395-efa0e61d9aec"/><h2 id="23fcfee5-be51-817c-9cd6-c7b36853b556" class="">🧪 Testing Your Progress</h2><h3 id="23fcfee5-be51-8155-b18b-c239ebff56ca" class="">Test Item Creation:</h3><ol type="1" id="23fcfee5-be51-8120-af65-c38df8c3f364" class="numbered-list" start="1"><li>Go to Stock → Item → New</li></ol><ol type="1" id="23fcfee5-be51-81ba-8b28-c0e5e048cf99" class="numbered-list" start="2"><li>Enable “Enable for Rental”</li></ol><ol type="1" id="23fcfee5-be51-81ff-b7f0-d2ba4e300141" class="numbered-list" start="3"><li>Fill in rental rate and other details</li></ol><ol type="1" id="23fcfee5-be51-812b-884e-c6645616b178" class="numbered-list" start="4"><li>Save the item and verify automation works</li></ol><h3 id="23fcfee5-be51-81a4-946b-d60970ff2232" class="">Test Customer Creation:</h3><ol type="1" id="23fcfee5-be51-8108-bf17-e47865843c58" class="numbered-list" start="1"><li>Go to Selling → Customer → New</li></ol><ol type="1" id="23fcfee5-be51-8162-aaed-def3de4dbb27" class="numbered-list" start="2"><li>Enter customer name and mobile number</li></ol><ol type="1" id="23fcfee5-be51-8164-aa59-f4ff2bc224d5" class="numbered-list" start="3"><li>Check if unique ID gets generated</li></ol><ol type="1" id="23fcfee5-be51-816f-a9bf-d6eec504feb0" class="numbered-list" start="4"><li>Try creating duplicate mobile - should show error</li></ol><hr id="23fcfee5-be51-819c-b66e-c9800d713bae"/><h2 id="23fcfee5-be51-81da-8227-d62c49c7af14" class="">🎯 Phase 4: Sales Invoice Enhancement for Booking System (Day 8-10)</h2><h3 id="23fcfee5-be51-81bc-9345-f8ded532b4e5" class="">Step 4.1: Sales Invoice Custom Fields</h3><p id="23fcfee5-be51-81d2-af59-f144c008a93e" class=""><strong>File: </strong><code><strong>rental_management/custom_fields/sales_invoice_fields.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-81d2-b349-d6cabb641443" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+def create_sales_invoice_custom_fields():
+    &quot;&quot;&quot;Create custom fields for Sales Invoice doctype for rental bookings&quot;&quot;&quot;    custom_fields = [
+        # Rental Booking Section        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;rental_booking_section&quot;,
+            &quot;label&quot;: &quot;Rental Booking Details&quot;,
+            &quot;fieldtype&quot;: &quot;Section Break&quot;,
+            &quot;insert_after&quot;: &quot;customer&quot;,
+            &quot;collapsible&quot;: 1        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;is_rental_booking&quot;,
+            &quot;label&quot;: &quot;Rental Booking&quot;,
+            &quot;fieldtype&quot;: &quot;Check&quot;,
+            &quot;default&quot;: 0,
+            &quot;insert_after&quot;: &quot;rental_booking_section&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;function_date&quot;,
+            &quot;label&quot;: &quot;Function/Event Date&quot;,
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;mandatory_depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;is_rental_booking&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;rental_duration_days&quot;,
+            &quot;label&quot;: &quot;Rental Duration (Days)&quot;,
+            &quot;fieldtype&quot;: &quot;Int&quot;,
+            &quot;default&quot;: 3,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;function_date&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;rental_start_date&quot;,
+            &quot;label&quot;: &quot;Rental Start Date&quot;,
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;read_only&quot;: 1,
+            &quot;insert_after&quot;: &quot;rental_duration_days&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;rental_end_date&quot;,
+            &quot;label&quot;: &quot;Rental End Date&quot;,
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;read_only&quot;: 1,
+            &quot;insert_after&quot;: &quot;rental_start_date&quot;        },
+        # Financial Section        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;rental_financial_section&quot;,
+            &quot;label&quot;: &quot;Rental Financial Details&quot;,
+            &quot;fieldtype&quot;: &quot;Section Break&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;rental_end_date&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;total_rental_amount&quot;,
+            &quot;label&quot;: &quot;Total Rental Charges&quot;,
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;read_only&quot;: 1,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;rental_financial_section&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;caution_deposit_amount&quot;,
+            &quot;label&quot;: &quot;Caution Deposit&quot;,
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;total_rental_amount&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;dry_cleaning_charges&quot;,
+            &quot;label&quot;: &quot;Dry Cleaning Charges&quot;,
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;caution_deposit_amount&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;column_break_rental_financial&quot;,
+            &quot;fieldtype&quot;: &quot;Column Break&quot;,
+            &quot;insert_after&quot;: &quot;dry_cleaning_charges&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;advance_received&quot;,
+            &quot;label&quot;: &quot;Advance Received&quot;,
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;column_break_rental_financial&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;balance_due_on_delivery&quot;,
+            &quot;label&quot;: &quot;Balance Due on Delivery&quot;,
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;read_only&quot;: 1,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;advance_received&quot;        },
+        # Status Section        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;booking_status_section&quot;,
+            &quot;label&quot;: &quot;Booking Status &amp; Management&quot;,
+            &quot;fieldtype&quot;: &quot;Section Break&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;balance_due_on_delivery&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;booking_status&quot;,
+            &quot;label&quot;: &quot;Booking Status&quot;,
+            &quot;fieldtype&quot;: &quot;Select&quot;,
+            &quot;options&quot;: &quot;Booked\nOut for Rental\nReturned\nUnder Dry Wash\nCompleted\nExchanged&quot;,
+            &quot;default&quot;: &quot;Booked&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;booking_status_section&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;delivery_date&quot;,
+            &quot;label&quot;: &quot;Actual Delivery Date&quot;,
+            &quot;fieldtype&quot;: &quot;Datetime&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;booking_status&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;return_date&quot;,
+            &quot;label&quot;: &quot;Actual Return Date&quot;,
+            &quot;fieldtype&quot;: &quot;Datetime&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;delivery_date&quot;        },
+        # Exchange Section        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;exchange_section&quot;,
+            &quot;label&quot;: &quot;Exchange Details&quot;,
+            &quot;fieldtype&quot;: &quot;Section Break&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;collapsible&quot;: 1,
+            &quot;insert_after&quot;: &quot;return_date&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;is_exchange_booking&quot;,
+            &quot;label&quot;: &quot;Exchange Booking&quot;,
+            &quot;fieldtype&quot;: &quot;Check&quot;,
+            &quot;depends_on&quot;: &quot;is_rental_booking&quot;,
+            &quot;insert_after&quot;: &quot;exchange_section&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;original_booking_reference&quot;,
+            &quot;label&quot;: &quot;Original Booking Reference&quot;,
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Sales Invoice&quot;,
+            &quot;depends_on&quot;: &quot;is_exchange_booking&quot;,
+            &quot;insert_after&quot;: &quot;is_exchange_booking&quot;        },
+        {
+            &quot;doctype&quot;: &quot;Sales Invoice&quot;,
+            &quot;fieldname&quot;: &quot;exchange_reason&quot;,
+            &quot;label&quot;: &quot;Exchange Reason&quot;,
+            &quot;fieldtype&quot;: &quot;Small Text&quot;,
+            &quot;depends_on&quot;: &quot;is_exchange_booking&quot;,
+            &quot;insert_after&quot;: &quot;original_booking_reference&quot;        }
+    ]
+    for field in custom_fields:
+        if not frappe.db.exists(&quot;Custom Field&quot;, {&quot;dt&quot;: field[&quot;doctype&quot;], &quot;fieldname&quot;: field[&quot;fieldname&quot;]}):
+            custom_field = frappe.get_doc({
+                &quot;doctype&quot;: &quot;Custom Field&quot;,
+                &quot;dt&quot;: field[&quot;doctype&quot;],
+                &quot;fieldname&quot;: field[&quot;fieldname&quot;],
+                &quot;label&quot;: field[&quot;label&quot;],
+                &quot;fieldtype&quot;: field[&quot;fieldtype&quot;],
+                &quot;options&quot;: field.get(&quot;options&quot;),
+                &quot;default&quot;: field.get(&quot;default&quot;),
+                &quot;insert_after&quot;: field[&quot;insert_after&quot;],
+                &quot;depends_on&quot;: field.get(&quot;depends_on&quot;),
+                &quot;mandatory_depends_on&quot;: field.get(&quot;mandatory_depends_on&quot;),
+                &quot;read_only&quot;: field.get(&quot;read_only&quot;, 0),
+                &quot;collapsible&quot;: field.get(&quot;collapsible&quot;, 0)
+            })
+            custom_field.insert()
+    frappe.db.commit()
+    print(&quot;Sales Invoice custom fields created successfully!&quot;)</code></pre><h3 id="23fcfee5-be51-812d-85ba-e91d333f9d04" class="">Step 4.2: Booking Automation &amp; Validation</h3><p id="23fcfee5-be51-812d-be5a-df12104e0efe" class=""><strong>File: </strong><code><strong>rental_management/automations/booking_automation.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8196-8ea2-fe8aa3224de8" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from frappe import _
+from frappe.utils import add_days, getdate, now_datetime, flt
+def validate_sales_invoice(doc, method):
+    &quot;&quot;&quot;Validate rental booking before saving&quot;&quot;&quot;    if doc.is_rental_booking:
+        # Calculate rental dates        calculate_rental_dates(doc)
+        # Check item availability        check_item_availability(doc)
+        # Calculate amounts        calculate_rental_amounts(doc)
+        # Validate exchange booking        if doc.is_exchange_booking:
+            validate_exchange_booking(doc)
+def calculate_rental_dates(doc):
+    &quot;&quot;&quot;Calculate rental start and end dates based on function date&quot;&quot;&quot;    if doc.function_date and doc.rental_duration_days:
+        function_date = getdate(doc.function_date)
+        # Start 2 days before function date        doc.rental_start_date = add_days(function_date, -2)
+        # End date based on duration        doc.rental_end_date = add_days(doc.rental_start_date, doc.rental_duration_days - 1)
+def check_item_availability(doc):
+    &quot;&quot;&quot;Check if rental items are available for the booking period&quot;&quot;&quot;    if not doc.rental_start_date or not doc.rental_end_date:
+        return    for item in doc.items:
+        # Check if item is a rental item        item_doc = frappe.get_doc(&quot;Item&quot;, item.item_code)
+        if item_doc.is_rental_item:
+            # Check for conflicting bookings            conflicting_bookings = frappe.db.sql(&quot;&quot;&quot;                SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date                FROM `tabSales Invoice` si                JOIN `tabSales Invoice Item` sii ON si.name = sii.parent                WHERE sii.item_code = %s                AND si.is_rental_booking = 1                AND si.docstatus = 1                AND si.booking_status NOT IN (&#x27;Completed&#x27;, &#x27;Exchanged&#x27;)                AND si.name != %s                AND (                    (si.rental_start_date &lt;= %s AND si.rental_end_date &gt;= %s) OR                    (si.rental_start_date &lt;= %s AND si.rental_end_date &gt;= %s) OR                    (si.rental_start_date &gt;= %s AND si.rental_end_date &lt;= %s)                )            &quot;&quot;&quot;, (item.item_code, doc.name, doc.rental_start_date, doc.rental_start_date,
+                  doc.rental_end_date, doc.rental_end_date, doc.rental_start_date, doc.rental_end_date))
+            if conflicting_bookings:
+                conflict_details = conflicting_bookings[0]
+                frappe.throw(_(f&quot;Item {item.item_name} is already booked from {conflict_details[2]} to {conflict_details[3]} (Booking: {conflict_details[0]})&quot;))
+def calculate_rental_amounts(doc):
+    &quot;&quot;&quot;Calculate rental amounts automatically&quot;&quot;&quot;    total_rental = 0    total_deposit = 0    for item in doc.items:
+        item_doc = frappe.get_doc(&quot;Item&quot;, item.item_code)
+        if item_doc.is_rental_item:
+            # Calculate rental amount            daily_rate = flt(item_doc.rental_rate_per_day)
+            duration = flt(doc.rental_duration_days) or 1            # Set item rate and amount            item.rate = daily_rate * duration
+            item.amount = item.rate * flt(item.qty)
+            total_rental += item.amount
+            total_deposit += flt(item_doc.caution_deposit_amount) * flt(item.qty)
+    # Update totals    doc.total_rental_amount = total_rental
+    doc.caution_deposit_amount = total_deposit
+    # Calculate balance due    if doc.advance_received:
+        doc.balance_due_on_delivery = doc.grand_total - flt(doc.advance_received)
+def validate_exchange_booking(doc):
+    &quot;&quot;&quot;Validate exchange booking details&quot;&quot;&quot;    if not doc.original_booking_reference:
+        frappe.throw(_(&quot;Original Booking Reference is mandatory for exchange bookings&quot;))
+    # Check if original booking exists and is valid    original_booking = frappe.get_doc(&quot;Sales Invoice&quot;, doc.original_booking_reference)
+    if not original_booking.is_rental_booking:
+        frappe.throw(_(&quot;Original booking reference must be a rental booking&quot;))
+    if original_booking.docstatus != 1:
+        frappe.throw(_(&quot;Original booking must be submitted&quot;))
+def on_submit_sales_invoice(doc, method):
+    &quot;&quot;&quot;Handle post-submission tasks for rental bookings&quot;&quot;&quot;    if doc.is_rental_booking:
+        # Update item status to &quot;Booked&quot;        update_item_rental_status(doc, &quot;Booked&quot;)
+        # Create caution deposit journal entry        if doc.caution_deposit_amount:
+            create_caution_deposit_entry(doc)
+        # Handle owner commission for third-party items        create_owner_commission_entries(doc)
+        # Update customer booking statistics        update_customer_stats(doc)
+def update_item_rental_status(doc, status):
+    &quot;&quot;&quot;Update rental status of items in the booking&quot;&quot;&quot;    for item in doc.items:
+        item_doc = frappe.get_doc(&quot;Item&quot;, item.item_code)
+        if item_doc.is_rental_item:
+            frappe.db.set_value(&quot;Item&quot;, item.item_code, &quot;current_rental_status&quot;, status)
+def create_caution_deposit_entry(doc):
+    &quot;&quot;&quot;Create journal entry for caution deposit liability&quot;&quot;&quot;    company_abbr = frappe.get_value(&quot;Company&quot;, doc.company, &quot;abbr&quot;)
+    caution_deposit_account = f&quot;Caution Deposit Received - {company_abbr}&quot;    # Check if account exists, create if not    if not frappe.db.exists(&quot;Account&quot;, caution_deposit_account):
+        create_caution_deposit_account(doc.company)
+    je = frappe.get_doc({
+        &quot;doctype&quot;: &quot;Journal Entry&quot;,
+        &quot;voucher_type&quot;: &quot;Journal Entry&quot;,
+        &quot;posting_date&quot;: doc.posting_date,
+        &quot;company&quot;: doc.company,
+        &quot;user_remark&quot;: f&quot;Caution Deposit for Rental Booking {doc.name}&quot;,
+        &quot;accounts&quot;: [
+            {
+                &quot;account&quot;: doc.debit_to,
+                &quot;debit_in_account_currency&quot;: doc.caution_deposit_amount,
+                &quot;party_type&quot;: &quot;Customer&quot;,
+                &quot;party&quot;: doc.customer
+            },
+            {
+                &quot;account&quot;: caution_deposit_account,
+                &quot;credit_in_account_currency&quot;: doc.caution_deposit_amount
+            }
+        ]
+    })
+    je.submit()
+def create_owner_commission_entries(doc):
+    &quot;&quot;&quot;Create commission liability entries for third-party items&quot;&quot;&quot;    company_abbr = frappe.get_value(&quot;Company&quot;, doc.company, &quot;abbr&quot;)
+    commission_account = f&quot;Owner Commission Payable - {company_abbr}&quot;    rental_income_account = f&quot;Rental Income - {company_abbr}&quot;    for item in doc.items:
+        item_doc = frappe.get_doc(&quot;Item&quot;, item.item_code)
+        if item_doc.is_rental_item and item_doc.is_third_party_item and item_doc.owner_commission_percent:
+            commission_amount = flt(item.amount) * flt(item_doc.owner_commission_percent) / 100            if commission_amount &gt; 0:
+                je = frappe.get_doc({
+                    &quot;doctype&quot;: &quot;Journal Entry&quot;,
+                    &quot;voucher_type&quot;: &quot;Journal Entry&quot;,
+                    &quot;posting_date&quot;: doc.posting_date,
+                    &quot;company&quot;: doc.company,
+                    &quot;user_remark&quot;: f&quot;Owner Commission for {item.item_name} - Booking {doc.name}&quot;,
+                    &quot;accounts&quot;: [
+                        {
+                            &quot;account&quot;: rental_income_account,
+                            &quot;debit_in_account_currency&quot;: commission_amount
+                        },
+                        {
+                            &quot;account&quot;: commission_account,
+                            &quot;credit_in_account_currency&quot;: commission_amount,
+                            &quot;party_type&quot;: &quot;Supplier&quot;,
+                            &quot;party&quot;: item_doc.third_party_supplier
+                        }
+                    ]
+                })
+                je.submit()
+def update_customer_stats(doc):
+    &quot;&quot;&quot;Update customer booking statistics&quot;&quot;&quot;    from rental_management.automations.customer_automation import update_customer_booking_stats
+    update_customer_booking_stats(doc.customer, doc.posting_date)
+def create_caution_deposit_account(company):
+    &quot;&quot;&quot;Create caution deposit liability account if it doesn&#x27;t exist&quot;&quot;&quot;    company_abbr = frappe.get_value(&quot;Company&quot;, company, &quot;abbr&quot;)
+    account = frappe.get_doc({
+        &quot;doctype&quot;: &quot;Account&quot;,
+        &quot;account_name&quot;: &quot;Caution Deposit Received&quot;,
+        &quot;parent_account&quot;: f&quot;Current Liabilities - {company_abbr}&quot;,
+        &quot;company&quot;: company,
+        &quot;account_type&quot;: &quot;Payable&quot;,
+        &quot;root_type&quot;: &quot;Liability&quot;    })
+    account.insert()</code></pre><h3 id="23fcfee5-be51-81f0-8821-df7270cead94" class="">Step 4.3: Booking Status Management</h3><p id="23fcfee5-be51-8182-92db-d6c1cdf950f2" class=""><strong>File: </strong><code><strong>rental_management/utils/rental_utils.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8117-a1cf-cb89b36b4b46" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from frappe.utils import now_datetime, getdate
+def update_booking_status(invoice_name, new_status, update_time=None):
+    &quot;&quot;&quot;Update booking status and related item statuses&quot;&quot;&quot;    doc = frappe.get_doc(&quot;Sales Invoice&quot;, invoice_name)
+    if not doc.is_rental_booking:
+        frappe.throw(&quot;This is not a rental booking&quot;)
+    # Update booking status    doc.db_set(&quot;booking_status&quot;, new_status)
+    # Update timestamps based on status    if new_status == &quot;Out for Rental&quot; and not doc.delivery_date:
+        doc.db_set(&quot;delivery_date&quot;, update_time or now_datetime())
+    elif new_status == &quot;Returned&quot; and not doc.return_date:
+        doc.db_set(&quot;return_date&quot;, update_time or now_datetime())
+    # Update item rental status    item_status_map = {
+        &quot;Booked&quot;: &quot;Booked&quot;,
+        &quot;Out for Rental&quot;: &quot;Out for Rental&quot;,
+        &quot;Returned&quot;: &quot;Under Dry Wash&quot;,
+        &quot;Under Dry Wash&quot;: &quot;Under Dry Wash&quot;,
+        &quot;Completed&quot;: &quot;Available&quot;    }
+    if new_status in item_status_map:
+        update_item_rental_status(doc, item_status_map[new_status])
+    # Handle caution deposit refund for completed bookings    if new_status == &quot;Completed&quot;:
+        handle_caution_deposit_refund(doc)
+def handle_caution_deposit_refund(doc):
+    &quot;&quot;&quot;Handle caution deposit refund when booking is completed&quot;&quot;&quot;    if doc.caution_deposit_amount:
+        company_abbr = frappe.get_value(&quot;Company&quot;, doc.company, &quot;abbr&quot;)
+        caution_deposit_account = f&quot;Caution Deposit Received - {company_abbr}&quot;        # Create journal entry to refund caution deposit        je = frappe.get_doc({
+            &quot;doctype&quot;: &quot;Journal Entry&quot;,
+            &quot;voucher_type&quot;: &quot;Journal Entry&quot;,
+            &quot;posting_date&quot;: getdate(),
+            &quot;company&quot;: doc.company,
+            &quot;user_remark&quot;: f&quot;Caution Deposit Refund for Booking {doc.name}&quot;,
+            &quot;accounts&quot;: [
+                {
+                    &quot;account&quot;: caution_deposit_account,
+                    &quot;debit_in_account_currency&quot;: doc.caution_deposit_amount
+                },
+                {
+                    &quot;account&quot;: doc.debit_to,
+                    &quot;credit_in_account_currency&quot;: doc.caution_deposit_amount,
+                    &quot;party_type&quot;: &quot;Customer&quot;,
+                    &quot;party&quot;: doc.customer
+                }
+            ]
+        })
+        je.submit()
+def get_item_booking_calendar(item_code, months_ahead=6):
+    &quot;&quot;&quot;Get booking calendar for an item&quot;&quot;&quot;    from frappe.utils import add_months, getdate
+    end_date = add_months(getdate(), months_ahead)
+    bookings = frappe.db.sql(&quot;&quot;&quot;        SELECT            si.name,            si.customer,            si.rental_start_date,            si.rental_end_date,            si.booking_status,            si.function_date        FROM `tabSales Invoice` si        JOIN `tabSales Invoice Item` sii ON si.name = sii.parent        WHERE sii.item_code = %s        AND si.is_rental_booking = 1        AND si.docstatus = 1        AND si.rental_end_date &gt;= CURDATE()        AND si.rental_start_date &lt;= %s        ORDER BY si.rental_start_date    &quot;&quot;&quot;, (item_code, end_date), as_dict=True)
+    return bookings
+def check_item_availability_for_period(item_code, start_date, end_date, exclude_booking=None):
+    &quot;&quot;&quot;Check if item is available for a specific period&quot;&quot;&quot;    conditions = [&quot;sii.item_code = %s&quot;, &quot;si.is_rental_booking = 1&quot;, &quot;si.docstatus = 1&quot;]
+    values = [item_code]
+    if exclude_booking:
+        conditions.append(&quot;si.name != %s&quot;)
+        values.append(exclude_booking)
+    # Check for overlapping bookings    conditions.append(&quot;&quot;&quot;(        (si.rental_start_date &lt;= %s AND si.rental_end_date &gt;= %s) OR        (si.rental_start_date &lt;= %s AND si.rental_end_date &gt;= %s) OR        (si.rental_start_date &gt;= %s AND si.rental_end_date &lt;= %s)    )&quot;&quot;&quot;)
+    values.extend([start_date, start_date, end_date, end_date, start_date, end_date])
+    conflicting_bookings = frappe.db.sql(f&quot;&quot;&quot;        SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date        FROM `tabSales Invoice` si        JOIN `tabSales Invoice Item` sii ON si.name = sii.parent        WHERE {&#x27; AND &#x27;.join(conditions)}        AND si.booking_status NOT IN (&#x27;Completed&#x27;, &#x27;Exchanged&#x27;)    &quot;&quot;&quot;, values, as_dict=True)
+    return len(conflicting_bookings) == 0, conflicting_bookings</code></pre><hr id="23fcfee5-be51-81a3-b4d6-d1e525d8c73f"/><h2 id="23fcfee5-be51-8160-8f07-cd01174dd193" class="">🎯 Phase 5: Financial Integration &amp; Chart of Accounts (Day 11-12)</h2><h3 id="23fcfee5-be51-8166-a7d9-d05a654f68fc" class="">Step 5.1: Setup Rental Chart of Accounts</h3><p id="23fcfee5-be51-8161-bc7c-c06d448aa033" class=""><strong>File: </strong><code><strong>rental_management/setup/chart_of_accounts.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-81d3-b110-deff799714de" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+def setup_rental_chart_of_accounts(company):
+    &quot;&quot;&quot;Setup rental-specific chart of accounts for a company&quot;&quot;&quot;    company_abbr = frappe.get_value(&quot;Company&quot;, company, &quot;abbr&quot;)
+    accounts_to_create = [
+        # Income Accounts        {
+            &quot;account_name&quot;: &quot;Rental Income&quot;,
+            &quot;parent_account&quot;: f&quot;Direct Income - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Income Account&quot;,
+            &quot;root_type&quot;: &quot;Income&quot;        },
+        {
+            &quot;account_name&quot;: &quot;Dry Cleaning Charges Income&quot;,
+            &quot;parent_account&quot;: f&quot;Direct Income - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Income Account&quot;,
+            &quot;root_type&quot;: &quot;Income&quot;        },
+        # Liability Accounts        {
+            &quot;account_name&quot;: &quot;Caution Deposit Received&quot;,
+            &quot;parent_account&quot;: f&quot;Current Liabilities - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Payable&quot;,
+            &quot;root_type&quot;: &quot;Liability&quot;        },
+        {
+            &quot;account_name&quot;: &quot;Owner Commission Payable&quot;,
+            &quot;parent_account&quot;: f&quot;Current Liabilities - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Payable&quot;,
+            &quot;root_type&quot;: &quot;Liability&quot;        },
+        # Expense Accounts        {
+            &quot;account_name&quot;: &quot;Dry Cleaning Expenses&quot;,
+            &quot;parent_account&quot;: f&quot;Indirect Expenses - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Expense Account&quot;,
+            &quot;root_type&quot;: &quot;Expense&quot;        },
+        {
+            &quot;account_name&quot;: &quot;Maintenance and Repairs&quot;,
+            &quot;parent_account&quot;: f&quot;Indirect Expenses - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Expense Account&quot;,
+            &quot;root_type&quot;: &quot;Expense&quot;        },
+        # Asset Accounts        {
+            &quot;account_name&quot;: &quot;Rental Inventory - Dresses&quot;,
+            &quot;parent_account&quot;: f&quot;Stock Assets - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Stock&quot;,
+            &quot;root_type&quot;: &quot;Asset&quot;        },
+        {
+            &quot;account_name&quot;: &quot;Rental Inventory - Ornaments&quot;,
+            &quot;parent_account&quot;: f&quot;Stock Assets - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Stock&quot;,
+            &quot;root_type&quot;: &quot;Asset&quot;        },
+        {
+            &quot;account_name&quot;: &quot;Cash in Hand - Store&quot;,
+            &quot;parent_account&quot;: f&quot;Current Assets - {company_abbr}&quot;,
+            &quot;account_type&quot;: &quot;Cash&quot;,
+            &quot;root_type&quot;: &quot;Asset&quot;        }
+    ]
+    for account_info in accounts_to_create:
+        account_name_with_company = f&quot;{account_info[&#x27;account_name&#x27;]} - {company_abbr}&quot;        if not frappe.db.exists(&quot;Account&quot;, account_name_with_company):
+            account = frappe.get_doc({
+                &quot;doctype&quot;: &quot;Account&quot;,
+                &quot;account_name&quot;: account_info[&quot;account_name&quot;],
+                &quot;parent_account&quot;: account_info[&quot;parent_account&quot;],
+                &quot;company&quot;: company,
+                &quot;account_type&quot;: account_info[&quot;account_type&quot;],
+                &quot;root_type&quot;: account_info[&quot;root_type&quot;]
+            })
+            account.insert()
+            print(f&quot;Created account: {account_name_with_company}&quot;)
+def setup_default_cost_centers(company):
+    &quot;&quot;&quot;Setup default cost centers for rental business&quot;&quot;&quot;    company_abbr = frappe.get_value(&quot;Company&quot;, company, &quot;abbr&quot;)
+    cost_centers = [
+        &quot;Rental Operations&quot;,
+        &quot;Store Management&quot;,
+        &quot;Customer Service&quot;    ]
+    for cc_name in cost_centers:
+        cc_name_with_company = f&quot;{cc_name} - {company_abbr}&quot;        if not frappe.db.exists(&quot;Cost Center&quot;, cc_name_with_company):
+            cost_center = frappe.get_doc({
+                &quot;doctype&quot;: &quot;Cost Center&quot;,
+                &quot;cost_center_name&quot;: cc_name,
+                &quot;parent_cost_center&quot;: f&quot;{company} - {company_abbr}&quot;,
+                &quot;company&quot;: company
+            })
+            cost_center.insert()
+            print(f&quot;Created cost center: {cc_name_with_company}&quot;)</code></pre><h3 id="23fcfee5-be51-813d-b3d4-ded0c510b289" class="">Step 5.2: Update Installation Script with Accounting Setup</h3><p id="23fcfee5-be51-8142-8a8c-e9979dd021d7" class=""><strong>Update: </strong><code><strong>rental_management/setup/install.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8115-b79c-de47d692acda" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from rental_management.custom_fields.item_fields import create_item_custom_fields
+from rental_management.custom_fields.customer_fields import create_customer_custom_fields
+from rental_management.custom_fields.sales_invoice_fields import create_sales_invoice_custom_fields
+from rental_management.setup.chart_of_accounts import setup_rental_chart_of_accounts, setup_default_cost_centers
+def after_install():
+    &quot;&quot;&quot;Setup custom fields and configurations after app installation&quot;&quot;&quot;    print(&quot;Setting up Rental Management...&quot;)
+    # Create custom fields    create_item_custom_fields()
+    create_customer_custom_fields()
+    create_sales_invoice_custom_fields()
+    # Create default item groups    create_rental_item_groups()
+    # Setup accounting for existing companies    setup_accounting_for_companies()
+    # Create default workflows    create_rental_workflows()
+    print(&quot;Rental Management setup completed!&quot;)
+def setup_accounting_for_companies():
+    &quot;&quot;&quot;Setup rental accounting for all existing companies&quot;&quot;&quot;    companies = frappe.get_all(&quot;Company&quot;, fields=[&quot;name&quot;])
+    for company in companies:
+        try:
+            setup_rental_chart_of_accounts(company.name)
+            setup_default_cost_centers(company.name)
+            print(f&quot;Accounting setup completed for {company.name}&quot;)
+        except Exception as e:
+            print(f&quot;Error setting up accounting for {company.name}: {str(e)}&quot;)
+# ...existing functions...def create_rental_workflows():
+    &quot;&quot;&quot;Create workflows for rental processes&quot;&quot;&quot;    # We&#x27;ll implement this in Phase 6    pass</code></pre><hr id="23fcfee5-be51-8151-80a7-f68a42d9b163"/><h2 id="23fcfee5-be51-8112-bfdc-ce1018f0c8c9" class="">🎯 Phase 6: Reports &amp; Dashboard (Day 13-15)</h2><h3 id="23fcfee5-be51-8100-91ca-d38abf393ebe" class="">Step 6.1: Booking Calendar Report</h3><p id="23fcfee5-be51-816a-8f7e-e34134f94cc6" class=""><strong>Create folder: </strong><code><strong>rental_management/rental_management/report/booking_calendar/</strong></code></p><p id="23fcfee5-be51-81b9-80bc-dea56b91e4ef" class=""><strong>File: </strong><code><strong>rental_management/rental_management/report/booking_calendar/booking_calendar.json</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8106-b4fd-d812a3cdedd4" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{ &quot;add_total_row&quot;: 0, &quot;columns&quot;: [], &quot;creation&quot;: &quot;2024-01-01 00:00:00.000000&quot;, &quot;disable_prepared_report&quot;: 0, &quot;disabled&quot;: 0, &quot;docstatus&quot;: 0, &quot;doctype&quot;: &quot;Report&quot;, &quot;idx&quot;: 0, &quot;is_standard&quot;: &quot;Yes&quot;, &quot;modified&quot;: &quot;2024-01-01 00:00:00.000000&quot;, &quot;module&quot;: &quot;Rental Management&quot;, &quot;name&quot;: &quot;Booking Calendar&quot;, &quot;prepared_report&quot;: 0, &quot;ref_doctype&quot;: &quot;Sales Invoice&quot;, &quot;report_name&quot;: &quot;Booking Calendar&quot;, &quot;report_type&quot;: &quot;Script Report&quot;, &quot;roles&quot;: [  {   &quot;role&quot;: &quot;Sales User&quot;  },  {   &quot;role&quot;: &quot;Sales Manager&quot;  },  {   &quot;role&quot;: &quot;System Manager&quot;  } ]}</code></pre><p id="23fcfee5-be51-811a-b490-cb4b6e36dae2" class=""><strong>File: </strong><code><strong>rental_management/rental_management/report/booking_calendar/booking_calendar.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-81d3-8628-f5894bdc7449" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from frappe import _
+from frappe.utils import getdate, add_days, add_months
+def execute(filters=None):
+    if not filters:
+        filters = {}
+    columns = get_columns()
+    data = get_data(filters)
+    return columns, data
+def get_columns():
+    return [
+        {
+            &quot;fieldname&quot;: &quot;item_code&quot;,
+            &quot;label&quot;: _(&quot;Item Code&quot;),
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Item&quot;,
+            &quot;width&quot;: 120        },
+        {
+            &quot;fieldname&quot;: &quot;item_name&quot;,
+            &quot;label&quot;: _(&quot;Item Name&quot;),
+            &quot;fieldtype&quot;: &quot;Data&quot;,
+            &quot;width&quot;: 200        },
+        {
+            &quot;fieldname&quot;: &quot;booking_reference&quot;,
+            &quot;label&quot;: _(&quot;Booking Reference&quot;),
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Sales Invoice&quot;,
+            &quot;width&quot;: 150        },
+        {
+            &quot;fieldname&quot;: &quot;customer&quot;,
+            &quot;label&quot;: _(&quot;Customer&quot;),
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Customer&quot;,
+            &quot;width&quot;: 150        },
+        {
+            &quot;fieldname&quot;: &quot;function_date&quot;,
+            &quot;label&quot;: _(&quot;Function Date&quot;),
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;width&quot;: 100        },
+        {
+            &quot;fieldname&quot;: &quot;rental_start_date&quot;,
+            &quot;label&quot;: _(&quot;Rental Start&quot;),
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;width&quot;: 100        },
+        {
+            &quot;fieldname&quot;: &quot;rental_end_date&quot;,
+            &quot;label&quot;: _(&quot;Rental End&quot;),
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;width&quot;: 100        },
+        {
+            &quot;fieldname&quot;: &quot;booking_status&quot;,
+            &quot;label&quot;: _(&quot;Status&quot;),
+            &quot;fieldtype&quot;: &quot;Data&quot;,
+            &quot;width&quot;: 120        },
+        {
+            &quot;fieldname&quot;: &quot;rental_amount&quot;,
+            &quot;label&quot;: _(&quot;Rental Amount&quot;),
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;width&quot;: 120        }
+    ]
+def get_data(filters):
+    conditions = []
+    values = []
+    if filters.get(&quot;from_date&quot;):
+        conditions.append(&quot;si.rental_start_date &gt;= %s&quot;)
+        values.append(filters.get(&quot;from_date&quot;))
+    if filters.get(&quot;to_date&quot;):
+        conditions.append(&quot;si.rental_end_date &lt;= %s&quot;)
+        values.append(filters.get(&quot;to_date&quot;))
+    if filters.get(&quot;item_code&quot;):
+        conditions.append(&quot;sii.item_code = %s&quot;)
+        values.append(filters.get(&quot;item_code&quot;))
+    if filters.get(&quot;customer&quot;):
+        conditions.append(&quot;si.customer = %s&quot;)
+        values.append(filters.get(&quot;customer&quot;))
+    if filters.get(&quot;booking_status&quot;):
+        conditions.append(&quot;si.booking_status = %s&quot;)
+        values.append(filters.get(&quot;booking_status&quot;))
+    where_clause = &quot;&quot;    if conditions:
+        where_clause = &quot;AND &quot; + &quot; AND &quot;.join(conditions)
+    data = frappe.db.sql(f&quot;&quot;&quot;        SELECT            sii.item_code,            sii.item_name,            si.name as booking_reference,            si.customer,            si.function_date,            si.rental_start_date,            si.rental_end_date,            si.booking_status,            sii.amount as rental_amount        FROM `tabSales Invoice` si        JOIN `tabSales Invoice Item` sii ON si.name = sii.parent        WHERE si.is_rental_booking = 1        AND si.docstatus = 1        {where_clause}        ORDER BY si.rental_start_date, sii.item_code    &quot;&quot;&quot;, values, as_dict=True)
+    return data</code></pre><h3 id="23fcfee5-be51-81fa-8f05-f9aeb6667f3b" class="">Step 6.2: Item Utilization Report</h3><p id="23fcfee5-be51-818b-901d-f54cf6e9d9db" class=""><strong>Create folder: </strong><code><strong>rental_management/rental_management/report/item_utilization/</strong></code></p><p id="23fcfee5-be51-81a0-b484-f76c2c25608c" class=""><strong>File: </strong><code><strong>rental_management/rental_management/report/item_utilization/item_utilization.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-816d-9a34-c971bd8ecda4" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from frappe import _
+from frappe.utils import getdate, add_months
+def execute(filters=None):
+    if not filters:
+        filters = {}
+    columns = get_columns()
+    data = get_data(filters)
+    return columns, data
+def get_columns():
+    return [
+        {
+            &quot;fieldname&quot;: &quot;item_code&quot;,
+            &quot;label&quot;: _(&quot;Item Code&quot;),
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Item&quot;,
+            &quot;width&quot;: 120        },
+        {
+            &quot;fieldname&quot;: &quot;item_name&quot;,
+            &quot;label&quot;: _(&quot;Item Name&quot;),
+            &quot;fieldtype&quot;: &quot;Data&quot;,
+            &quot;width&quot;: 200        },
+        {
+            &quot;fieldname&quot;: &quot;total_bookings&quot;,
+            &quot;label&quot;: _(&quot;Total Bookings&quot;),
+            &quot;fieldtype&quot;: &quot;Int&quot;,
+            &quot;width&quot;: 100        },
+        {
+            &quot;fieldname&quot;: &quot;total_rental_days&quot;,
+            &quot;label&quot;: _(&quot;Total Rental Days&quot;),
+            &quot;fieldtype&quot;: &quot;Int&quot;,
+            &quot;width&quot;: 120        },
+        {
+            &quot;fieldname&quot;: &quot;total_revenue&quot;,
+            &quot;label&quot;: _(&quot;Total Revenue&quot;),
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;width&quot;: 120        },
+        {
+            &quot;fieldname&quot;: &quot;avg_rental_per_booking&quot;,
+            &quot;label&quot;: _(&quot;Avg Rental/Booking&quot;),
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;width&quot;: 150        },
+        {
+            &quot;fieldname&quot;: &quot;current_status&quot;,
+            &quot;label&quot;: _(&quot;Current Status&quot;),
+            &quot;fieldtype&quot;: &quot;Data&quot;,
+            &quot;width&quot;: 120        },
+        {
+            &quot;fieldname&quot;: &quot;last_booking_date&quot;,
+            &quot;label&quot;: _(&quot;Last Booking&quot;),
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;width&quot;: 100        }
+    ]
+def get_data(filters):
+    # Get rental items with their utilization stats    data = frappe.db.sql(&quot;&quot;&quot;        SELECT            i.item_code,            i.item_name,            i.current_rental_status as current_status,            COUNT(sii.name) as total_bookings,            SUM(si.rental_duration_days) as total_rental_days,            SUM(sii.amount) as total_revenue,            AVG(sii.amount) as avg_rental_per_booking,            MAX(si.rental_start_date) as last_booking_date        FROM `tabItem` i        LEFT JOIN `tabSales Invoice Item` sii ON i.item_code = sii.item_code        LEFT JOIN `tabSales Invoice` si ON sii.parent = si.name AND si.is_rental_booking = 1 AND si.docstatus = 1        WHERE i.is_rental_item = 1        GROUP BY i.item_code, i.item_name, i.current_rental_status        ORDER BY total_revenue DESC    &quot;&quot;&quot;, as_dict=True)
+    return data</code></pre><h3 id="23fcfee5-be51-811c-97bf-e91165f6e87c" class="">Step 6.3: Owner Commission Report</h3><p id="23fcfee5-be51-81e1-bedf-fe70a6e71b22" class=""><strong>Create folder: </strong><code><strong>rental_management/rental_management/report/owner_commission/</strong></code></p><p id="23fcfee5-be51-8149-b3f0-ca4f787b9115" class=""><strong>File: </strong><code><strong>rental_management/rental_management/report/owner_commission/owner_commission.py</strong></code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23fcfee5-be51-8124-a526-c73837fd8031" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import frappe
+from frappe import _
+def execute(filters=None):
+    if not filters:
+        filters = {}
+    columns = get_columns()
+    data = get_data(filters)
+    return columns, data
+def get_columns():
+    return [
+        {
+            &quot;fieldname&quot;: &quot;supplier&quot;,
+            &quot;label&quot;: _(&quot;Owner/Supplier&quot;),
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Supplier&quot;,
+            &quot;width&quot;: 150        },
+        {
+            &quot;fieldname&quot;: &quot;item_code&quot;,
+            &quot;label&quot;: _(&quot;Item Code&quot;),
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Item&quot;,
+            &quot;width&quot;: 120        },
+        {
+            &quot;fieldname&quot;: &quot;item_name&quot;,
+            &quot;label&quot;: _(&quot;Item Name&quot;),
+            &quot;fieldtype&quot;: &quot;Data&quot;,
+            &quot;width&quot;: 200        },
+        {
+            &quot;fieldname&quot;: &quot;booking_reference&quot;,
+            &quot;label&quot;: _(&quot;Booking&quot;),
+            &quot;fieldtype&quot;: &quot;Link&quot;,
+            &quot;options&quot;: &quot;Sales Invoice&quot;,
+            &quot;width&quot;: 150        },
+        {
+            &quot;fieldname&quot;: &quot;booking_date&quot;,
+            &quot;label&quot;: _(&quot;Booking Date&quot;),
+            &quot;fieldtype&quot;: &quot;Date&quot;,
+            &quot;width&quot;: 100        },
+        {
+            &quot;fieldname&quot;: &quot;rental_amount&quot;,
+            &quot;label&quot;: _(&quot;Rental Amount&quot;),
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;width&quot;: 120        },
+        {
+            &quot;fieldname&quot;: &quot;commission_percent&quot;,
+            &quot;label&quot;: _(&quot;Commission %&quot;),
+            &quot;fieldtype&quot;: &quot;Percent&quot;,
+            &quot;width&quot;: 100        },
+        {
+            &quot;fieldname&quot;: &quot;commission_amount&quot;,
+            &quot;label&quot;: _(&quot;Commission Amount&quot;),
+            &quot;fieldtype&quot;: &quot;Currency&quot;,
+            &quot;width&quot;: 150        },
+        {
+            &quot;fieldname&quot;: &quot;payment_status&quot;,
+            &quot;label&quot;: _(&quot;Payment Status&quot;),
+            &quot;fieldtype&quot;: &quot;Data&quot;,
+            &quot;width&quot;: 120        }
+    ]
+def get_data(filters):
+    conditions = []
+    values = []
+    if filters.get(&quot;supplier&quot;):
+        conditions.append(&quot;i.third_party_supplier = %s&quot;)
+        values.append(filters.get(&quot;supplier&quot;))
+    if filters.get(&quot;from_date&quot;):
+        conditions.append(&quot;si.posting_date &gt;= %s&quot;)
+        values.append(filters.get(&quot;from_date&quot;))
+    if filters.get(&quot;to_date&quot;):
+        conditions.append(&quot;si.posting_date &lt;= %s&quot;)
+        values.append(filters.get(&quot;to_date&quot;))
+    where_clause = &quot;&quot;    if conditions:
+        where_clause = &quot;AND &quot; + &quot; AND &quot;.join(conditions)
+    data = frappe.db.sql(f&quot;&quot;&quot;        SELECT            i.third_party_supplier as supplier,            sii.item_code,            sii.item_name,            si.name as booking_reference,            si.posting_date as booking_date,            sii.amount as rental_amount,            i.owner_commission_percent as commission_percent,            (sii.amount * i.owner_commission_percent / 100) as commission_amount,            &#x27;Pending&#x27; as payment_status        FROM `tabSales Invoice` si        JOIN `tabSales Invoice Item` sii ON si.name = sii.parent        JOIN `tabItem` i ON sii.item_code = i.item_code        WHERE si.is_rental_booking = 1        AND si.docstatus = 1        AND i.is_third_party_item = 1        AND i.third_party_supplier IS NOT NULL        {where_clause}        ORDER BY si.posting_date DESC, i.third_party_supplier    &quot;&quot;&quot;, values, as_dict=True)
+    return data</code></pre><hr id="23fcfee5-be51-81ca-9cd3-f32364202018"/><h2 id="23fcfee5-be51-8121-88ff-d50cc2a1f08d" class="">🎯 Phase 7: Complete Workflows &amp; Business Processes (Day 16-18)</h2><h3 id="23fcfee5-be51-8122-adcc-d1e951bb3777" class="">Complete Business Workflows</h3><p id="23fcfee5-be51-81b5-9f14-ff33853acfb1" class="">Now let me detail the complete workflows that will be available after implementation:</p><h2 id="23fcfee5-be51-8154-8b81-fe7254cf3572" class="">📋 COMPLETE BUSINESS WORKFLOWS</h2><p id="23fcfee5-be51-81ff-8660-ed740c5861a2" class="">After implementing all phases, your rental management system will support these end-to-end workflows:</p><h3 id="23fcfee5-be51-81d5-a594-d368bdcf7c19" class="">🔄 Workflow 1: Item Addition &amp; Approval Process</h3><p id="23fcfee5-be51-81a3-b73c-ed5282a842fa" class=""><strong>Steps:</strong><br/>1. <br/><strong>Store Admin adds new rental item</strong><br/>- Go to Stock → Item → New<br/>- Fill basic details (Item Code, Name, UOM)<br/>- Check “Enable for Rental”<br/>- Set rental rate per day and<br/> <mark class="highlight-yellow_background">caution deposit</mark><br/>- Choose item category (Dress/Ornament/Accessory)<br/>- If third-party: Check “Third Party Owned”, set commission %, add owner details<br/></p><ol type="1" id="23fcfee5-be51-81f1-bf92-c6338de665ac" class="numbered-list" start="1"><li><strong>System Automation (on save):</strong><ul id="23fcfee5-be51-8144-895a-f95a044c3835" class="bulleted-list"><li style="list-style-type:disc">Auto-creates rental service item (ItemCode-RENTAL)</li></ul><ul id="23fcfee5-be51-81d6-9cd4-dfbb7c9096ff" class="bulleted-list"><li style="list-style-type:disc">If third-party: Auto-creates supplier record for owner</li></ul><ul id="23fcfee5-be51-8192-ab25-dd90cbde8263" class="bulleted-list"><li style="list-style-type:disc">Sets item status to “Pending Approval”</li></ul><ul id="23fcfee5-be51-814b-89c5-d70549902f90" class="bulleted-list"><li style="list-style-type:disc">Sets item group based on category</li></ul></li></ol><ol type="1" id="23fcfee5-be51-81c9-ac68-d3d8d3a275c2" class="numbered-list" start="2"><li><strong>Super Admin Approval:</strong><ul id="23fcfee5-be51-8194-9406-f770c7f15d55" class="bulleted-list"><li style="list-style-type:disc">Reviews items in “Pending Approval” status</li></ul><ul id="23fcfee5-be51-81d0-923b-d43c6ebb7442" class="bulleted-list"><li style="list-style-type:disc">Approves or rejects items</li></ul><ul id="23fcfee5-be51-81e8-8f92-e2659bc41e4a" class="bulleted-list"><li style="list-style-type:disc">Only approved items appear in store frontend</li></ul></li></ol><p id="23fcfee5-be51-811a-9ef4-cf68e5605a21" class=""><strong>Result:</strong> Items ready for rental booking with proper categorization and approval control.</p><hr id="23fcfee5-be51-81c3-91e0-fdbdb33e2dd1"/><h3 id="23fcfee5-be51-8131-8956-ee0e5f16c81e" class="">🔄 Workflow 2: Customer Registration &amp; Management</h3><p id="23fcfee5-be51-81c9-8101-e9a3574bbd67" class=""><strong>Steps:</strong><br/>1. <br/><strong>Customer visits store or calls</strong><br/>2. <br/><strong>Staff creates customer record:</strong><br/>- Go to Selling → Customer → New<br/>- Enter customer name and mobile number<br/>- System auto-generates unique customer ID (Name3chars + Mobile4digits)<br/>- Add address if needed<br/></p><ol type="1" id="23fcfee5-be51-81a7-944e-f5af06c0a750" class="numbered-list" start="1"><li><strong>System Validation:</strong><ul id="23fcfee5-be51-81e7-97a0-eed5c0a84774" class="bulleted-list"><li style="list-style-type:disc">Validates Indian mobile number format</li></ul><ul id="23fcfee5-be51-8133-a5f6-da62c9c1b220" class="bulleted-list"><li style="list-style-type:disc">Checks for duplicate mobile numbers</li></ul><ul id="23fcfee5-be51-8179-8323-d8013b75bcb5" class="bulleted-list"><li style="list-style-type:disc">Standardizes mobile format (+91xxxxxxxxxx)</li></ul></li></ol><p id="23fcfee5-be51-812f-9369-fa82b455bce3" class=""><strong>Result:</strong> Unique customer identification preventing duplicates while allowing easy lookup.</p><hr id="23fcfee5-be51-81a2-9ff7-eccee931f9a4"/><h3 id="23fcfee5-be51-81bc-ba5d-f9fcee53a254" class="">🔄 Workflow 3: Rental Booking Process</h3><p id="23fcfee5-be51-8135-9733-f55d192f95cc" class=""><strong>Steps:</strong><br/>1. <br/><strong>Customer selects items for function date</strong><br/>2. <br/><strong>Staff creates rental booking:</strong><br/>- Go to Accounts → Sales Invoice → New<br/>- Select customer<br/>- Check “Rental Booking”<br/>- Enter function date (e.g., wedding on Sep 20)<br/>- Set rental duration (default 3 days)<br/>- Add rental items to invoice<br/></p><ol type="1" id="23fcfee5-be51-811a-b2a0-c8dc17e4b0e3" class="numbered-list" start="1"><li><strong>System Auto-calculations:</strong><ul id="23fcfee5-be51-8109-a009-ef824b3a218e" class="bulleted-list"><li style="list-style-type:disc">Calculates rental start date (2 days before function = Sep 18)</li></ul><ul id="23fcfee5-be51-8194-a609-cf4297b65d08" class="bulleted-list"><li style="list-style-type:disc">Calculates rental end date (Sep 18 + 3 days = Sep 21)</li></ul><ul id="23fcfee5-be51-81cf-aebc-f49ccdf124c0" class="bulleted-list"><li style="list-style-type:disc">Checks item availability for Sep 18-21</li></ul><ul id="23fcfee5-be51-815d-bb1f-e5abc9957d49" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-yellow_background">Calculates total rental amount (rate × duration × quantity)</mark></li></ul><ul id="23fcfee5-be51-812a-ad5e-ea24159df8bb" class="bulleted-list"><li style="list-style-type:disc">Calculates caution deposit amount</li></ul><ul id="23fcfee5-be51-8180-a869-ef1f925dcdfa" class="bulleted-list"><li style="list-style-type:disc">Auto-adds dry cleaning charges if specified</li></ul></li></ol><ol type="1" id="23fcfee5-be51-8125-9a14-dad0cb6e5e30" class="numbered-list" start="2"><li><strong>Staff completes booking:</strong><ul id="23fcfee5-be51-81c9-8cf6-f66757fc7d80" class="bulleted-list"><li style="list-style-type:disc">Enter advance received amount</li></ul><ul id="23fcfee5-be51-81d3-8afd-e4ef00a45a38" class="bulleted-list"><li style="list-style-type:disc">System calculates balance due on delivery</li></ul><ul id="23fcfee5-be51-81a4-8da6-d1755b68edb6" class="bulleted-list"><li style="list-style-type:disc">Submit invoice</li></ul></li></ol><ol type="1" id="23fcfee5-be51-81fe-b3d3-f21ba7b3959e" class="numbered-list" start="3"><li><strong>System Post-submission:</strong><ul id="23fcfee5-be51-8121-91e4-e3800c3ae3dc" class="bulleted-list"><li style="list-style-type:disc">Updates item status to “Booked” for the period</li></ul><ul id="23fcfee5-be51-814e-92f6-f098945b86b2" class="bulleted-list"><li style="list-style-type:disc">Creates caution deposit liability journal entry</li></ul><ul id="23fcfee5-be51-8152-b01c-efc5cb4bc5b0" class="bulleted-list"><li style="list-style-type:disc">Creates owner commission liability (for third-party items)</li></ul><ul id="23fcfee5-be51-81a6-bb9d-ea99bcc80775" class="bulleted-list"><li style="list-style-type:disc">Updates customer booking statistics</li></ul></li></ol><p id="23fcfee5-be51-81b4-8259-fca860eb0244" class=""><strong>Result:</strong> Confirmed booking with automatic financial entries and availability blocking.</p><hr id="23fcfee5-be51-81ed-a8e6-f217b8b84a57"/><h3 id="23fcfee5-be51-81fd-8015-e74361e57b80" class="">🔄 Workflow 4: Item Delivery Process</h3><p id="23fcfee5-be51-81ca-872c-f9181b652843" class=""><strong>Steps:</strong><br/>1. <br/><strong>Delivery day (Sep 18):</strong><br/>- Staff goes to booking (Sales Invoice)<br/>- Updates booking status to “Out for Rental”<br/>- System records actual delivery timestamp<br/>- Collects balance amount due<br/>- Items physically given to customer<br/></p><ol type="1" id="23fcfee5-be51-814e-80aa-d80ac8dc5719" class="numbered-list" start="1"><li><strong>System Updates:</strong><ul id="23fcfee5-be51-8109-8d8b-d7aa4a051942" class="bulleted-list"><li style="list-style-type:disc">Item status changes to “Out for Rental”</li></ul><ul id="23fcfee5-be51-81eb-bd9e-e83475a4378d" class="bulleted-list"><li style="list-style-type:disc">Delivery timestamp recorded</li></ul><ul id="23fcfee5-be51-815b-81f0-df43364ad5ee" class="bulleted-list"><li style="list-style-type:disc">Items unavailable for other bookings</li></ul></li></ol><p id="23fcfee5-be51-81fc-9b65-f98ea946c039" class=""><strong>Result:</strong> Proper tracking of item location and timing.</p><hr id="23fcfee5-be51-8178-8cb8-ec3a60feae08"/><h3 id="23fcfee5-be51-81a3-9b27-cf0905480224" class="">🔄 Workflow 5: Item Return &amp; Completion Process</h3><p id="23fcfee5-be51-81a3-a3f8-fceb52e64bf7" class=""><strong>Steps:</strong><br/>1. <br/><strong>Return day </strong><strong>(Sep 21):</strong><br/>- Customer returns items<br/>- Staff inspects items for damage<br/>- Updates booking status to “Returned”<br/>- System records actual return timestamp<br/></p><ol type="1" id="23fcfee5-be51-81b5-a983-f48e22995c05" class="numbered-list" start="1"><li><strong>Dry cleaning process:</strong><ul id="23fcfee5-be51-8108-8da7-de9875c17d30" class="bulleted-list"><li style="list-style-type:disc">Items sent for dry cleaning</li></ul><ul id="23fcfee5-be51-8109-a7b9-c15b0969fda7" class="bulleted-list"><li style="list-style-type:disc">Status updated to “Under Dry Wash”</li></ul><ul id="23fcfee5-be51-8196-9afe-df321d5efbaf" class="bulleted-list"><li style="list-style-type:disc">Dry cleaning expense recorded</li></ul></li></ol><ol type="1" id="23fcfee5-be51-8122-8194-d81179a1689b" class="numbered-list" start="2"><li><strong>Items back from cleaning:</strong><ul id="23fcfee5-be51-81b1-bf91-dba25ae7c040" class="bulleted-list"><li style="list-style-type:disc">Staff receives items</li></ul><ul id="23fcfee5-be51-810a-a3bd-f7e2bbe0bbf6" class="bulleted-list"><li style="list-style-type:disc">Updates booking status to “Completed”</li></ul><ul id="23fcfee5-be51-81c3-8661-c08c2a4112f5" class="bulleted-list"><li style="list-style-type:disc">System automatically:<ul id="23fcfee5-be51-8103-8576-d0209beaf0c8" class="bulleted-list"><li style="list-style-type:circle">Changes item status to “Available”</li></ul><ul id="23fcfee5-be51-8188-9582-da43cfc24599" class="bulleted-list"><li style="list-style-type:circle">Processes caution deposit refund</li></ul><ul id="23fcfee5-be51-8155-82fe-df728f7b3f48" class="bulleted-list"><li style="list-style-type:circle">Items become available for new bookings</li></ul></li></ul></li></ol><p id="23fcfee5-be51-811c-bab3-fa7b009a09ef" class=""><strong>Result:</strong> Complete rental cycle with proper item availability management.</p><hr id="23fcfee5-be51-81f5-a751-dd64d9c69cb0"/><h3 id="23fcfee5-be51-8187-8e8b-ee6c61008bf6" class="">🔄 Workflow 6: Exchange Booking Process</h3><p id="23fcfee5-be51-81c6-a124-e85661e50d47" class=""><strong>Steps:</strong><br/>1. <br/><strong>Customer wants to change items after booking:</strong><br/>- Create new Sales Invoice<br/>- Check “Exchange Booking”<br/>- Link to original booking reference<br/>- Select new items<br/>- Enter exchange reason<br/></p><ol type="1" id="23fcfee5-be51-8170-99d0-e6b71f056395" class="numbered-list" start="1"><li><strong>System Handling:</strong><ul id="23fcfee5-be51-81b6-8215-d2c954f57be5" class="bulleted-list"><li style="list-style-type:disc">Validates original booking exists</li></ul><ul id="23fcfee5-be51-81c2-a9b5-cb81262b7c07" class="bulleted-list"><li style="list-style-type:disc">Transfers advance from original to new booking</li></ul><ul id="23fcfee5-be51-815b-86f0-f78d9d80a039" class="bulleted-list"><li style="list-style-type:disc">Marks original booking as “Exchanged”</li></ul><ul id="23fcfee5-be51-810c-825e-d28309fdcd5e" class="bulleted-list"><li style="list-style-type:disc">Processes new booking with transferred advance</li></ul></li></ol><p id="23fcfee5-be51-810b-8690-dd4e41aa45e7" class=""><strong>Result:</strong> No-refund exchange policy properly handled with financial accuracy.</p><hr id="23fcfee5-be51-8157-a0cc-e1d5fe712fb3"/><h3 id="23fcfee5-be51-81f5-9782-f0b8a5d41272" class="">🔄 Workflow 7: Owner Commission Payment Process</h3><p id="23fcfee5-be51-8114-bd5c-f905283715d9" class=""><strong>Steps:</strong><br/>1. <br/><strong>Monthly commission processing</strong><strong>:</strong><br/>- Generate Owner Commission Report<br/>- Review all pending commissions by supplier<br/>- Create Payment Entry for each <br/>owner/supplier<br/>- Link to outstanding commission liability<br/></p><ol type="1" id="23fcfee5-be51-8156-94e2-e9de36787c63" class="numbered-list" start="1"><li><strong>System Automation:</strong><ul id="23fcfee5-be51-81aa-94ad-c61fbeec43b3" class="bulleted-list"><li style="list-style-type:disc">Calculates total commission owed per owner</li></ul><ul id="23fcfee5-be51-81dd-9e0e-e877d823efc2" class="bulleted-list"><li style="list-style-type:disc">Creates payment voucher</li></ul><ul id="23fcfee5-be51-81ef-98d8-edb99357ad46" class="bulleted-list"><li style="list-style-type:disc">Clears commission payable liability</li></ul><ul id="23fcfee5-be51-813b-b060-e1bd8e5a99b2" class="bulleted-list"><li style="list-style-type:disc">Updates payment status in reports</li></ul></li></ol><p id="23fcfee5-be51-815f-ad5f-e7ff2973d989" class=""><strong>Result:</strong> Transparent and timely owner/supplier payments.</p><hr id="23fcfee5-be51-81c0-9daa-d96b7563f2f5"/><h3 id="23fcfee5-be51-8165-8010-d59fa6f0e5c1" class="">🔄 Workflow 8: Multi-Store Management (Super Admin)</h3><p id="23fcfee5-be51-8169-9094-df73967cbe39" class=""><strong>Steps:</strong><br/>1. <br/><strong>Super Admin dashboard access:</strong><br/>- Can view all stores/companies<br/>- Access consolidated reports across stores<br/>- Manage item approvals for all stores<br/></p><ol type="1" id="23fcfee5-be51-81ec-9867-d44868d87781" class="numbered-list" start="1"><li><strong>Store-wise operations:</strong><ul id="23fcfee5-be51-8181-b98f-d1e66020fb41" class="bulleted-list"><li style="list-style-type:disc">Each store has independent P&amp;L and Balance Sheet</li></ul><ul id="23fcfee5-be51-81f1-b57a-dfa94df44eee" class="bulleted-list"><li style="list-style-type:disc">Store admins see only their store’s data</li></ul><ul id="23fcfee5-be51-8192-8cf5-ca482e0c5d29" class="bulleted-list"><li style="list-style-type:disc">Financial consolidation available at super admin level</li></ul></li></ol><p id="23fcfee5-be51-8164-8123-f5a9475e4150" class=""><strong>Result:</strong> Complete multi-store rental business management with proper access controls.</p><hr id="23fcfee5-be51-8110-bb00-dba460fb9225"/><h3 id="23fcfee5-be51-81f4-a0b6-d4a56284dc85" class="">🔄 Workflow 9: Financial Reporting &amp; Management</h3><p id="23fcfee5-be51-814b-8b8d-d6b3e8418fec" class=""><strong>Available Reports:</strong><br/>1. <br/><strong>Booking Calendar Report</strong><br/>- View all bookings by date range<br/>- Filter by item, customer, status<br/>- Identify busy periods and availability gaps<br/></p><ol type="1" id="23fcfee5-be51-8145-b4aa-c78a24d8e18f" class="numbered-list" start="1"><li><strong>Item Utilization Report</strong><ul id="23fcfee5-be51-8149-b17b-ff50738a21aa" class="bulleted-list"><li style="list-style-type:disc">Most/least rented items</li></ul><ul id="23fcfee5-be51-8170-8182-c67c262978c2" class="bulleted-list"><li style="list-style-type:disc">Revenue per item</li></ul><ul id="23fcfee5-be51-81db-b8ab-e0287d4259ce" class="bulleted-list"><li style="list-style-type:disc">Utilization percentages</li></ul><ul id="23fcfee5-be51-812c-9ffb-eb2973016658" class="bulleted-list"><li style="list-style-type:disc">Inventory optimization insights</li></ul></li></ol><ol type="1" id="23fcfee5-be51-8115-b978-db244142e65e" class="numbered-list" start="2"><li><strong>Owner Commission Report</strong><ul id="23fcfee5-be51-8147-a555-cd570edb7389" class="bulleted-list"><li style="list-style-type:disc">Commission owed by owner</li></ul><ul id="23fcfee5-be51-81ef-808d-c27d9d0e2939" class="bulleted-list"><li style="list-style-type:disc">Payment status tracking</li></ul><ul id="23fcfee5-be51-8130-a07e-c21c31c95a69" class="bulleted-list"><li style="list-style-type:disc">Profitability analysis</li></ul></li></ol><ol type="1" id="23fcfee5-be51-81bf-8424-dbca41a8e457" class="numbered-list" start="3"><li><strong>Financial Reports (Standard ERPNext):</strong><ul id="23fcfee5-be51-81f6-a0f8-de434d7f0e9c" class="bulleted-list"><li style="list-style-type:disc">Profit &amp; Loss Statement (store-wise)</li></ul><ul id="23fcfee5-be51-81f6-9934-fadf2d84a0f7" class="bulleted-list"><li style="list-style-type:disc">Balance Sheet (store-wise)</li></ul><ul id="23fcfee5-be51-81e5-b8f8-de4a76b35975" class="bulleted-list"><li style="list-style-type:disc">Cash Flow Statement</li></ul><ul id="23fcfee5-be51-81a0-bf55-f90fd8a47307" class="bulleted-list"><li style="list-style-type:disc">General Ledger</li></ul></li></ol><p id="23fcfee5-be51-81e5-b6c7-c5a0fea7f792" class=""><strong>Result:</strong> Complete business intelligence and financial control.</p><hr id="23fcfee5-be51-811c-a398-c9adc38b4c48"/><h2 id="23fcfee5-be51-8105-b4d7-f3cabfaab355" class="">🎯 System Capabilities Summary</h2><h3 id="23fcfee5-be51-81d3-a310-c64ece2c7ca5" class="">✅ <strong>Core Features Achieved</strong></h3><ul id="23fcfee5-be51-81da-b88a-d32463becc43" class="bulleted-list"><li style="list-style-type:disc"><strong>Item Management</strong>: Add, categorize, approve, track rental items</li></ul><ul id="23fcfee5-be51-8199-9e28-c461d19f96d3" class="bulleted-list"><li style="list-style-type:disc"><strong>Customer Management</strong>: Unique identification, booking history</li></ul><ul id="23fcfee5-be51-81a9-9158-d861a5caf348" class="bulleted-list"><li style="list-style-type:disc"><strong>Booking Management</strong>: Date-based availability, conflict prevention</li></ul><ul id="23fcfee5-be51-8173-9b96-fd67fbc77045" class="bulleted-list"><li style="list-style-type:disc"><strong>Financial Integration</strong>: Complete accounting integration with ERPNext</li></ul><ul id="23fcfee5-be51-811b-a84b-c10650f87ff1" class="bulleted-list"><li style="list-style-type:disc"><strong>Multi-store Support</strong>: Independent store operations with consolidated oversight</li></ul><ul id="23fcfee5-be51-813e-a097-ccfe8cc55c83" class="bulleted-list"><li style="list-style-type:disc"><strong>Commission Management</strong>: Automated calculation and payment tracking</li></ul><ul id="23fcfee5-be51-81f1-936f-e1ea80b81e0e" class="bulleted-list"><li style="list-style-type:disc"><strong>Exchange Policy</strong>: No-refund exchange system</li></ul><ul id="23fcfee5-be51-8141-b6ea-eb4874331e6e" class="bulleted-list"><li style="list-style-type:disc"><strong>Status Tracking</strong>: Real-time item and booking status updates</li></ul><ul id="23fcfee5-be51-81f4-a322-f246e2e0e1a1" class="bulleted-list"><li style="list-style-type:disc"><strong>Reporting</strong>: Comprehensive business reports and analytics</li></ul><h3 id="23fcfee5-be51-81d8-aa5a-e6a5b9961f3c" class="">✅ <strong>Business Process Automation</strong></h3><ul id="23fcfee5-be51-8137-84a5-e5ba7b817b5f" class="bulleted-list"><li style="list-style-type:disc">Auto-creation of service items for rentals</li></ul><ul id="23fcfee5-be51-8150-ad09-c6bd77e12da7" class="bulleted-list"><li style="list-style-type:disc">Automatic supplier creation for third-party items</li></ul><ul id="23fcfee5-be51-814b-ab56-c9dc3db25dda" class="bulleted-list"><li style="list-style-type:disc">Date-based availability checking</li></ul><ul id="23fcfee5-be51-8135-9c50-d4d0a9dc277a" class="bulleted-list"><li style="list-style-type:disc">Commission calculation and liability booking</li></ul><ul id="23fcfee5-be51-81df-88dd-f5b1f29293fc" class="bulleted-list"><li style="list-style-type:disc">Caution deposit management</li></ul><ul id="23fcfee5-be51-8109-aafa-c9b65bc95af5" class="bulleted-list"><li style="list-style-type:disc">Item status lifecycle management</li></ul><ul id="23fcfee5-be51-810d-95b1-dd8f9484872c" class="bulleted-list"><li style="list-style-type:disc">Customer statistics updating</li></ul><h3 id="23fcfee5-be51-8178-8abd-c92f1f1894bb" class="">✅ <strong>ERPNext Integration Benefits</strong></h3><ul id="23fcfee5-be51-81cf-bbb6-da062b06b953" class="bulleted-list"><li style="list-style-type:disc">Complete accounting system (no external tools needed)</li></ul><ul id="23fcfee5-be51-81ce-a860-ea12aea6bffc" class="bulleted-list"><li style="list-style-type:disc">User management and role-based permissions</li></ul><ul id="23fcfee5-be51-81ce-8662-e098f8c07a44" class="bulleted-list"><li style="list-style-type:disc">Standard ERPNext mobile app compatibility</li></ul><ul id="23fcfee5-be51-8131-bc8c-d7adfabfc26c" class="bulleted-list"><li style="list-style-type:disc">Backup/restore procedures</li></ul><ul id="23fcfee5-be51-81ea-ac16-d84a2b75bbd4" class="bulleted-list"><li style="list-style-type:disc">Upgrade path maintenance</li></ul><ul id="23fcfee5-be51-8144-9c96-c852fe6a6760" class="bulleted-list"><li style="list-style-type:disc">Community support availability</li></ul><hr id="23fcfee5-be51-8129-be21-e2bceeace31b"/><h2 id="23fcfee5-be51-81b7-97c5-c5e598955192" class="">🧪 Final Testing Checklist</h2><h3 id="23fcfee5-be51-81ae-a54c-c1428ff289b8" class="">Test Scenario 1: Complete Rental Cycle</h3><ol type="1" id="23fcfee5-be51-81dc-9d46-c8f4d44a1390" class="numbered-list" start="1"><li>Create rental item → Check service item created</li></ol><ol type="1" id="23fcfee5-be51-81be-9c96-f90b61930129" class="numbered-list" start="2"><li>Create customer → Verify unique ID generation</li></ol><ol type="1" id="23fcfee5-be51-81a3-81d8-e8cf24a9e2b0" class="numbered-list" start="3"><li>Create booking for future date → Verify availability checking</li></ol><ol type="1" id="23fcfee5-be51-817b-8427-dff327c3276e" class="numbered-list" start="4"><li>Try booking same item for overlapping dates → Should fail</li></ol><ol type="1" id="23fcfee5-be51-814d-8fd4-fcdb48a605b8" class="numbered-list" start="5"><li>Deliver items → Check status updates</li></ol><ol type="1" id="23fcfee5-be51-81aa-a052-c8bf747c6aa7" class="numbered-list" start="6"><li>Return items → Verify completion and refund</li></ol><h3 id="23fcfee5-be51-81df-ac10-daa776a93a66" class="">Test Scenario 2: Exchange Booking</h3><ol type="1" id="23fcfee5-be51-8125-9d24-c6db17185230" class="numbered-list" start="1"><li>Create initial booking</li></ol><ol type="1" id="23fcfee5-be51-8193-898f-c27570e491f7" class="numbered-list" start="2"><li>Create exchange booking linking to original</li></ol><ol type="1" id="23fcfee5-be51-8121-b34a-e5c68e88608f" class="numbered-list" start="3"><li>Verify advance transfer and status updates</li></ol><h3 id="23fcfee5-be51-81de-ab28-e844ee777895" class="">Test Scenario 3: Third-party Item Commission</h3><ol type="1" id="23fcfee5-be51-81df-8e8e-d1f6fe17be7f" class="numbered-list" start="1"><li>Create third-party rental item</li></ol><ol type="1" id="23fcfee5-be51-81f7-9161-c6d3d62df2f2" class="numbered-list" start="2"><li>Make booking with the item</li></ol><ol type="1" id="23fcfee5-be51-81cc-9097-c8955a8b1ea9" class="numbered-list" start="3"><li>Verify commission liability creation</li></ol><ol type="1" id="23fcfee5-be51-8136-810e-dea01dbede75" class="numbered-list" start="4"><li>Process commission payment</li></ol><h3 id="23fcfee5-be51-8156-a16a-d1e33aa74037" class="">Test Scenario 4: Multi-store Operations</h3><ol type="1" id="23fcfee5-be51-815b-b818-d29c4a759690" class="numbered-list" start="1"><li>Create second company/store</li></ol><ol type="1" id="23fcfee5-be51-81d7-b1a1-f4d352950ecd" class="numbered-list" start="2"><li>Verify data isolation between stores</li></ol><ol type="1" id="23fcfee5-be51-81bb-9949-df4cc579ea8d" class="numbered-list" start="3"><li>Test super admin access to both stores</li></ol><hr id="23fcfee5-be51-810b-acd4-ce58fe0b1582"/><p id="23fcfee5-be51-8139-a51c-cd9f2782aa88" class="">This completes your rental management system implementation that fully leverages ERPNext’s capabilities while adding your specific business logic!</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"><hr/><details open="" style="padding-top:1em"><summary style="font-weight:600;font-size:1.25em;line-height:1.3;margin:0">Inline comments</summary><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background"> <mark class="highlight-yellow_background">caution deposit</mark></mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocJQVs7NRFBPdW4u_f--onVM73iHVGnR5RgqTIs21xzsjDJepGiM=s100" class="icon user-icon"/><span><b>Jaseem k</b> <time style="font-size:0.8em">Jul 31, 2025, 11:03 PM</time></span></span></div><div style="padding:0.2em">Caution deposit need not be added while adding rental item, it is added manually while creating invoice</div><div style="padding:0.3em"></div></li></ul></div><hr/></div><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background"><strong>(Sep 21):</strong></mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocJQVs7NRFBPdW4u_f--onVM73iHVGnR5RgqTIs21xzsjDJepGiM=s100" class="icon user-icon"/><span><b>Jaseem k</b> <time style="font-size:0.8em">Jul 31, 2025, 11:20 PM</time></span></span></div><div style="padding:0.2em">Date may vary to 22 or 23, make it according to window </div><div style="padding:0.3em"></div></li></ul></div><hr/></div><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background"><strong>Monthly commission processing</strong></mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocJQVs7NRFBPdW4u_f--onVM73iHVGnR5RgqTIs21xzsjDJepGiM=s100" class="icon user-icon"/><span><b>Jaseem k</b> <time style="font-size:0.8em">Jul 31, 2025, 11:23 PM</time></span></span></div><div style="padding:0.2em">There is no specific periodic interval for owner commission payment, just while sales happen the owner commission ledger under current liability in chart of accounts has to be updated automatically, also the payment given to that account should be recorded under payment entry</div><div style="padding:0.3em"></div></li></ul></div><hr/></div><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background">owner/supplier</mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocJQVs7NRFBPdW4u_f--onVM73iHVGnR5RgqTIs21xzsjDJepGiM=s100" class="icon user-icon"/><span><b>Jaseem k</b> <time style="font-size:0.8em">Jul 31, 2025, 11:24 PM</time></span></span></div><div style="padding:0.2em">In erpnext accounting terms, the owner and supplier of the dress are separate entities , even though they are same in real, the company owe rental commission to owner but dress purchase value to supplier (in accounting report)</div><div style="padding:0.3em"></div></li></ul></div><hr/></div><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background">Sep 18-21</mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocJQVs7NRFBPdW4u_f--onVM73iHVGnR5RgqTIs21xzsjDJepGiM=s100" class="icon user-icon"/><span><b>Jaseem k</b> <time style="font-size:0.8em">Jul 31, 2025, 11:07 PM</time></span></span></div><div style="padding:0.2em">The booking window should be from sep 18 to 23 ie 6 days window</div><div style="padding:0.3em"></div></li></ul></div><hr/></div><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background">Calculates caution deposit amount</mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocJQVs7NRFBPdW4u_f--onVM73iHVGnR5RgqTIs21xzsjDJepGiM=s100" class="icon user-icon"/><span><b>Jaseem k</b> <time style="font-size:0.8em">Jul 31, 2025, 11:08 PM</time></span></span></div><div style="padding:0.2em">No auto calculation, it is manually added by salesman</div><div style="padding:0.3em"></div></li></ul></div><hr/></div><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background">Auto-adds dry cleaning charges if specified</mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocJQVs7NRFBPdW4u_f--onVM73iHVGnR5RgqTIs21xzsjDJepGiM=s100" class="icon user-icon"/><span><b>Jaseem k</b> <time style="font-size:0.8em">Jul 31, 2025, 11:19 PM</time></span></span></div><div style="padding:0.2em">No dry cleaning charges , remove it from the invoice but keep it in expense account (indirect expenses category in chart of accounts)</div><div style="padding:0.3em"></div></li></ul></div><hr/></div><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background">Dry cleaning expense recorded</mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocKPZDVVnnhjzTiWhOYSPOUQqTi4P6fLtGjy6lh0pTCSi4E=s100" class="icon user-icon"/><span><b>Ananth.C Jayan</b> <time style="font-size:0.8em">Jul 29, 2025, 4:48 PM</time></span></span></div><div style="padding:0.2em">Dry wash may be done in bulk , or done that time itself , </div><div style="padding:0.3em"></div></li></ul></div><hr/></div><div class="indented"><div><p style="padding:0.2em"><b>Block text</b>: <mark class="highlight-yellow_background">Processes caution deposit refund</mark></p><ul class="toggle"><li><div><span class="user" style="padding:0.2em"><img src="https://lh3.googleusercontent.com/a/ACg8ocKPZDVVnnhjzTiWhOYSPOUQqTi4P6fLtGjy6lh0pTCSi4E=s100" class="icon user-icon"/><span><b>Ananth.C Jayan</b> <time style="font-size:0.8em">Jul 29, 2025, 4:50 PM</time></span></span></div><div style="padding:0.2em">caution deposit refund should be done before dry cleaning process only once then item is returned without sny damage , if Damage is there , we will ciut some amount from caution deposit</div><div style="padding:0.3em"></div></li></ul></div><hr/></div></details></span></body></html>
