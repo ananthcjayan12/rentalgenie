@@ -109,7 +109,6 @@ def create_rental_service_item(item_doc):
     
     # Link service item back to original item
     frappe.db.set_value("Item", item_doc.name, "rental_service_item", service_item.name)
-    frappe.db.set_value("Item", item_doc.name, "rental_service_item", service_item.name)
 
 def handle_third_party_supplier(item_doc):
     """Create or link third party supplier"""

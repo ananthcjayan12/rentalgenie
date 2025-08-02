@@ -166,6 +166,16 @@ def create_item_custom_fields():
             "read_only": 1,
             "default": 0,
             "insert_after": "next_maintenance_due"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "rental_service_item",
+            "label": "Rental Service Item",
+            "fieldtype": "Link",
+            "options": "Item",
+            "depends_on": "is_rental_item",
+            "read_only": 1,
+            "insert_after": "total_rental_count"
         }
     ]
     
