@@ -1,357 +1,260 @@
 # Rental Manag---
 
-## 📝 Current Phase: Phase 3 - Customer Enhancement 🚀 IN PROGRESS
+## 📝 Current Phase: Phase 3 - Customer Enhancement 🧪 TESTING
 
-### 🧪 Phase 2 Testing Checklist:
+### 🧪 Phase 3 Testing Checklist:
 
-### Test 2.1: Enhanced Item Fields ⏳
-- [ ] Navigate to **Stock → Item → New**
-- [ ] Verify "Item Management" section appears after Third Party fields
+### Test 3.1: Customer Custom Fields ⏳
+- [ ] Navigate to **Selling → Customer → New**
+- [ ] Verify "Customer Management" section appears after Mobile No field
 - [ ] Check new fields are present:
-  - [ ] Purchase Date (Date field)
-  - [ ] Purchase Cost (Currency field)
-  - [ ] Current Condition (Rating 1-5)
-  - [ ] Last Maintenance Date (Read-only)
-  - [ ] Next Maintenance Due (Date field)
-  - [ ] Total Times Rented (Read-only, default 0)
+  - [ ] Unique Customer ID (Read-only)
+  - [ ] Mobile Number (Required field)
+  - [ ] Total Bookings (Read-only, default 0)
+  - [ ] Last Booking Date (Read-only)
+  - [ ] Total Rental Amount (Read-only, default 0)
+- [ ] Verify "Customer Notes" section appears and is collapsible
+- [ ] Check notes fields:
+  - [ ] Customer Preferences (Text field)
+  - [ ] Special Instructions (Text field)
 
-### Test 2.2: Enhanced Item Creation ⏳
-- [ ] Create item: `TEST-DRESS-002` with all new fields
-- [ ] Verify auto-generated description appears
-- [ ] Check approval status defaults to "Pending Approval"
-- [ ] Confirm service item `TEST-DRESS-002-RENTAL` is created
-- [ ] Verify stock entry is automatically created
+### Test 3.2: Customer ID Generation ⏳
+- [ ] Create customer with name: `Rajesh Kumar` and mobile: `9876543210`
+- [ ] Verify Unique Customer ID auto-generated: `RAJ3210`
+- [ ] Create another customer with name: `Rajesh Sharma` and mobile: `9876543210`
+- [ ] Should show error: "Mobile number already registered"
+- [ ] Create customer with name: `Ram` and mobile: `9876543211`
+- [ ] Verify ID generated as `RAMX211` (padded with X for short names)
 
-### Test 2.3: Enhanced Validations ⏳
-- [ ] Test rental rate = 0 (should show error)
-- [ ] Test third-party with commission = 0% (should show error)
-- [ ] Test third-party with commission > 100% (should show error)
+### Test 3.3: Mobile Number Validation ⏳
+- [ ] Try mobile: `12345` → Should show validation error
+- [ ] Try mobile: `91987654321` → Should auto-format to `+919876543210`
+- [ ] Try mobile: `+919876543210` → Should accept as valid
+- [ ] Try mobile: `09876543210` → Should remove leading 0 and format
+- [ ] Try mobile: `5876543210` → Should show error (doesn't start with 6-9)
 
-### Test 2.4: Warehouse Creation 🔧 FIXING
-- [ ] Navigate to **Stock → Warehouse**
-- [ ] **ISSUE FOUND**: Rental warehouses not created during installation
-- [ ] **FIX APPLIED**: Enhanced warehouse creation logic
-- [ ] **SOLUTION**: Reinstall app OR run manual warehouse creation
-- [ ] Verify these warehouses exist after fix:
-  - [ ] "Rental Store - [Company]"
-  - [ ] "Rental Display - [Company]"  
-  - [ ] "Rental Maintenance - [Company]"
+### Test 3.4: Duplicate Mobile Prevention ⏳
+- [ ] Create first customer: Name: `John`, Mobile: `9876543212`
+- [ ] Try creating second customer: Name: `Jane`, Mobile: `9876543212`
+- [ ] Should show error with existing customer name
+- [ ] Verify first customer can be edited without mobile number error
 
-**🛠️ To Fix Warehouse Issue:**
+### Test 3.5: Customer Statistics ⏳
+- [ ] Create a customer successfully
+- [ ] Verify Total Bookings = 0
+- [ ] Verify Last Booking Date = empty
+- [ ] Verify Total Rental Amount = 0
+- [ ] (Statistics will be updated when we implement Sales Invoice in Phase 4)
+
+---
+
+## 🧪 **Step-by-Step Testing Instructions:**
+
+### **Test 1: Reinstall App with Phase 3 Features**
+
 ```bash
-# Option 1: Reinstall app
 bench --site your-site.localhost uninstall-app rental_management
 bench --site your-site.localhost install-app rental_management
-
-# Option 2: Manual creation (if needed)
-bench --site your-site.localhost console
-from rental_management.setup.install import create_warehouses_manually
-create_warehouses_manually()
 ```
 
-### Test 2.5: Stock Management ⏳
-- [ ] Check **Stock → Stock Entry** for auto-created entry
-- [ ] Verify entry type is "Material Receipt"
-- [ ] Check quantity = 1, proper warehouse assignment
-- [ ] Confirm **Stock → Stock Balance** shows item with qty = 1
+**Expected Output:**
+```
+Installing rental_management...
+Setting up Rental Management...
+Item custom fields created successfully!
+Customer custom fields created successfully!
+Creating warehouses for company: [Your Company]
+✅ Created warehouse: Rental Store - [Your Company]
+✅ Created warehouse: Rental Display - [Your Company]  
+✅ Created warehouse: Rental Maintenance - [Your Company]
+Rental Management setup completed!
+```
+
+### **Test 2: Verify Customer Form Structure**
+
+1. **Go to Selling → Customer → New**
+2. **Check form layout:**
+   - "Customer Management" section should appear after Mobile No
+   - Should be collapsible
+   - All fields should be properly arranged
+
+### **Test 3: Customer ID Generation**
+
+**Test Case 1: Normal Name**
+1. **Create customer:**
+   - Customer Name: `Rajesh Kumar`
+   - Mobile Number: `9876543210`
+2. **Save and verify:**
+   - Unique Customer ID should auto-generate as `RAJ3210`
+   - Mobile should be formatted as `+919876543210`
+
+**Test Case 2: Short Name**
+1. **Create customer:**
+   - Customer Name: `Ram`
+   - Mobile Number: `9876543211`
+2. **Verify:**
+   - ID should be `RAMX211` (padded with X)
+
+**Test Case 3: Duplicate ID Handling**
+1. **Create customer:**
+   - Customer Name: `Rajesh Gupta`
+   - Mobile Number: `9876543210` (same mobile as first)
+2. **Should show error:** "Mobile number +919876543210 is already registered with customer [Name]"
+
+### **Test 4: Mobile Number Validation**
+
+**Test Case 1: Invalid Numbers**
+- Try `12345` → Should show: "Please enter a valid Indian mobile number"
+- Try `5876543210` → Should show error (doesn't start with 6-9)
+
+**Test Case 2: Format Conversion**
+- Enter `91987654321` → Should auto-format to `+919876543210`
+- Enter `09876543210` → Should remove 0 and format to `+919876543210`
+- Enter `+919876543210` → Should accept as valid
+
+### **Test 5: Customer Statistics Fields**
+
+1. **Create any valid customer**
+2. **Verify default values:**
+   - Total Bookings = 0
+   - Last Booking Date = (empty)
+   - Total Rental Amount = 0.00
 
 ---
 
-## ⚠️ If Phase 2 Testing Finds Issues:
-**Report any errors and we'll debug before moving to Phase 3**
+## 🧪 **Expected Results After Testing:**
 
-## ✅ Phase 2 Sign-off:
-**Once all tests pass, we'll proceed to Phase 3: Customer Enhancement**nt Implementation Progress
+✅ **Customer Form Should Have:**
+- New "Customer Management" section with all fields
+- "Customer Notes" section for preferences/instructions
+- Proper field dependencies and validations
 
-## 📊 Overall Progress: 55% Complete
+✅ **Automation Should Work:**
+- Unique Customer ID auto-generation
+- Mobile number validation and formatting
+- Duplicate mobile prevention
+- Statistics fields initialized
 
-### 🎯 Phase Status Overview
-- ✅ **Prerequisites**: Environment setup complete
-- ✅ **Phase 1**: Basic Setup (Day 1-2) - **COMPLETED & TESTED** ✅
-- ✅ **Phase 2**: Item Management (Day 3-5) - **COMPLETED & TESTED** ✅
-- 🚧 **Phase 3**: Customer Enhancement (Day 6-7) - **IN PROGRESS** 🚀
-- ⏳ **Phase 4**: Sales Invoice Enhancement (Day 8-10) - **READY TO START**
-- ⏸️ **Phase 5**: Financial Integration (Day 11-12) - Pending
-- ⏸️ **Phase 6**: Reports & Dashboard (Day 13-15) - Pending
-- ⏸️ **Phase 7**: Testing & Workflows (Day 16-18) - Pending
-
----
-
-## 📝 Current Phase: Phase 2 - Item Management � IN PROGRESS
-
-### ✅ Phase 1 - COMPLETED SUCCESSFULLY!
-
-**All Phase 1 features implemented and tested:**
-- [x] Item custom fields creation ✅
-- [x] Item groups setup ✅  
-- [x] Service item automation ✅
-- [x] Third-party supplier automation ✅
-- [x] Item Price creation for service items ✅
-- [x] Field dependencies and validations ✅
-
-**Key Tests Passed:**
-- [x] ✅ Item rental fields appear and work correctly
-- [x] ✅ Item groups created properly  
-- [x] ✅ Service items auto-created with correct pricing
-- [x] ✅ Third-party supplier logic works
-- [x] ✅ Field dependencies and validations work
-- [x] ✅ No JavaScript/Python errors
+✅ **Error Handling Should Show:**
+- Mobile validation errors
+- Duplicate mobile errors
+- Proper error messages
 
 ---
 
-## 🚧 Phase 2: Item Management - Tasks
+## ⚠️ **If Phase 3 Testing Finds Issues:**
+**Report any errors and we'll debug before moving to Phase 4**
 
-### Step 2.1: Enhanced Item Automation ✅
-- [x] Enhanced item validation and defaults
-- [x] Auto-generation of item descriptions
-- [x] Enhanced third-party item validations
-- [x] Approval status management
+## ✅ **Phase 3 Sign-off Criteria:**
+**Before moving to Phase 4:**
 
-### Step 2.2: Item Stock Management ✅
-- [x] Initial stock entry creation for rental items
-- [x] Default warehouse setup for rental inventory
-- [x] Stock valuation based on rental rates
-- [x] Error handling for stock operations
+1. ✅ **Customer custom fields appear and work correctly**
+2. ✅ **Unique Customer ID generation works**
+3. ✅ **Mobile number validation and formatting works**
+4. ✅ **Duplicate mobile prevention works**
+5. ✅ **Customer statistics fields are initialized**
+6. ✅ **No errors in customer creation process**
 
-### Step 2.3: Additional Item Fields ✅
-- [x] Purchase date and cost tracking
-- [x] Condition rating system
-- [x] Maintenance scheduling fields
-- [x] Rental statistics tracking
-
-### Step 2.4: Item Utility Functions ✅
-- [x] Item approval/rejection workflow
-- [x] Availability checking with date ranges
-- [x] Condition update tracking
-- [x] Utilization calculation
-- [x] Rental history tracking
-
-### 📂 New Files Created in Phase 2:
-6. ✅ `rental_management/utils/item_utils.py` - Item management utilities
-7. ✅ `rental_management/utils/server_scripts.py` - Server script templates
-8. ✅ Enhanced `rental_management/setup/install.py` - Warehouse creation
-9. ✅ Enhanced `rental_management/custom_fields/item_fields.py` - Additional fields
+## 🚀 **After Successful Phase 3 Testing:**
+**We'll proceed to Phase 4: Sales Invoice Enhancement (Booking System)**
 
 ---
 
-## 🧪 Phase 2 Testing Checklist:
+## 🧪 Phase 4: Sales Invoice Enhancement (Booking System) - READY FOR TESTING
 
-### Test 2.1: Enhanced Item Creation
-- [ ] Create rental item and verify all new fields appear
-- [ ] Test enhanced validations (commission %, rental rate)
-- [ ] Verify auto-description generation
-- [ ] Check approval status defaults to "Pending Approval"
+### 🧪 Phase 4 Testing Checklist:
 
-### Test 2.2: Stock Management  
-- [ ] Create rental item and verify stock entry is created
-- [ ] Check if rental warehouses are created
-- [ ] Verify stock valuation calculation
+### Test 4.1: Sales Invoice Custom Fields ⏳
+- [ ] Navigate to **Accounts → Sales Invoice → New**
+- [ ] Check "Rental Booking" checkbox
+- [ ] Verify "Rental Booking Details" section appears and contains:
+  - [ ] Function Date (Date field)
+  - [ ] Rental Duration (Days) - default 6
+  - [ ] Rental Start Date (Read-only, auto-calculated)
+  - [ ] Rental End Date (Read-only, auto-calculated)
+  - [ ] Booking Status (Read-only, default "Draft")
+- [ ] Verify "Caution Deposit & Commission" section contains:
+  - [ ] Caution Deposit Amount (Currency)
+  - [ ] Caution Deposit Refunded (Read-only)
+  - [ ] Total Owner Commission (Read-only)
+  - [ ] Commission Paid to Owners (Read-only)
+- [ ] Verify "Exchange Booking" section contains:
+  - [ ] Exchange Booking (Checkbox)
+  - [ ] Original Booking Reference (Link)
+  - [ ] Exchange Amount Adjustment (Currency)
+  - [ ] Exchange Notes (Text)
+- [ ] Verify "Delivery & Return Timing" section contains:
+  - [ ] Actual Delivery Time (Read-only)
+  - [ ] Actual Return Time (Read-only)
+  - [ ] Delivery Notes (Text)
+  - [ ] Return Notes (Text)
 
-### Test 2.3: Item Management Functions
-- [ ] Test item approval workflow
-- [ ] Test availability checking with date ranges
-- [ ] Verify condition rating and maintenance fields work
+### Test 4.2: Rental Date Calculation ⏳
+- [ ] Create rental booking with Function Date: September 25, 2025
+- [ ] Set Rental Duration: 6 days
+- [ ] Verify Rental Start Date auto-calculates to: September 23, 2025 (2 days before)
+- [ ] Verify Rental End Date auto-calculates to: September 29, 2025 (start + 6 days)
+- [ ] Change Function Date and verify dates recalculate
+- [ ] Change Duration and verify end date updates
 
----
+### Test 4.3: Item Availability Validation ⏳
+- [ ] Add rental items to booking
+- [ ] Try booking same item for overlapping dates
+- [ ] Should show error: "Item [CODE] is already booked from [DATE] to [DATE]"
+- [ ] Test with non-overlapping dates - should work fine
+- [ ] Test with multiple quantities of same item
 
-## ✅ Phase 2 Sign-off Criteria:
-**Before moving to Phase 3:**
+### Test 4.4: Booking Commission Calculation ⏳
+- [ ] Add third-party items with owner commission percentage
+- [ ] Verify Total Owner Commission auto-calculates
+- [ ] Example: Item amount ₹1000, Commission 30% = ₹300 commission
+- [ ] Test with multiple third-party items
+- [ ] Verify commission calculation updates when amounts change
 
-1. ✅ **Enhanced item fields work correctly**
-2. ✅ **Stock entry automation works**  
-3. ✅ **Approval workflow functions properly**
-4. ✅ **Item utility functions work as expected**
-5. ✅ **No errors in item creation process**
+### Test 4.5: Exchange Booking Logic ⏳
+- [ ] Create original booking (Booking A)
+- [ ] Create new booking and check "Exchange Booking"
+- [ ] Select original booking in "Original Booking Reference"
+- [ ] Verify exchange validation works
+- [ ] Submit exchange booking
+- [ ] Check original booking status changes to "Exchanged"
 
-### 📂 Files Created:
-1. ✅ `rental_management/custom_fields/item_fields.py`
-2. ✅ `rental_management/hooks.py` (updated)
-3. ✅ `rental_management/setup/install.py`
-4. ✅ `rental_management/automations/item_automation.py`
-5. ✅ Directory structure with __init__.py files
+### Test 4.6: Booking Status Management ⏳
+- [ ] Submit booking - status should change to "Confirmed"
+- [ ] Use quick actions to update status:
+  - [ ] Mark as "Out for Rental" - delivery time recorded
+  - [ ] Mark as "Returned" - return time recorded  
+  - [ ] Mark as "Completed" - booking finalized
+- [ ] Test status progression workflow
 
----
-
-## 🚀 Phase 1 - DETAILED TESTING CHECKLIST:
-
-### ✅ 1. Installation Verification
-- [x] App installed successfully without errors
-- [ ] Check installation log for any warnings
-
-### 🧪 2. Custom Fields Testing
-
-#### Test 2.1: Item Form Structure
-- [ ] Navigate to **Stock → Item → New**
-- [ ] Verify "Rental Configuration" section appears after Image field
-- [ ] Verify section is collapsible
-- [ ] Check all fields are present in correct order:
-  - [ ] "Enable for Rental" (Checkbox)
-  - [ ] "Rental Rate (₹/day)" (Currency) - should appear only when checkbox is checked
-  - [ ] "Item Category" (Select) - options: Dress, Ornament, Accessory, Other
-  - [ ] "Current Status" (Select) - default: Available
-  - [ ] "Approval Status" (Read-only) - default: Pending Approval
-- [ ] Verify "Third Party Owner Details" section appears and is collapsible
-- [ ] Check third party fields:
-  - [ ] "Third Party Owned" (Checkbox)
-  - [ ] "Owner Commission %" - appears only when third party is checked
-  - [ ] "Owner (Supplier)" - Link to Supplier doctype
-
-#### Test 2.2: Field Dependencies
-- [x ] **Test "Enable for Rental" dependency:**
-  - Uncheck "Enable for Rental" → rental fields should disappear
-  - Check "Enable for Rental" → rental fields should appear
-- [ ] **Test "Third Party Owned" dependency:**
-  - Uncheck → commission and supplier fields disappear
-  - Check → commission and supplier fields appear
-- [ ] **Test mandatory validation:**
-  - Enable rental → try to save without rental rate → should show error
-
-### 🧪 3. Item Groups Testing
-- [ ] Navigate to **Stock → Item Group**
-- [ ] Verify these groups were created:
-  - [ ] "Rental Items" (parent: All Item Groups)
-  - [ ] "Dresses" (parent: Rental Items)  
-  - [ ] "Ornaments" (parent: Rental Items)
-  - [ ] "Accessories" (parent: Rental Items)
-
-### 🧪 4. Item Automation Testing
-
-#### Test 4.1: Create Rental Item (Own Item)
-- [ ] Create new item with these details:
-  - Item Code: `TEST-DRESS-001`
-  - Item Name: `Test Wedding Dress`
-  - Enable for Rental: ✅
-  - Rental Rate: `500`
-  - Item Category: `Dress`
-  - Third Party Owned: ❌ (unchecked)
-- [ ] **Save the item**
-- [ ] **Verify automation worked:**
-  - [ ] Item Group automatically set to "Dresses"
-  - [ ] Stock UOM set to "Nos"
-  - [ ] Is Stock Item = 1
-  - [ ] Include Item in Manufacturing = 0
-  - [ ] Is Fixed Asset = 0
-
-#### Test 4.2: Verify Service Item Creation
-- [ ] Navigate to **Stock → Item** 
-- [ ] Search for `TEST-DRESS-001-RENTAL`
-- [ ] **Verify service item was created with:**
-  - [ ] Item Name: "Test Wedding Dress - Rental Service"
-  - [ ] Item Group: "Services"
-  - [ ] Is Stock Item = 0 (service item)
-  - [ ] Is Sales Item = 1
-  - [ ] Standard Rate = 500 (same as rental rate)
-
-#### Test 4.3: Create Third Party Item
-- [ ] Create another item:
-  - Item Code: `TEST-ORN-001`
-  - Item Name: `Test Gold Necklace`
-  - Enable for Rental: ✅
-  - Rental Rate: `1000`
-  - Item Category: `Ornament`
-  - Third Party Owned: ✅
-  - Owner Commission %: `30`
-- [ ] **Save the item**
-- [ ] **Verify automation:**
-  - [ ] Item Group set to "Ornaments"
-  - [ ] Service item `TEST-ORN-001-RENTAL` created
-  - [ ] Auto-created supplier with name like "Owner-TEST-ORN-001"
-
-#### Test 4.4: Verify Supplier Creation
-- [ ] Navigate to **Buying → Supplier**
-- [ ] Search for supplier created (e.g., "Owner-TEST-ORN-001")
-- [ ] **Verify supplier details:**
-  - [ ] Supplier Type: "Individual"
-  - [ ] Supplier Group: "Local"
-
-### 🧪 5. Database Verification
-- [ ] **Check custom fields in database:**
-  ```bash
-  bench --site your-site.localhost mariadb
-  ```
-  ```sql
-  desc tabItem;
-  ```
-  - [ ] Verify rental custom fields exist in Item table
-  - [ ] Check field names are correct (snake_case)
-
-- [ ] **Check data integrity:**
-  ```sql
-  SELECT item_code, item_name, is_rental_item, rental_rate_per_day, 
-         rental_item_type, current_rental_status 
-  FROM tabItem 
-  WHERE is_rental_item = 1;
-  ```
-
-### 🧪 6. Error Handling Testing
-
-#### Test 6.1: Validation Testing
-- [ ] **Test missing rental rate:**
-  - Enable rental → leave rental rate empty → save
-  - Should show: "Rental Rate Per Day is mandatory for rental items"
-
-#### Test 6.2: Create duplicate items
-- [ ] Try creating item with same item code
-- [ ] Should show standard ERPNext duplicate error
-
-### 🧪 7. UI/UX Testing
-- [ ] **Form layout looks good:**
-  - [ ] Fields are properly arranged
-  - [ ] Column breaks work correctly
-  - [ ] Sections collapse/expand properly
-- [ ] **Field labels are clear and appropriate**
-- [ ] **Default values are set correctly**
-
-### 🧪 8. Permission Testing
-- [ ] **Log in as different user roles and verify access:**
-  - [ ] Stock Manager can create rental items
-  - [ ] Sales User can view rental items
-  - [ ] Test role-based permissions work as expected
-
-### 🧪 9. Performance Testing
-- [ ] **Create multiple rental items (5-10) and verify:**
-  - [ ] Form loads quickly
-  - [ ] Save operation is fast
-  - [ ] List view shows items correctly
+### Test 4.7: Caution Deposit Management ⏳
+- [ ] Create booking with caution deposit amount
+- [ ] Submit booking - journal entry should be created
+- [ ] Process partial refund
+- [ ] Process full refund
+- [ ] Verify accounting entries are correct
 
 ---
 
-## ✅ Phase 1 Sign-off Criteria:
-**Before moving to Phase 2, ALL of the above tests should pass. Specifically verify:**
+## ✅ **Phase 4 Sign-off Criteria:**
+**Before moving to Phase 5:**
 
-1. ✅ **Item rental fields appear and work correctly**
-2. ✅ **Item groups are created properly**  
-3. ✅ **Service items are auto-created for rental items**
-4. ✅ **Third-party supplier logic works**
-5. ✅ **Field dependencies and validations work**
-6. ✅ **No JavaScript/Python errors in browser console**
-
----
-
-## 🚨 Common Issues to Watch For:
-- **Custom fields not showing**: Clear cache and reload
-- **Service item not created**: Check error logs
-- **Supplier not created**: Verify permissions
-- **Validation errors**: Check field dependencies
-
-**If any test fails, we'll debug before proceeding to Phase 2!**
+1. ✅ **Sales Invoice custom fields work correctly**
+2. ✅ **Rental date calculation works automatically**
+3. ✅ **Item availability validation prevents conflicts**
+4. ✅ **Commission calculation works for third-party items**
+5. ✅ **Exchange booking logic works properly**
+6. ✅ **Booking status management works**
+7. ✅ **Caution deposit accounting entries are created**
+8. ✅ **No errors in booking creation/submission process**
 
 ---
 
-## 🚀 Next Steps:
-1. Implement Phase 1: Basic Setup
-2. Test Item custom fields creation
-3. Verify automation works
-4. Move to Phase 2: Item Management
+## 🚀 **Ready to Proceed to Phase 5: Financial Integration**
+**After successful Phase 4 testing, we'll implement:**
+- Chart of accounts for rental business
+- Automated accounting entries
+- Commission payment processing
+- Revenue recognition and reporting
 
----
-
-## 📋 Implementation Notes:
-- Using 6-day rental window (2 days before + 4 days after function)
-- Manual caution deposit entry (no automation)
-- Dry cleaning tracked as expense only
-- Owner commission auto-updated in ledger
-
----
-
-**Last Updated**: 2 August 2025
+**Last Updated**: 2 August 2025 - Phase 4 Implementation Complete

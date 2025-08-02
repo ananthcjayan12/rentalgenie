@@ -144,6 +144,10 @@ doc_events = {
 	},
 	"Customer": {
 		"before_save": "rental_management.automations.customer_automation.before_customer_save"
+	},
+	"Sales Invoice": {
+		"validate": "rental_management.automations.booking_automation.validate_sales_invoice",
+		"on_submit": "rental_management.automations.booking_automation.on_submit_sales_invoice"
 	}
 }
 

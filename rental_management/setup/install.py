@@ -1,6 +1,7 @@
 import frappe
 from rental_management.custom_fields.item_fields import create_item_custom_fields
 from rental_management.custom_fields.customer_fields import create_customer_custom_fields
+from rental_management.custom_fields.sales_invoice_fields import create_sales_invoice_custom_fields
 
 def after_install():
     """Setup custom fields and configurations after app installation"""
@@ -9,6 +10,7 @@ def after_install():
     # Create custom fields
     create_item_custom_fields()
     create_customer_custom_fields()
+    create_sales_invoice_custom_fields()
     
     # Create default item groups if they don't exist
     create_rental_item_groups()

@@ -1,0 +1,322 @@
+import frappe
+from frappe import _
+from frappe.utils import add_days, getdate, now_datetime, flt
+
+def validate_sales_invoice(doc, method):
+    """Validate rental booking before saving"""
+    if doc.is_rental_booking:
+        # Calculate rental dates
+        calculate_rental_dates(doc)
+        
+        # Check item availability
+        check_item_availability(doc)
+        
+        # Calculate rental amounts
+        calculate_rental_amounts(doc)
+        
+        # Validate exchange booking
+        if doc.is_exchange_booking:
+            validate_exchange_booking(doc)
+
+def calculate_rental_dates(doc):
+    """Calculate rental start and end dates based on function date"""
+    if doc.function_date and doc.rental_duration_days:
+        function_date = getdate(doc.function_date)
+        
+        # Calculate rental start date (2 days before function)
+        rental_start_date = add_days(function_date, -2)
+        
+        # Calculate rental end date (start date + rental duration)
+        rental_end_date = add_days(rental_start_date, doc.rental_duration_days)
+        
+        doc.rental_start_date = rental_start_date
+        doc.rental_end_date = rental_end_date
+
+def check_item_availability(doc):
+    """Check if rental items are available for the booking period"""
+    if not doc.rental_start_date or not doc.rental_end_date:
+        return
+    
+    for item in doc.items:
+        # Get item details to check if it's a rental item
+        item_doc = frappe.get_doc("Item", item.item_code)
+        
+        if item_doc.is_rental_item:
+            # Check if item is available for the rental period
+            conflicting_bookings = frappe.db.sql("""
+                SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date
+                FROM `tabSales Invoice` si
+                JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+                WHERE sii.item_code = %s
+                AND si.is_rental_booking = 1
+                AND si.docstatus = 1
+                AND si.booking_status NOT IN ('Cancelled', 'Completed', 'Exchanged')
+                AND si.name != %s
+                AND (
+                    (si.rental_start_date <= %s AND si.rental_end_date >= %s) OR
+                    (si.rental_start_date <= %s AND si.rental_end_date >= %s) OR
+                    (si.rental_start_date >= %s AND si.rental_end_date <= %s)
+                )
+            """, (
+                item.item_code, 
+                doc.name or "",
+                doc.rental_start_date, doc.rental_start_date,
+                doc.rental_end_date, doc.rental_end_date,
+                doc.rental_start_date, doc.rental_end_date
+            ), as_dict=True)
+            
+            if conflicting_bookings:
+                conflict = conflicting_bookings[0]
+                frappe.throw(_(
+                    "Item {0} is already booked from {1} to {2} for customer {3} (Booking: {4})"
+                ).format(
+                    item.item_code,
+                    conflict.rental_start_date,
+                    conflict.rental_end_date,
+                    conflict.customer,
+                    conflict.name
+                ))
+
+def calculate_rental_amounts(doc):
+    """Calculate rental amounts and commission automatically"""
+    total_commission = 0
+    caution_deposit = 0
+    
+    for item in doc.items:
+        if item.item_code:
+            item_doc = frappe.get_doc("Item", item.item_code)
+            
+            if item_doc.get("is_rental_item"):
+                # Calculate commission for this item
+                commission_rate = item_doc.get("owner_commission_percentage", 0)
+                if commission_rate and item.amount:
+                    item_commission = (item.amount * commission_rate) / 100
+                    total_commission += item_commission
+                
+                # Add to caution deposit calculation if needed
+                item_caution = item_doc.get("suggested_caution_deposit", 0)
+                if item_caution > caution_deposit:
+                    caution_deposit = item_caution
+    
+    doc.total_owner_commission = total_commission
+    
+    # Set caution deposit if not already set
+    if not doc.caution_deposit_amount:
+        doc.caution_deposit_amount = caution_deposit or 5000  # Default amount
+
+def validate_exchange_booking(doc):
+    """Validate exchange booking details"""
+    if not doc.original_booking_reference:
+        frappe.throw(_("Original Booking Reference is required for exchange bookings"))
+    
+    # Verify original booking exists and is valid
+    original_booking = frappe.get_doc("Sales Invoice", doc.original_booking_reference)
+    if not original_booking.is_rental_booking:
+        frappe.throw(_("Original booking must be a rental booking"))
+    
+    if original_booking.booking_status in ['Cancelled', 'Completed', 'Exchanged']:
+        frappe.throw(_("Cannot exchange booking with status: {0}").format(original_booking.booking_status))
+    
+    # Transfer advance from original booking
+    if not doc.advance_amount and original_booking.get("advance_amount"):
+        doc.advance_amount = original_booking.advance_amount
+
+def on_submit_sales_invoice(doc, method):
+    """Handle post-submission tasks for rental bookings"""
+    if doc.is_rental_booking:
+        # Update booking status
+        doc.booking_status = "Confirmed"
+        
+        # Update item rental status
+        update_item_rental_status(doc, "Booked")
+        
+        # Create caution deposit entry if amount is specified
+        if doc.caution_deposit_amount:
+            create_caution_deposit_entry(doc)
+        
+        # Update customer statistics
+        update_customer_stats(doc)
+        
+        # Handle exchange booking
+        if doc.is_exchange_booking and doc.original_booking_reference:
+            # Mark original booking as exchanged
+            frappe.db.set_value("Sales Invoice", doc.original_booking_reference, "booking_status", "Exchanged")
+
+def on_cancel_sales_invoice(doc, method):
+    """Handle booking cancellation"""
+    if doc.is_rental_booking:
+        # Update booking status
+        doc.booking_status = "Cancelled"
+        
+        # Update item rental status back to available
+        update_item_rental_status(doc, "Available")
+        
+        # Update customer stats
+        update_customer_stats(doc)
+        
+        # If this was an exchange booking, revert original booking status
+        if doc.is_exchange_booking and doc.original_booking_reference:
+            frappe.db.set_value("Sales Invoice", doc.original_booking_reference, "booking_status", "Confirmed")
+
+def update_item_rental_status(doc, status):
+    """Update rental status of items in the booking"""
+    for item in doc.items:
+        # Check if item is a rental item
+        item_doc = frappe.get_doc("Item", item.item_code)
+        if item_doc.is_rental_item:
+            frappe.db.set_value("Item", item.item_code, "current_rental_status", status)
+
+def create_caution_deposit_entry(doc):
+    """Create journal entry for caution deposit liability"""
+    try:
+        company_abbr = frappe.get_value("Company", doc.company, "abbr")
+        
+        # Create caution deposit liability account if it doesn't exist
+        caution_deposit_account = create_caution_deposit_account(doc.company)
+        
+        # Get default cash account
+        cash_account = frappe.get_value("Company", doc.company, "default_cash_account")
+        if not cash_account:
+            cash_account = frappe.db.get_value("Account", 
+                                             {"account_type": "Cash", "company": doc.company}, 
+                                             "name")
+        
+        if not cash_account:
+            frappe.log_error(f"No cash account found for company {doc.company}")
+            return
+        
+        # Create journal entry
+        je = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry",
+            "posting_date": doc.posting_date,
+            "company": doc.company,
+            "user_remark": f"Caution deposit received for booking {doc.name}",
+            "accounts": [
+                {
+                    "account": cash_account,
+                    "debit_in_account_currency": doc.caution_deposit_amount,
+                    "credit_in_account_currency": 0,
+                    "reference_type": "Sales Invoice",
+                    "reference_name": doc.name
+                },
+                {
+                    "account": caution_deposit_account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": doc.caution_deposit_amount,
+                    "reference_type": "Sales Invoice",
+                    "reference_name": doc.name
+                }
+            ]
+        })
+        je.insert()
+        je.submit()
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating caution deposit entry for {doc.name}: {str(e)}")
+
+def create_caution_deposit_account(company):
+    """Create caution deposit liability account if it doesn't exist"""
+    company_abbr = frappe.get_value("Company", company, "abbr")
+    account_name = f"Caution Deposit Payable - {company_abbr}"
+    
+    if not frappe.db.exists("Account", account_name):
+        # Get parent account
+        parent_account = f"Current Liabilities - {company_abbr}"
+        
+        account = frappe.get_doc({
+            "doctype": "Account",
+            "account_name": "Caution Deposit Payable",
+            "parent_account": parent_account,
+            "account_type": "Payable",
+            "company": company,
+            "is_group": 0
+        })
+        account.insert()
+        return account.name
+    
+    return account_name
+
+def update_customer_stats(doc):
+    """Update customer booking statistics"""
+    try:
+        from rental_management.automations.customer_automation import update_customer_booking_stats
+        update_customer_booking_stats(doc.customer, doc.posting_date)
+    except Exception as e:
+        frappe.log_error(f"Error updating customer stats for {doc.name}: {str(e)}")
+
+# Utility functions for booking status management
+@frappe.whitelist()
+def update_booking_status(booking_name, new_status, notes=None):
+    """Update booking status with proper validation"""
+    booking = frappe.get_doc("Sales Invoice", booking_name)
+    
+    if not booking.is_rental_booking:
+        frappe.throw(_("Not a rental booking"))
+    
+    old_status = booking.booking_status
+    booking.booking_status = new_status
+    
+    # Handle status-specific actions
+    if new_status == "Out for Rental":
+        booking.actual_delivery_time = now_datetime()
+        if notes:
+            booking.delivery_notes = notes
+            
+    elif new_status == "Returned":
+        booking.actual_return_time = now_datetime()
+        if notes:
+            booking.return_notes = notes
+            
+    elif new_status == "Completed":
+        booking.actual_return_time = booking.actual_return_time or now_datetime()
+        
+    booking.save()
+    frappe.db.commit()
+    
+    return {
+        "status": "success",
+        "message": f"Booking status updated from {old_status} to {new_status}"
+    }
+
+@frappe.whitelist()
+def process_caution_deposit_refund(booking_name, refund_amount, refund_notes=None):
+    """Process caution deposit refund"""
+    booking = frappe.get_doc("Sales Invoice", booking_name)
+    refund_amount = flt(refund_amount)
+    
+    # Validate refund amount
+    max_refund = booking.caution_deposit_amount - booking.caution_deposit_refunded
+    if refund_amount > max_refund:
+        frappe.throw(_("Refund amount cannot exceed remaining deposit of {0}").format(max_refund))
+    
+    # Update booking
+    booking.caution_deposit_refunded += refund_amount
+    
+    if refund_notes:
+        existing_notes = booking.return_notes or ""
+        booking.return_notes = f"{existing_notes}\nRefund: {refund_notes}".strip()
+    
+    booking.save()
+    frappe.db.commit()
+    
+    return {
+        "status": "success",
+        "message": f"Refund of {refund_amount} processed successfully"
+    }
+
+# Quick action functions for booking management
+@frappe.whitelist()
+def mark_delivered(booking_name, notes=None):
+    """Quick action to mark booking as delivered"""
+    return update_booking_status(booking_name, "Out for Rental", notes)
+
+@frappe.whitelist()
+def mark_returned(booking_name, notes=None):
+    """Quick action to mark booking as returned"""
+    return update_booking_status(booking_name, "Returned", notes)
+
+@frappe.whitelist()
+def complete_booking(booking_name, notes=None):
+    """Quick action to complete booking"""
+    return update_booking_status(booking_name, "Completed", notes)
