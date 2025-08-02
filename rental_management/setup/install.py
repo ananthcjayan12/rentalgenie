@@ -46,11 +46,11 @@ def setup_rental_accounts():
 def create_rental_warehouses():
     """Create default warehouses for rental inventory management"""
     try:
-        # Get all companies
-        companies = frappe.get_all("Company", filters={"disabled": 0}, fields=["name"])
+        # Get all companies (removed disabled filter as it doesn't exist)
+        companies = frappe.get_all("Company", fields=["name"])
         
         if not companies:
-            print("No active companies found. Skipping warehouse creation.")
+            print("No companies found. Skipping warehouse creation.")
             return
         
         warehouses = [
