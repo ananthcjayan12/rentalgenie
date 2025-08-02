@@ -109,7 +109,7 @@ def create_item_custom_fields():
                 "doctype": "Custom Field",
                 "dt": field["doctype"], 
                 "fieldname": field["fieldname"],
-                "label": field["label"],
+                "label": field.get("label"),
                 "fieldtype": field["fieldtype"],
                 "options": field.get("options"),
                 "default": field.get("default"),
