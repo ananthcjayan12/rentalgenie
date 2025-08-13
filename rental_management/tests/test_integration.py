@@ -1,5 +1,6 @@
 import frappe
 import unittest
+import random
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import getdate, add_days, today, flt
 from datetime import datetime, timedelta
@@ -183,8 +184,8 @@ class TestRentalManagementIntegration(FrappeTestCase):
 
     def _create_test_booking_customer(self, mobile_number=None):
         """Create a customer specifically for booking tests with proper payment terms"""
-        mobile_number = mobile_number or f"987654{frappe.utils.random.randint(1000, 9999)}"
-        customer_name = f"Test Booking Customer {frappe.utils.random.randint(1000, 9999)}"
+        mobile_number = mobile_number or f"987654{random.randint(1000, 9999)}"
+        customer_name = f"Test Booking Customer {random.randint(1000, 9999)}"
         
         # Ensure payment terms template exists
         payment_terms_name = "Immediate Payment"
@@ -451,6 +452,7 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
             "doctype": "Sales Invoice",
             "customer": test_customer,
             "company": self.test_company,
+            "currency": "INR",
             "is_rental_booking": 1,
             "function_date": function_date,
             "rental_duration_days": duration,
@@ -484,6 +486,7 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
             "doctype": "Sales Invoice",
             "customer": test_customer,
             "company": self.test_company,
+            "currency": "INR",
             "is_rental_booking": 1,
             "function_date": function_date,
             "rental_duration_days": 6,
@@ -502,6 +505,7 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
                 "doctype": "Sales Invoice",
                 "customer": test_customer,
                 "company": self.test_company,
+                "currency": "INR",
                 "is_rental_booking": 1,
                 "function_date": add_days(function_date, 2),  # Overlapping dates
                 "rental_duration_days": 6,
@@ -528,6 +532,7 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
             "doctype": "Sales Invoice",
             "customer": test_customer,
             "company": self.test_company,
+            "currency": "INR",
             "is_rental_booking": 1,
             "function_date": function_date,
             "rental_duration_days": 6,
@@ -560,6 +565,7 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
             "doctype": "Sales Invoice",
             "customer": test_customer,
             "company": self.test_company,
+            "currency": "INR",
             "is_rental_booking": 1,
             "function_date": function_date,
             "rental_duration_days": 6,
@@ -607,6 +613,7 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
             "doctype": "Sales Invoice",
             "customer": test_customer,
             "company": self.test_company,
+            "currency": "INR",
             "is_rental_booking": 1,
             "function_date": function_date,
             "rental_duration_days": 6,
@@ -661,6 +668,7 @@ class TestPhase4ExchangeBooking(TestRentalManagementIntegration):
             "doctype": "Sales Invoice",
             "customer": test_customer,
             "company": self.test_company,
+            "currency": "INR",
             "is_rental_booking": 1,
             "function_date": function_date,
             "rental_duration_days": 6,
@@ -678,6 +686,7 @@ class TestPhase4ExchangeBooking(TestRentalManagementIntegration):
             "doctype": "Sales Invoice",
             "customer": test_customer,
             "company": self.test_company,
+            "currency": "INR",
             "is_rental_booking": 1,
             "is_exchange_booking": 1,
             "original_booking_reference": original_booking.name,
