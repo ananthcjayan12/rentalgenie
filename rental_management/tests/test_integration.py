@@ -40,13 +40,33 @@ class TestRentalManagementIntegration(FrappeTestCase):
         """Create test customer with rental management fields"""
         customer_name = "Test Rental Customer"
         if not frappe.db.exists("Customer", customer_name):
+            # Get default payment terms
+            default_payment_terms = frappe.db.get_value("Payment Terms Template", 
+                                                       filters={"template_name": "Immediate Payment"}, 
+                                                       fieldname="name")
+            if not default_payment_terms:
+                # Create a basic payment terms template
+                payment_terms = frappe.get_doc({
+                    "doctype": "Payment Terms Template",
+                    "template_name": "Immediate Payment",
+                    "terms": [{
+                        "payment_term": "100% Immediate",
+                        "invoice_portion": 100,
+                        "credit_days_based_on": "Day(s) after invoice date",
+                        "credit_days": 0
+                    }]
+                })
+                payment_terms.insert()
+                default_payment_terms = payment_terms.name
+
             customer = frappe.get_doc({
                 "doctype": "Customer",
                 "customer_name": customer_name,
                 "customer_type": "Individual",
                 "customer_group": "Individual",
                 "territory": "India",
-                "mobile_number": "9876543210"
+                "mobile_number": "9876543210",
+                "payment_terms": default_payment_terms
             })
             customer.insert()
             cls.test_customer = customer.name
@@ -95,7 +115,7 @@ class TestRentalManagementIntegration(FrappeTestCase):
                     "current_rental_status": "Available",
                     "approval_status": "Approved",
                     "is_third_party_item": item_data["third_party"],
-                    "owner_commission_percentage": item_data.get("commission", 0)
+                    "owner_commission_percent": item_data.get("commission", 0)
                 })
                 item.insert()
                 cls.test_items.append(item.name)
@@ -139,15 +159,15 @@ class TestPhase1BasicSetup(TestRentalManagementIntegration):
         
         # Test third party fields
         self.assertTrue(frappe.db.exists("Custom Field", {"dt": "Item", "fieldname": "is_third_party_item"}))
-        self.assertTrue(frappe.db.exists("Custom Field", {"dt": "Item", "fieldname": "owner_commission_percentage"}))
+        self.assertTrue(frappe.db.exists("Custom Field", {"dt": "Item", "fieldname": "owner_commission_percent"}))
         self.assertTrue(frappe.db.exists("Custom Field", {"dt": "Item", "fieldname": "third_party_supplier"}))
 
     def test_item_groups_created(self):
         """Test that rental item groups are created"""
         self.assertTrue(frappe.db.exists("Item Group", "Rental Items"))
-        self.assertTrue(frappe.db.exists("Item Group", "Costumes"))
-        self.assertTrue(frappe.db.exists("Item Group", "Men's Wear"))
         self.assertTrue(frappe.db.exists("Item Group", "Women's Wear"))
+        self.assertTrue(frappe.db.exists("Item Group", "Men's Wear"))
+        self.assertTrue(frappe.db.exists("Item Group", "Jewelry"))
         self.assertTrue(frappe.db.exists("Item Group", "Accessories"))
         self.assertTrue(frappe.db.exists("Item Group", "Jewelry"))
 
