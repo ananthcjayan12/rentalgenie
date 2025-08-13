@@ -268,12 +268,19 @@ def create_sales_invoice_custom_fields():
             ]
 
             for prop in props:
-                new_val = field.get(prop, 0 if prop in ["read_only", "collapsible", "reqd"] else None)
-                if new_val is not None and getattr(cf, prop, None) != new_val:
-                    cf.set(prop, new_val)
-                    updated = True
+                new_val = field.get(prop)
+                if new_val is not None:
+                    # Convert to proper type for boolean fields
+                    if prop in ["read_only", "collapsible", "reqd"]:
+                        new_val = int(new_val) if new_val else 0
+                    
+                    current_val = getattr(cf, prop, None)
+                    if current_val != new_val:
+                        cf.set(prop, new_val)
+                        updated = True
 
             if updated:
+                cf.flags.ignore_version = True  # Skip version tracking to avoid formatter issues
                 cf.save()
 
     frappe.db.commit()
