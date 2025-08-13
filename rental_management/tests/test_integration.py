@@ -34,6 +34,9 @@ class TestRentalManagementIntegration(FrappeTestCase):
                 "default_currency": "INR"
             })
             company.insert()
+        
+        # Ensure price list exists
+        cls._create_test_price_list()
 
     @classmethod
     def _create_test_customer(cls):
@@ -141,6 +144,26 @@ class TestRentalManagementIntegration(FrappeTestCase):
         else:
             cls.test_supplier = supplier_name
 
+    @classmethod
+    def _create_test_price_list(cls):
+        """Create test price list with INR currency"""
+        price_list_name = "Standard Selling"
+        
+        if not frappe.db.exists("Price List", price_list_name):
+            price_list = frappe.get_doc({
+                "doctype": "Price List",
+                "price_list_name": price_list_name,
+                "currency": "INR",
+                "selling": 1,
+                "buying": 0,
+                "enabled": 1
+            })
+            price_list.insert()
+        
+        # Set company default selling price list
+        if frappe.db.exists("Company", cls.test_company):
+            frappe.db.set_value("Company", cls.test_company, "default_selling_price_list", price_list_name)
+
     def setUp(self):
         """Set up each test"""
         frappe.db.rollback()
@@ -213,6 +236,25 @@ class TestRentalManagementIntegration(FrappeTestCase):
         })
         customer.insert()
         return customer.name
+
+    def _create_test_booking(self, **kwargs):
+        """Create a test booking (Sales Invoice) with proper defaults"""
+        defaults = {
+            "doctype": "Sales Invoice",
+            "company": self.test_company,
+            "currency": "INR",
+            "selling_price_list": "Standard Selling",
+            "is_rental_booking": 1
+        }
+        
+        # Merge with provided kwargs
+        defaults.update(kwargs)
+        
+        # Ensure customer exists
+        if "customer" not in defaults:
+            defaults["customer"] = self._create_test_booking_customer()
+        
+        return frappe.get_doc(defaults)
 
 class TestPhase1BasicSetup(TestRentalManagementIntegration):
     """Test Phase 1: Basic Setup functionality"""
@@ -445,26 +487,18 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         function_date = add_days(today(), 10)  # 10 days from today
         duration = 6
         
-        # Create customer with proper payment terms for this test
-        test_customer = self._create_test_booking_customer()
-        
         # Ensure test item exists
         test_item_code = self._ensure_test_item_exists("TEST-DRESS-001", "Test Wedding Dress")
         
-        booking = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": test_customer,
-            "company": self.test_company,
-            "currency": "INR",
-            "is_rental_booking": 1,
-            "function_date": function_date,
-            "rental_duration_days": duration,
-            "items": [{
+        booking = self._create_test_booking(
+            function_date=function_date,
+            rental_duration_days=duration,
+            items=[{
                 "item_code": test_item_code,
                 "qty": 1,
                 "rate": 500
             }]
-        })
+        )
         booking.insert()
         
         # Test date calculation
@@ -481,46 +515,33 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         """Test item availability validation"""
         function_date = add_days(today(), 15)
         
-        # Create customer with proper payment terms for this test
-        test_customer = self._create_test_booking_customer()
-        
         # Ensure test item exists
         test_item_code = self._ensure_test_item_exists("TEST-DRESS-002", "Test Wedding Dress 2")
         
         # Create first booking
-        booking1 = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": test_customer,
-            "company": self.test_company,
-            "currency": "INR",
-            "is_rental_booking": 1,
-            "function_date": function_date,
-            "rental_duration_days": 6,
-            "items": [{
+        booking1 = self._create_test_booking(
+            function_date=function_date,
+            rental_duration_days=6,
+            items=[{
                 "item_code": test_item_code,
                 "qty": 1,
                 "rate": 500
             }]
-        })
+        )
         booking1.insert()
         booking1.submit()
         
         # Try to create conflicting booking
         with self.assertRaises(frappe.ValidationError):
-            booking2 = frappe.get_doc({
-                "doctype": "Sales Invoice",
-                "customer": test_customer,
-                "company": self.test_company,
-                "currency": "INR",
-                "is_rental_booking": 1,
-                "function_date": add_days(function_date, 2),  # Overlapping dates
-                "rental_duration_days": 6,
-                "items": [{
+            booking2 = self._create_test_booking(
+                function_date=add_days(function_date, 2),  # Overlapping dates
+                rental_duration_days=6,
+                items=[{
                     "item_code": test_item_code,
                     "qty": 1,
                     "rate": 500
                 }]
-            })
+            )
             booking2.insert()
         
         # Clean up
@@ -530,9 +551,6 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
     def test_commission_calculation(self):
         """Test owner commission calculation for third-party items"""
         function_date = add_days(today(), 20)
-        
-        # Create customer with proper payment terms for this test
-        test_customer = self._create_test_booking_customer()
         
         # Ensure third party test item exists
         test_item_code = self._ensure_test_item_exists(
@@ -548,21 +566,16 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
             "owner_commission_percent": 25
         })
         
-        booking = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": test_customer,
-            "company": self.test_company,
-            "currency": "INR",
-            "is_rental_booking": 1,
-            "function_date": function_date,
-            "rental_duration_days": 6,
-            "items": [{
+        booking = self._create_test_booking(
+            function_date=function_date,
+            rental_duration_days=6,
+            items=[{
                 "item_code": test_item_code,
                 "qty": 1,
                 "rate": 1000,
                 "amount": 6000  # 1000 * 6 days
             }]
-        })
+        )
         booking.insert()
         
         # Test commission calculation (25% of 6000 = 1500)
@@ -578,27 +591,19 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         
         function_date = add_days(today(), 25)
         
-        # Create customer with proper payment terms for this test
-        test_customer = self._create_test_booking_customer()
-        
         # Ensure test item exists
         test_item_code = self._ensure_test_item_exists("TEST-DRESS-004", "Test Wedding Dress 4")
         
-        booking = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": test_customer,
-            "company": self.test_company,
-            "currency": "INR",
-            "is_rental_booking": 1,
-            "function_date": function_date,
-            "rental_duration_days": 6,
-            "caution_deposit_amount": 5000,
-            "items": [{
+        booking = self._create_test_booking(
+            function_date=function_date,
+            rental_duration_days=6,
+            caution_deposit_amount=5000,
+            items=[{
                 "item_code": test_item_code,
                 "qty": 1,
                 "rate": 500
             }]
-        })
+        )
         booking.insert()
         booking.submit()
         
@@ -629,27 +634,19 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         """Test caution deposit journal entry creation"""
         function_date = add_days(today(), 30)
         
-        # Create customer with proper payment terms for this test
-        test_customer = self._create_test_booking_customer()
-        
         # Ensure test item exists
         test_item_code = self._ensure_test_item_exists("TEST-DRESS-005", "Test Wedding Dress 5")
         
-        booking = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": test_customer,
-            "company": self.test_company,
-            "currency": "INR",
-            "is_rental_booking": 1,
-            "function_date": function_date,
-            "rental_duration_days": 6,
-            "caution_deposit_amount": 5000,
-            "items": [{
+        booking = self._create_test_booking(
+            function_date=function_date,
+            rental_duration_days=6,
+            caution_deposit_amount=5000,
+            items=[{
                 "item_code": test_item_code,
                 "qty": 1,
                 "rate": 500
             }]
-        })
+        )
         booking.insert()
         
         try:
@@ -686,47 +683,37 @@ class TestPhase4ExchangeBooking(TestRentalManagementIntegration):
         """Test exchange booking creation and validation"""
         function_date = add_days(today(), 35)
         
-        # Create customer with proper payment terms for this test
-        test_customer = self._create_test_booking_customer()
-        
         # Ensure test item exists
         test_item_code = self._ensure_test_item_exists("TEST-DRESS-006", "Test Wedding Dress 6")
         
         # Create original booking
-        original_booking = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": test_customer,
-            "company": self.test_company,
-            "currency": "INR",
-            "is_rental_booking": 1,
-            "function_date": function_date,
-            "rental_duration_days": 6,
-            "items": [{
+        original_booking = self._create_test_booking(
+            function_date=function_date,
+            rental_duration_days=6,
+            items=[{
                 "item_code": test_item_code,
                 "qty": 1,
                 "rate": 500
             }]
-        })
+        )
         original_booking.insert()
         original_booking.submit()
         
         # Create exchange booking
-        exchange_booking = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": test_customer,
-            "company": self.test_company,
-            "currency": "INR",
-            "is_rental_booking": 1,
-            "is_exchange_booking": 1,
-            "original_booking_reference": original_booking.name,
-            "function_date": add_days(function_date, 10),  # Different date
-            "rental_duration_days": 6,
-            "items": [{
-                "item_code": self.test_items[2] if len(self.test_items) > 2 else "TEST-SUIT-001",
+        exchange_item_code = self._ensure_test_item_exists("TEST-SUIT-001", "Test Men's Suit", item_category="Men's Wear", rental_rate=800)
+        
+        exchange_booking = self._create_test_booking(
+            customer=original_booking.customer,  # Same customer
+            is_exchange_booking=1,
+            original_booking_reference=original_booking.name,
+            function_date=add_days(function_date, 10),  # Different date
+            rental_duration_days=6,
+            items=[{
+                "item_code": exchange_item_code,
                 "qty": 1,
                 "rate": 800
             }]
-        })
+        )
         exchange_booking.insert()
         exchange_booking.submit()
         
@@ -811,21 +798,17 @@ class TestSystemIntegration(TestRentalManagementIntegration):
         # Ensure test item exists
         test_item_code = self._ensure_test_item_exists("TEST-DRESS-WORKFLOW", "Test Workflow Dress")
         
-        booking = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": customer.name,
-            "company": self.test_company,
-            "currency": "INR",
-            "is_rental_booking": 1,
-            "function_date": function_date,
-            "rental_duration_days": 6,
-            "caution_deposit_amount": 5000,
-            "items": [{
+        booking = self._create_test_booking(
+            customer=customer.name,
+            function_date=function_date,
+            rental_duration_days=6,
+            caution_deposit_amount=5000,
+            items=[{
                 "item_code": test_item_code,
                 "qty": 1,
                 "rate": 500
             }]
-        })
+        )
         booking.insert()
         
         # Try to submit, but handle currency errors gracefully
