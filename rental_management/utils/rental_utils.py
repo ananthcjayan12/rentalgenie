@@ -40,7 +40,7 @@ def handle_caution_deposit_refund(doc):
     if doc.caution_deposit_amount and not doc.caution_deposit_refunded:
         try:
             company_abbr = frappe.get_value("Company", doc.company, "abbr")
-            caution_deposit_account = f"Caution Deposit Payable - {company_abbr}"
+            caution_deposit_account = f"Caution Deposits Received - {company_abbr}"
             
             # Get default cash account
             cash_account = frappe.get_value("Company", doc.company, "default_cash_account")
