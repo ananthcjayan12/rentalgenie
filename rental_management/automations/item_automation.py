@@ -16,15 +16,10 @@ def before_item_save(doc, method):
         
         # Set default item group based on category
         if not doc.item_group or doc.item_group == "All Item Groups":
-            if doc.rental_item_type:
-                if doc.rental_item_type in ["Dress", "Dresses"]:
-                    doc.item_group = "Dresses"
-                elif doc.rental_item_type in ["Ornament", "Ornaments"]:
-                    doc.item_group = "Ornaments"
-                elif doc.rental_item_type in ["Accessory", "Accessories"]:
-                    doc.item_group = "Accessories"
-                else:
-                    doc.item_group = "Rental Items"
+            if doc.item_category:
+                doc.item_group = doc.item_category
+            else:
+                doc.item_group = "Rental Items"
         
         # Validate rental rate
         if not doc.rental_rate_per_day or doc.rental_rate_per_day <= 0:
@@ -40,7 +35,7 @@ def before_item_save(doc, method):
         
         # Auto-generate item description if not provided
         if not doc.description:
-            category = doc.rental_item_type or "Item"
+            category = doc.item_category or "Item"
             party_type = "Third-party" if doc.is_third_party_item else "In-house"
             doc.description = f"{party_type} {category} available for rental at ₹{doc.rental_rate_per_day}/day"
         
