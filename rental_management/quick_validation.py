@@ -22,7 +22,7 @@ def validate_basic_setup():
     # Check custom fields existence
     item_fields = [
         "is_rental_item", "rental_rate_per_day", "item_category", 
-        "current_rental_status", "is_third_party_item", "owner_commission_percentage"
+        "current_rental_status", "is_third_party_item", "owner_commission_percent"
     ]
     
     for field in item_fields:
@@ -32,7 +32,7 @@ def validate_basic_setup():
             checks.append(("❌", f"Item field '{field}' missing"))
     
     # Check customer fields
-    customer_fields = ["customer_unique_id", "mobile_number", "total_bookings", "total_rental_amount"]
+    customer_fields = ["unique_customer_id", "mobile_number", "total_bookings", "total_rental_amount"]
     
     for field in customer_fields:
         if frappe.db.exists("Custom Field", {"dt": "Customer", "fieldname": field}):
@@ -135,8 +135,8 @@ def test_customer_creation():
         
         # Check automation
         customer.reload()
-        if customer.customer_unique_id:
-            checks.append(("✅", f"Unique ID auto-generated: '{customer.customer_unique_id}'"))
+        if customer.unique_customer_id:
+            checks.append(("✅", f"Unique ID auto-generated: '{customer.unique_customer_id}'"))
         else:
             checks.append(("⚠️", "Unique ID not auto-generated"))
         
