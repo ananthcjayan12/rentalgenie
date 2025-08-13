@@ -88,13 +88,13 @@ def calculate_rental_amounts(doc):
             
             if item_doc.get("is_rental_item"):
                 # Calculate commission for this item
-                commission_rate = item_doc.get("owner_commission_percentage", 0)
-                if commission_rate and item.amount:
-                    item_commission = (item.amount * commission_rate) / 100
+                commission_rate = item_doc.get("owner_commission_percent", 0) or 0
+                if commission_rate > 0 and item.amount:
+                    item_commission = (flt(item.amount) * flt(commission_rate)) / 100
                     total_commission += item_commission
                 
                 # Add to caution deposit calculation if needed
-                item_caution = item_doc.get("suggested_caution_deposit", 0)
+                item_caution = item_doc.get("suggested_caution_deposit", 0) or 0
                 if item_caution > caution_deposit:
                     caution_deposit = item_caution
     
