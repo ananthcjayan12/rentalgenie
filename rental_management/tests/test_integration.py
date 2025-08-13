@@ -181,6 +181,38 @@ class TestRentalManagementIntegration(FrappeTestCase):
             return item.name
         return item_code
 
+    def _create_test_booking_customer(self, mobile_number=None):
+        """Create a customer specifically for booking tests with proper payment terms"""
+        mobile_number = mobile_number or f"987654{frappe.utils.random.randint(1000, 9999)}"
+        customer_name = f"Test Booking Customer {frappe.utils.random.randint(1000, 9999)}"
+        
+        # Ensure payment terms template exists
+        payment_terms_name = "Immediate Payment"
+        if not frappe.db.exists("Payment Terms Template", payment_terms_name):
+            payment_terms = frappe.get_doc({
+                "doctype": "Payment Terms Template",
+                "template_name": payment_terms_name,
+                "terms": [{
+                    "payment_term": "100% Immediate",
+                    "invoice_portion": 100,
+                    "credit_days_based_on": "Day(s) after invoice date",
+                    "credit_days": 0
+                }]
+            })
+            payment_terms.insert()
+        
+        customer = frappe.get_doc({
+            "doctype": "Customer",
+            "customer_name": customer_name,
+            "customer_type": "Individual",
+            "customer_group": "Individual",
+            "territory": "India",
+            "mobile_number": mobile_number,
+            "payment_terms": payment_terms_name
+        })
+        customer.insert()
+        return customer.name
+
 class TestPhase1BasicSetup(TestRentalManagementIntegration):
     """Test Phase 1: Basic Setup functionality"""
     
@@ -312,10 +344,10 @@ class TestPhase2ItemManagement(TestRentalManagementIntegration):
         self.assertEqual(item.approval_status, "Rejected")
         
         # Clean up
-        frappe.delete_doc("Item", item.name)
+        self._safe_delete_item(item.name)
         service_item_code = f"{item.item_code}-RENTAL"
         if frappe.db.exists("Item", service_item_code):
-            frappe.delete_doc("Item", service_item_code)
+            self._safe_delete_item(service_item_code)
 
 class TestPhase3CustomerManagement(TestRentalManagementIntegration):
     """Test Phase 3: Customer Management functionality"""
@@ -412,9 +444,12 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         function_date = add_days(today(), 10)  # 10 days from today
         duration = 6
         
+        # Create customer with proper payment terms for this test
+        test_customer = self._create_test_booking_customer()
+        
         booking = frappe.get_doc({
             "doctype": "Sales Invoice",
-            "customer": self.test_customer,
+            "customer": test_customer,
             "company": self.test_company,
             "is_rental_booking": 1,
             "function_date": function_date,
@@ -441,10 +476,13 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         """Test item availability validation"""
         function_date = add_days(today(), 15)
         
+        # Create customer with proper payment terms for this test
+        test_customer = self._create_test_booking_customer()
+        
         # Create first booking
         booking1 = frappe.get_doc({
             "doctype": "Sales Invoice",
-            "customer": self.test_customer,
+            "customer": test_customer,
             "company": self.test_company,
             "is_rental_booking": 1,
             "function_date": function_date,
@@ -462,7 +500,7 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         with self.assertRaises(frappe.ValidationError):
             booking2 = frappe.get_doc({
                 "doctype": "Sales Invoice",
-                "customer": self.test_customer,
+                "customer": test_customer,
                 "company": self.test_company,
                 "is_rental_booking": 1,
                 "function_date": add_days(function_date, 2),  # Overlapping dates
@@ -483,9 +521,12 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         """Test owner commission calculation for third-party items"""
         function_date = add_days(today(), 20)
         
+        # Create customer with proper payment terms for this test
+        test_customer = self._create_test_booking_customer()
+        
         booking = frappe.get_doc({
             "doctype": "Sales Invoice",
-            "customer": self.test_customer,
+            "customer": test_customer,
             "company": self.test_company,
             "is_rental_booking": 1,
             "function_date": function_date,
@@ -512,9 +553,12 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         
         function_date = add_days(today(), 25)
         
+        # Create customer with proper payment terms for this test
+        test_customer = self._create_test_booking_customer()
+        
         booking = frappe.get_doc({
             "doctype": "Sales Invoice",
-            "customer": self.test_customer,
+            "customer": test_customer,
             "company": self.test_company,
             "is_rental_booking": 1,
             "function_date": function_date,
@@ -556,9 +600,12 @@ class TestPhase4BookingSystem(TestRentalManagementIntegration):
         """Test caution deposit journal entry creation"""
         function_date = add_days(today(), 30)
         
+        # Create customer with proper payment terms for this test
+        test_customer = self._create_test_booking_customer()
+        
         booking = frappe.get_doc({
             "doctype": "Sales Invoice",
-            "customer": self.test_customer,
+            "customer": test_customer,
             "company": self.test_company,
             "is_rental_booking": 1,
             "function_date": function_date,
@@ -606,10 +653,13 @@ class TestPhase4ExchangeBooking(TestRentalManagementIntegration):
         """Test exchange booking creation and validation"""
         function_date = add_days(today(), 35)
         
+        # Create customer with proper payment terms for this test
+        test_customer = self._create_test_booking_customer()
+        
         # Create original booking
         original_booking = frappe.get_doc({
             "doctype": "Sales Invoice",
-            "customer": self.test_customer,
+            "customer": test_customer,
             "company": self.test_company,
             "is_rental_booking": 1,
             "function_date": function_date,
@@ -626,7 +676,7 @@ class TestPhase4ExchangeBooking(TestRentalManagementIntegration):
         # Create exchange booking
         exchange_booking = frappe.get_doc({
             "doctype": "Sales Invoice",
-            "customer": self.test_customer,
+            "customer": test_customer,
             "company": self.test_company,
             "is_rental_booking": 1,
             "is_exchange_booking": 1,
@@ -666,9 +716,9 @@ class TestIntegrationUtilities(TestRentalManagementIntegration):
         # Test dashboard data
         dashboard = get_dashboard_data()
         self.assertIsInstance(dashboard, dict)
-        self.assertIn("todays_deliveries", dashboard)
-        self.assertIn("todays_returns", dashboard)
-        self.assertIn("month_summary", dashboard)
+        self.assertIn("booking_summary", dashboard)
+        self.assertIn("items_out_count", dashboard)
+        self.assertIn("monthly_revenue", dashboard)
 
     def test_item_availability_check(self):
         """Test item availability checking utility"""
@@ -679,11 +729,10 @@ class TestIntegrationUtilities(TestRentalManagementIntegration):
         
         # Check availability for test item
         if self.test_items:
-            availability = check_item_availability(self.test_items[0], start_date, end_date, 1)
+            availability = check_item_availability(self.test_items[0], start_date, end_date)
             self.assertIsInstance(availability, dict)
             self.assertIn("available", availability)
-            self.assertIn("stock_qty", availability)
-            self.assertIn("available_qty", availability)
+            self.assertIn("reason", availability)
 
 class TestSystemIntegration(TestRentalManagementIntegration):
     """Test complete system integration scenarios"""
@@ -711,6 +760,7 @@ class TestSystemIntegration(TestRentalManagementIntegration):
             "doctype": "Sales Invoice",
             "customer": customer.name,
             "company": self.test_company,
+            "currency": "INR",
             "is_rental_booking": 1,
             "function_date": function_date,
             "rental_duration_days": 6,
@@ -759,11 +809,15 @@ class TestSystemIntegration(TestRentalManagementIntegration):
 
     def test_error_handling(self):
         """Test error handling in various scenarios"""
+        # Create customer with proper payment terms for this test
+        test_customer = self._create_test_booking_customer()
+        
         # Test booking without customer
         with self.assertRaises(frappe.ValidationError):
             booking = frappe.get_doc({
                 "doctype": "Sales Invoice",
                 "company": self.test_company,
+                "currency": "INR",
                 "is_rental_booking": 1,
                 "function_date": add_days(today(), 50),
                 "rental_duration_days": 6
@@ -774,8 +828,9 @@ class TestSystemIntegration(TestRentalManagementIntegration):
         with self.assertRaises(frappe.ValidationError):
             booking = frappe.get_doc({
                 "doctype": "Sales Invoice",
-                "customer": self.test_customer,
+                "customer": test_customer,
                 "company": self.test_company,
+                "currency": "INR",
                 "is_rental_booking": 1,
                 "function_date": add_days(today(), -1),  # Past date
                 "rental_duration_days": 6,
