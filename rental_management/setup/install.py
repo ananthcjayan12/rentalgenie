@@ -27,9 +27,12 @@ def create_rental_item_groups():
     """Create rental-specific item groups"""
     item_groups = [
         {"item_group_name": "Rental Items", "parent_item_group": "All Item Groups"},
-        {"item_group_name": "Dresses", "parent_item_group": "Rental Items"},
-        {"item_group_name": "Ornaments", "parent_item_group": "Rental Items"},
-        {"item_group_name": "Accessories", "parent_item_group": "Rental Items"}
+        {"item_group_name": "Women's Wear", "parent_item_group": "All Item Groups"},
+        {"item_group_name": "Men's Wear", "parent_item_group": "All Item Groups"},
+        {"item_group_name": "Jewelry", "parent_item_group": "All Item Groups"},
+        {"item_group_name": "Footwear", "parent_item_group": "All Item Groups"},
+        {"item_group_name": "Dresses", "parent_item_group": "Women's Wear"},
+        {"item_group_name": "Ornaments", "parent_item_group": "Jewelry"}
     ]
     
     for group in item_groups:
@@ -41,6 +44,7 @@ def create_rental_item_groups():
                 "is_group": 1 if group["item_group_name"] == "Rental Items" else 0
             })
             item_group.insert()
+            print(f"Created Item Group: {group['item_group_name']}")
 
 def setup_rental_accounts():
     """Setup rental-specific account templates"""
@@ -94,3 +98,9 @@ def create_rental_warehouses():
 def create_warehouses_manually():
     """Manual function to create warehouses - can be called from console"""
     create_rental_warehouses()
+
+def setup_item_groups():
+    """Standalone function to setup item groups"""
+    create_rental_item_groups()
+    frappe.db.commit()
+    print("Item groups setup completed!")

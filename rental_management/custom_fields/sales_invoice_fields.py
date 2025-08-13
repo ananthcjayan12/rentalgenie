@@ -124,16 +124,36 @@ def create_sales_invoice_custom_fields():
         },
         {
             "doctype": "Sales Invoice",
+            "fieldname": "total_owner_commission",
+            "label": "Total Owner Commission",
+            "fieldtype": "Currency",
+            "depends_on": "is_rental_booking",
+            "read_only": 1,
+            "default": 0,
+            "insert_after": "caution_deposit_refunded"
+        },
+        {
+            "doctype": "Sales Invoice",
+            "fieldname": "commission_paid_to_owners",
+            "label": "Commission Paid to Owners",
+            "fieldtype": "Currency",
+            "depends_on": "is_rental_booking",
+            "read_only": 1,
+            "default": 0,
+            "insert_after": "total_owner_commission"
+        },
+        {
+            "doctype": "Sales Invoice",
             "fieldname": "exchange_booking_section",
             "label": "Exchange Booking Details",
             "fieldtype": "Section Break",
-            "insert_after": "caution_deposit_refunded",
+            "insert_after": "commission_paid_to_owners",
             "collapsible": 1,
             "depends_on": "is_rental_booking"
         },
         {
             "doctype": "Sales Invoice",
-            "fieldname": "is_exchange_booking",
+            "fieldname": "exchange_booking",
             "label": "Exchange Booking",
             "fieldtype": "Check",
             "depends_on": "is_rental_booking",
@@ -146,24 +166,32 @@ def create_sales_invoice_custom_fields():
             "label": "Original Booking Reference",
             "fieldtype": "Link",
             "options": "Sales Invoice",
-            "depends_on": "is_exchange_booking",
-            "mandatory_depends_on": "is_exchange_booking",
-            "insert_after": "is_exchange_booking"
+            "depends_on": "exchange_booking",
+            "mandatory_depends_on": "exchange_booking",
+            "insert_after": "exchange_booking"
         },
         {
             "doctype": "Sales Invoice",
-            "fieldname": "exchange_reason",
-            "label": "Exchange Reason",
-            "fieldtype": "Text",
-            "depends_on": "is_exchange_booking",
+            "fieldname": "exchange_amount_adjustment",
+            "label": "Exchange Amount Adjustment",
+            "fieldtype": "Currency",
+            "depends_on": "exchange_booking",
             "insert_after": "original_booking_reference"
         },
         {
             "doctype": "Sales Invoice",
+            "fieldname": "exchange_notes",
+            "label": "Exchange Notes",
+            "fieldtype": "Text",
+            "depends_on": "exchange_booking",
+            "insert_after": "exchange_amount_adjustment"
+        },
+        {
+            "doctype": "Sales Invoice",
             "fieldname": "rental_timestamps_section",
-            "label": "Rental Timestamps",
+            "label": "Delivery & Return Timing",
             "fieldtype": "Section Break",
-            "insert_after": "exchange_reason",
+            "insert_after": "exchange_notes",
             "collapsible": 1,
             "depends_on": "is_rental_booking"
         },
@@ -187,11 +215,19 @@ def create_sales_invoice_custom_fields():
         },
         {
             "doctype": "Sales Invoice",
-            "fieldname": "rental_notes",
-            "label": "Rental Notes",
+            "fieldname": "delivery_notes",
+            "label": "Delivery Notes",
             "fieldtype": "Text",
             "depends_on": "is_rental_booking",
             "insert_after": "actual_return_time"
+        },
+        {
+            "doctype": "Sales Invoice",
+            "fieldname": "return_notes",
+            "label": "Return Notes",
+            "fieldtype": "Text",
+            "depends_on": "is_rental_booking",
+            "insert_after": "delivery_notes"
         }
     ]
     
