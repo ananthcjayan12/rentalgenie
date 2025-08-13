@@ -16,6 +16,7 @@ class TestRentalManagementIntegration(FrappeTestCase):
         cls.test_customer = None
         cls.test_items = []
         cls.test_supplier = None
+        cls.test_price_list = None
         
         # Create test data
         cls._create_test_company()
@@ -160,9 +161,8 @@ class TestRentalManagementIntegration(FrappeTestCase):
             })
             price_list.insert()
         
-        # Set company default selling price list
-        if frappe.db.exists("Company", cls.test_company):
-            frappe.db.set_value("Company", cls.test_company, "default_selling_price_list", price_list_name)
+        # Store the price list name for later use
+        cls.test_price_list = price_list_name
 
     def setUp(self):
         """Set up each test"""
@@ -243,7 +243,7 @@ class TestRentalManagementIntegration(FrappeTestCase):
             "doctype": "Sales Invoice",
             "company": self.test_company,
             "currency": "INR",
-            "selling_price_list": "Standard Selling",
+            "selling_price_list": self.test_price_list or "Standard Selling",
             "is_rental_booking": 1
         }
         
