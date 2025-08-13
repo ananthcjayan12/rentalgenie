@@ -24,14 +24,13 @@ class TestRentalManagementIntegration(FrappeTestCase):
 
     @classmethod
     def _create_test_company(cls):
-        """Create test company if it doesn't exist"""
+        """Create test company if not exists"""
         if not frappe.db.exists("Company", cls.test_company):
             company = frappe.get_doc({
                 "doctype": "Company",
                 "company_name": cls.test_company,
-                "abbr": "TC",
-                "default_currency": "INR",
-                "country": "India"
+                "abbr": "_TC",
+                "default_currency": "INR"
             })
             company.insert()
 
@@ -40,24 +39,25 @@ class TestRentalManagementIntegration(FrappeTestCase):
         """Create test customer with rental management fields"""
         customer_name = "Test Rental Customer"
         if not frappe.db.exists("Customer", customer_name):
-            # Get default payment terms
-            default_payment_terms = frappe.db.get_value("Payment Terms Template", 
-                                                       filters={"template_name": "Immediate Payment"}, 
-                                                       fieldname="name")
-            if not default_payment_terms:
+            # Get or create default payment terms
+            default_payment_terms = "Immediate Payment"
+            if not frappe.db.exists("Payment Terms Template", default_payment_terms):
                 # Create a basic payment terms template
-                payment_terms = frappe.get_doc({
-                    "doctype": "Payment Terms Template",
-                    "template_name": "Immediate Payment",
-                    "terms": [{
-                        "payment_term": "100% Immediate",
-                        "invoice_portion": 100,
-                        "credit_days_based_on": "Day(s) after invoice date",
-                        "credit_days": 0
-                    }]
-                })
-                payment_terms.insert()
-                default_payment_terms = payment_terms.name
+                try:
+                    payment_terms = frappe.get_doc({
+                        "doctype": "Payment Terms Template",
+                        "template_name": default_payment_terms,
+                        "terms": [{
+                            "payment_term": "100% Immediate",
+                            "invoice_portion": 100,
+                            "credit_days_based_on": "Day(s) after invoice date",
+                            "credit_days": 0
+                        }]
+                    })
+                    payment_terms.insert()
+                except Exception as e:
+                    frappe.log_error(f"Error creating payment terms: {str(e)}")
+                    default_payment_terms = None
 
             customer = frappe.get_doc({
                 "doctype": "Customer",
@@ -65,9 +65,13 @@ class TestRentalManagementIntegration(FrappeTestCase):
                 "customer_type": "Individual",
                 "customer_group": "Individual",
                 "territory": "India",
-                "mobile_number": "9876543210",
-                "payment_terms": default_payment_terms
+                "mobile_number": "9876543210"
             })
+            
+            # Only set payment_terms if we successfully created it
+            if default_payment_terms and frappe.db.exists("Payment Terms Template", default_payment_terms):
+                customer.payment_terms = default_payment_terms
+                
             customer.insert()
             cls.test_customer = customer.name
         else:
@@ -145,6 +149,38 @@ class TestRentalManagementIntegration(FrappeTestCase):
         """Clean up after each test"""
         frappe.db.rollback()
 
+    def _safe_delete_item(self, item_code):
+        """Safely delete an item, disable if linked to other documents"""
+        try:
+            frappe.delete_doc("Item", item_code)
+        except frappe.LinkExistsError:
+            # If item is linked, disable it instead
+            frappe.db.set_value("Item", item_code, "disabled", 1)
+        except Exception as e:
+            # Log error but don't fail the test
+            frappe.log_error(f"Error deleting/disabling item {item_code}: {str(e)}")
+
+    def _ensure_test_item_exists(self, item_code, item_name, item_category="Women's Wear", rental_rate=500):
+        """Ensure a test item exists, create if it doesn't"""
+        if not frappe.db.exists("Item", item_code):
+            item = frappe.get_doc({
+                "doctype": "Item",
+                "item_code": item_code,
+                "item_name": item_name,
+                "item_group": item_category,
+                "stock_uom": "Nos",
+                "is_rental_item": 1,
+                "rental_rate_per_day": rental_rate,
+                "item_category": item_category,
+                "current_rental_status": "Available",
+                "approval_status": "Approved",
+                "is_third_party_item": 0,
+                "owner_commission_percent": 0
+            })
+            item.insert()
+            return item.name
+        return item_code
+
 class TestPhase1BasicSetup(TestRentalManagementIntegration):
     """Test Phase 1: Basic Setup functionality"""
     
@@ -194,10 +230,11 @@ class TestPhase1BasicSetup(TestRentalManagementIntegration):
         service_item_code = f"{item.item_code}-RENTAL"
         self.assertTrue(frappe.db.exists("Item", service_item_code))
         
-        # Clean up
-        frappe.delete_doc("Item", item.name)
+        # Clean up - handle linked item deletion
+        self._safe_delete_item(item.name)
+        service_item_code = f"{item.item_code}-RENTAL"
         if frappe.db.exists("Item", service_item_code):
-            frappe.delete_doc("Item", service_item_code)
+            self._safe_delete_item(service_item_code)
 
 class TestPhase2ItemManagement(TestRentalManagementIntegration):
     """Test Phase 2: Item Management functionality"""
@@ -213,13 +250,13 @@ class TestPhase2ItemManagement(TestRentalManagementIntegration):
             "rental_rate_per_day": 1200,
             "item_category": "Jewelry",
             "is_third_party_item": 1,
-            "owner_commission_percentage": 30
+            "owner_commission_percent": 30
         })
         item.insert()
         
         # Test third party automation
         self.assertEqual(item.is_third_party_item, 1)
-        self.assertEqual(item.owner_commission_percentage, 30)
+        self.assertEqual(item.owner_commission_percent, 30)
         
         # Check if supplier was created
         expected_supplier = f"Owner-{item.item_code}"
@@ -227,11 +264,11 @@ class TestPhase2ItemManagement(TestRentalManagementIntegration):
             supplier = frappe.get_doc("Supplier", expected_supplier)
             self.assertEqual(supplier.supplier_type, "Individual")
         
-        # Clean up
-        frappe.delete_doc("Item", item.name)
+        # Clean up - handle linked item deletion
+        self._safe_delete_item(item.name)
         service_item_code = f"{item.item_code}-RENTAL"
         if frappe.db.exists("Item", service_item_code):
-            frappe.delete_doc("Item", service_item_code)
+            self._safe_delete_item(service_item_code)
 
     def test_item_validation(self):
         """Test item validation rules"""
@@ -667,6 +704,9 @@ class TestSystemIntegration(TestRentalManagementIntegration):
         customer.insert()
         
         # Step 2: Create rental booking
+        # Ensure test item exists
+        test_item_code = self._ensure_test_item_exists("TEST-DRESS-001", "Test Wedding Dress")
+        
         booking = frappe.get_doc({
             "doctype": "Sales Invoice",
             "customer": customer.name,
@@ -676,7 +716,7 @@ class TestSystemIntegration(TestRentalManagementIntegration):
             "rental_duration_days": 6,
             "caution_deposit_amount": 5000,
             "items": [{
-                "item_code": self.test_items[0] if self.test_items else "TEST-DRESS-001",
+                "item_code": test_item_code,
                 "qty": 1,
                 "rate": 500
             }]

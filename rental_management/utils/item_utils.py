@@ -210,3 +210,12 @@ def calculate_item_utilization(item_code, from_date=None, to_date=None):
     except Exception as e:
         frappe.log_error(f"Error calculating utilization for item {item_code}: {str(e)}")
         return 0
+
+# Add alias functions for backward compatibility
+def approve_item(item_code, approved_by=None):
+    """Alias for approve_rental_item - for backward compatibility"""
+    return approve_rental_item(item_code, approved_by)
+
+def reject_item(item_code, reason=None, rejected_by=None):
+    """Alias for reject_rental_item - for backward compatibility"""
+    return reject_rental_item(item_code, reason, rejected_by)

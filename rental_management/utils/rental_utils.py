@@ -206,3 +206,34 @@ def process_bulk_status_update(bookings, new_status):
         "updated_count": updated_count,
         "errors": errors
     }
+
+# Add missing functions for rental_utils
+def check_item_availability(item_code, start_date=None, end_date=None):
+    """Check if a rental item is available - alias for get_item_availability_status"""
+    from rental_management.utils.item_utils import get_item_availability_status
+    return get_item_availability_status(item_code, start_date, end_date)
+
+def get_booking_status_summary():
+    """Get summary of booking statuses"""
+    try:
+        summary = frappe.db.sql("""
+            SELECT 
+                booking_status,
+                COUNT(*) as count,
+                SUM(grand_total) as total_amount
+            FROM `tabSales Invoice`
+            WHERE is_rental_booking = 1
+            AND docstatus = 1
+            GROUP BY booking_status
+        """, as_dict=True)
+        
+        return summary
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting booking status summary: {str(e)}")
+        return []
+
+def get_dashboard_data():
+    """Get dashboard data for rental management - alias for get_rental_dashboard_data in rental_utils"""
+    from rental_management.utils.rental_utils import get_rental_dashboard_data
+    return get_rental_dashboard_data()
