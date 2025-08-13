@@ -61,7 +61,19 @@ def test_item_creation():
         
         # Delete if exists
         if frappe.db.exists("Item", item_code):
-            frappe.delete_doc("Item", item_code)
+            try:
+                frappe.delete_doc("Item", item_code, force=True)
+            except:
+                # If deletion fails, try disabling first
+                try:
+                    existing_item = frappe.get_doc("Item", item_code)
+                    existing_item.disabled = 1
+                    existing_item.save()
+                    frappe.delete_doc("Item", item_code, force=True)
+                except:
+                    # If still fails, use a different item code
+                    import random
+                    item_code = f"VALIDATE-TEST-DRESS-{random.randint(100, 999)}"
         
         item = frappe.get_doc({
             "doctype": "Item",
@@ -100,8 +112,11 @@ def test_item_creation():
             checks.append(("⚠️", "Service item not auto-created"))
         
         # Clean up
-        frappe.delete_doc("Item", item_code)
-        checks.append(("✅", "Test item cleaned up"))
+        try:
+            frappe.delete_doc("Item", item_code, force=True)
+            checks.append(("✅", "Test item cleaned up"))
+        except:
+            checks.append(("⚠️", "Could not clean up test item - may need manual cleanup"))
         
         return checks
         
@@ -157,21 +172,30 @@ def test_booking_creation():
         # Create test customer first
         customer_name = "Booking Test Customer"
         if frappe.db.exists("Customer", customer_name):
-            frappe.delete_doc("Customer", customer_name)
+            try:
+                frappe.delete_doc("Customer", customer_name, force=True)
+            except:
+                import random
+                customer_name = f"Booking Test Customer {random.randint(100, 999)}"
         
         customer = frappe.get_doc({
             "doctype": "Customer",
             "customer_name": customer_name,
             "customer_type": "Individual",
             "customer_group": "Individual", 
-            "territory": "India"
+            "territory": "India",
+            "mobile_number": "9876543211"  # Add required mobile number
         })
         customer.insert()
         
         # Create test item
         item_code = "BOOKING-TEST-ITEM-001"
         if frappe.db.exists("Item", item_code):
-            frappe.delete_doc("Item", item_code)
+            try:
+                frappe.delete_doc("Item", item_code, force=True)
+            except:
+                import random
+                item_code = f"BOOKING-TEST-ITEM-{random.randint(100, 999)}"
         
         item = frappe.get_doc({
             "doctype": "Item",
@@ -217,10 +241,13 @@ def test_booking_creation():
             checks.append(("⚠️", "Rental dates not calculated"))
         
         # Clean up
-        frappe.delete_doc("Sales Invoice", booking.name)
-        frappe.delete_doc("Item", item_code)
-        frappe.delete_doc("Customer", customer_name)
-        checks.append(("✅", "Test data cleaned up"))
+        try:
+            frappe.delete_doc("Sales Invoice", booking.name, force=True)
+            frappe.delete_doc("Item", item_code, force=True)
+            frappe.delete_doc("Customer", customer_name, force=True)
+            checks.append(("✅", "Test data cleaned up"))
+        except Exception as cleanup_error:
+            checks.append(("⚠️", f"Partial cleanup completed - some test data may remain: {str(cleanup_error)}"))
         
         return checks
         
