@@ -205,7 +205,9 @@ def create_caution_deposit_entry(doc):
                     "debit_in_account_currency": 0,
                     "credit_in_account_currency": doc.caution_deposit_amount,
                     "reference_type": "Sales Invoice",
-                    "reference_name": doc.name
+                    "reference_name": doc.name,
+                    "party_type": "Customer",
+                    "party": doc.customer
                 }
             ]
         })
