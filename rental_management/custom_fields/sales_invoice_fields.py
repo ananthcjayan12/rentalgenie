@@ -248,6 +248,7 @@ def create_sales_invoice_custom_fields():
                     "reqd": field.get("reqd", 0),
                 }
             )
+            custom_field.flags.ignore_version = True  # Skip version tracking to avoid formatter issues
             custom_field.insert()
         else:
             # Update existing custom field to ensure visibility and correct defaults/options
