@@ -288,9 +288,27 @@ class TestRentalManagementIntegration(FrappeTestCase):
                 # Re-raise other validation errors
                 raise
 
-    def _create_test_booking_with_validation(self, function_date, rental_duration_days, item_code, caution_deposit_amount=None):
+    def _create_test_booking_with_validation(self, **kwargs):
         """Create a test booking with currency validation handling"""
-        test_customer = self._create_test_booking_customer()
+        # Default values
+        defaults = {
+            "function_date": add_days(today(), 10),
+            "rental_duration_days": 6,
+            "item_code": None,
+            "caution_deposit_amount": None,
+            "customer": None
+        }
+        
+        # Update with provided kwargs
+        defaults.update(kwargs)
+        
+        # Use provided customer or create a new one
+        test_customer = defaults.get("customer") or self._create_test_booking_customer()
+        
+        # Ensure item exists
+        item_code = defaults["item_code"]
+        if not item_code:
+            item_code = self._ensure_test_item_exists("TEST-DEFAULT-001", "Test Default Item")
         
         booking_data = {
             "doctype": "Sales Invoice",
@@ -299,17 +317,17 @@ class TestRentalManagementIntegration(FrappeTestCase):
             "currency": "INR",
             "selling_price_list": self.test_price_list,
             "is_rental_booking": 1,
-            "function_date": function_date,
-            "rental_duration_days": rental_duration_days,
+            "function_date": defaults["function_date"],
+            "rental_duration_days": defaults["rental_duration_days"],
             "items": [{
                 "item_code": item_code,
                 "qty": 1,
-                "rate": 500
+                "rate": defaults.get("item_rate", 500)
             }]
         }
         
-        if caution_deposit_amount:
-            booking_data["caution_deposit_amount"] = caution_deposit_amount
+        if defaults.get("caution_deposit_amount"):
+            booking_data["caution_deposit_amount"] = defaults["caution_deposit_amount"]
         
         booking = frappe.get_doc(booking_data)
         
@@ -318,6 +336,13 @@ class TestRentalManagementIntegration(FrappeTestCase):
             return booking
         except frappe.ValidationError as e:
             error_msg = str(e).lower()
+            if "exchange rate" in error_msg or "currency" in error_msg:
+                # Currency setup issue - skip this test gracefully
+                frappe.log_error(f"Currency validation error in test: {str(e)}")
+                return None
+            else:
+                # Re-raise other validation errors
+                raise
             if "exchange rate" in error_msg or "currency" in error_msg:
                 # Currency setup issue - return None to indicate failure
                 frappe.log_error(f"Currency validation error in test: {str(e)}")
