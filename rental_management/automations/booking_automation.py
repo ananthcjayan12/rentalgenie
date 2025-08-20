@@ -185,7 +185,7 @@ def create_caution_deposit_entry(doc):
             frappe.log_error(f"No cash account found for company {doc.company}")
             return
         
-        # Create journal entry
+        # Create journal entry - simplified without party details
         je = frappe.get_doc({
             "doctype": "Journal Entry",
             "voucher_type": "Journal Entry",
@@ -195,27 +195,31 @@ def create_caution_deposit_entry(doc):
             "accounts": [
                 {
                     "account": cash_account,
-                    "debit_in_account_currency": doc.caution_deposit_amount,
-                    "credit_in_account_currency": 0,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": doc.name
+                    "debit_in_account_currency": flt(doc.caution_deposit_amount),
+                    "credit_in_account_currency": 0
                 },
                 {
                     "account": caution_deposit_account,
                     "debit_in_account_currency": 0,
-                    "credit_in_account_currency": doc.caution_deposit_amount,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": doc.name
+                    "credit_in_account_currency": flt(doc.caution_deposit_amount)
                 }
             ]
         })
-        je.insert()
-        je.submit()
+        
+        # Try to insert without submit first
+        je.insert(ignore_permissions=True)
+        
+        # Then submit if insertion successful
+        try:
+            je.submit()
+            frappe.msgprint(f"Caution deposit journal entry {je.name} created successfully", alert=True)
+        except Exception as submit_error:
+            frappe.msgprint(f"Journal entry created but submission failed: {str(submit_error)}", alert=True)
         
     except Exception as e:
         # Don't fail the booking if journal entry fails, just log it
         frappe.msgprint(f"Caution deposit journal entry could not be created: {str(e)}", alert=True)
-        print(f"Error creating caution deposit entry for {doc.name}: {str(e)}")
+        frappe.log_error(f"Error creating caution deposit entry for {doc.name}: {str(e)}", "Rental Management")
 
 def create_caution_deposit_account(company):
     """Create caution deposit liability account if it doesn't exist"""
@@ -223,18 +227,19 @@ def create_caution_deposit_account(company):
     account_name = f"Caution Deposits Received - {company_abbr}"
     
     if not frappe.db.exists("Account", account_name):
-        # Get parent account - use Current Liabilities but as a regular liability account
+        # Get parent account - use Current Liabilities
         parent_account = f"Current Liabilities - {company_abbr}"
         
+        # Create as a regular liability account without special account type
         account = frappe.get_doc({
             "doctype": "Account",
             "account_name": "Caution Deposits Received",
             "parent_account": parent_account,
-            "account_type": "Stock Adjustment",  # This doesn't require party
             "company": company,
-            "is_group": 0
+            "is_group": 0,
+            "account_currency": frappe.get_value("Company", company, "default_currency")
         })
-        account.insert()
+        account.insert(ignore_permissions=True)
         return account.name
     
     return account_name

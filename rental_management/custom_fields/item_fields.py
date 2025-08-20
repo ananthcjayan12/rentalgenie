@@ -91,7 +91,8 @@ def create_item_custom_fields():
             "depends_on": "is_third_party_item",
             "default": 30,
             "insert_after": "is_third_party_item"
-        },        {
+        },
+        {
             "doctype": "Item",
             "fieldname": "third_party_supplier",
             "label": "Owner (Supplier)",

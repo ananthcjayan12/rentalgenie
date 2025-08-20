@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from frappe.utils import cstr
+from frappe.utils import cstr, flt
 
 def before_item_save(doc, method):
     """Validate and set defaults for rental items"""
@@ -27,15 +27,17 @@ def before_item_save(doc, method):
                     doc.item_group = "Rental Items"
         
         # Validate rental rate
-        if not doc.rental_rate_per_day or doc.rental_rate_per_day <= 0:
+        rental_rate = flt(doc.rental_rate_per_day)
+        if not rental_rate or rental_rate <= 0:
             frappe.throw(_("Rental Rate Per Day is mandatory for rental items"))
         
         # Enhanced validations for third-party items
         if doc.is_third_party_item:
-            if not doc.owner_commission_percent or doc.owner_commission_percent <= 0:
+            commission_percent = flt(doc.owner_commission_percent)
+            if not commission_percent or commission_percent <= 0:
                 frappe.throw(_("Owner Commission % is mandatory for third-party items"))
             
-            if doc.owner_commission_percent > 100:
+            if commission_percent > 100:
                 frappe.throw(_("Owner Commission % cannot exceed 100%"))
         
         # Auto-generate item description if not provided
