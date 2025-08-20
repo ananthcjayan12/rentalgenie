@@ -2,6 +2,35 @@ import frappe
 from frappe import _
 from frappe.utils import cstr, flt
 
+def auto_create_supplier_for_item(item_doc):
+    """Auto-create supplier for third-party rental items"""
+    if not item_doc.is_third_party_item:
+        return None
+    
+    try:
+        # Generate supplier name based on item code and name
+        supplier_name = f"Owner-{item_doc.item_code}"
+        
+        # Check if supplier already exists
+        if frappe.db.exists("Supplier", supplier_name):
+            return supplier_name
+        
+        # Create new supplier
+        supplier = frappe.get_doc({
+            "doctype": "Supplier",
+            "supplier_name": supplier_name,
+            "supplier_type": "Individual",
+            "supplier_group": "Local"
+        })
+        supplier.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        return supplier.name
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating supplier for item {item_doc.name}: {str(e)}")
+        return None
+
 def before_item_save(doc, method):
     """Validate and set defaults for rental items"""
     if doc.is_rental_item:
@@ -14,7 +43,18 @@ def before_item_save(doc, method):
         if not doc.stock_uom:
             doc.stock_uom = "Nos"
         
-        # Set default item group based on category
+        # Set item category based on item group if not already set
+        if not doc.rental_item_type and doc.item_group:
+            if "dress" in doc.item_group.lower():
+                doc.rental_item_type = "Dress"
+            elif "ornament" in doc.item_group.lower():
+                doc.rental_item_type = "Ornament"
+            elif "accessor" in doc.item_group.lower():
+                doc.rental_item_type = "Accessory"
+            else:
+                doc.rental_item_type = "Other"
+        
+        # Set default item group based on category if needed
         if not doc.item_group or doc.item_group == "All Item Groups":
             if doc.rental_item_type:
                 if doc.rental_item_type in ["Dress", "Dresses"]:
@@ -39,6 +79,17 @@ def before_item_save(doc, method):
             
             if commission_percent > 100:
                 frappe.throw(_("Owner Commission % cannot exceed 100%"))
+                
+            # Auto-create/assign supplier if not already set
+            if not doc.third_party_supplier:
+                supplier_name = auto_create_supplier_for_item(doc)
+                if supplier_name:
+                    doc.third_party_supplier = supplier_name
+        
+        # Clear supplier if not a third-party item
+        if not doc.is_third_party_item:
+            doc.third_party_supplier = ""
+            doc.owner_commission_percent = 0
         
         # Auto-generate item description if not provided
         if not doc.description:
@@ -113,22 +164,20 @@ def create_rental_service_item(item_doc):
     frappe.db.set_value("Item", item_doc.name, "rental_service_item", service_item.name)
 
 def handle_third_party_supplier(item_doc):
-    """Create or link third party supplier"""
-    if not item_doc.third_party_supplier:
-        # Auto-create supplier if not provided
-        supplier_name = f"Owner-{item_doc.item_code}"
-        
-        if not frappe.db.exists("Supplier", supplier_name):
-            supplier = frappe.get_doc({
-                "doctype": "Supplier",
-                "supplier_name": supplier_name,
-                "supplier_type": "Individual",
-                "supplier_group": "Local"
-            })
-            supplier.insert()
-            
-            # Update item with supplier reference
-            frappe.db.set_value("Item", item_doc.name, "third_party_supplier", supplier.name)
+    """Handle supplier creation for third-party items - only if not already done in before_save"""
+    if not item_doc.is_third_party_item:
+        return
+    
+    # If supplier is already set, no need to create again
+    if item_doc.third_party_supplier and frappe.db.exists("Supplier", item_doc.third_party_supplier):
+        return
+    
+    # Create supplier if not already done
+    supplier_name = auto_create_supplier_for_item(item_doc)
+    if supplier_name and supplier_name != item_doc.third_party_supplier:
+        # Update the item document with the supplier reference
+        frappe.db.set_value("Item", item_doc.name, "third_party_supplier", supplier_name)
+        frappe.db.commit()
 
 def create_initial_stock_entry(item_doc):
     """Create initial stock entry for the rental item"""

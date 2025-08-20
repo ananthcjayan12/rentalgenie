@@ -33,7 +33,7 @@ def create_item_custom_fields():
         {
             "doctype": "Item", 
             "fieldname": "rental_item_type",
-            "label": "Item Category",
+            "label": "Rental Item Category",
             "fieldtype": "Select",
             "options": "\nDress\nOrnament\nAccessory\nOther",
             "depends_on": "is_rental_item",
