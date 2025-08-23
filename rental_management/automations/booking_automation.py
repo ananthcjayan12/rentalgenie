@@ -102,7 +102,7 @@ def calculate_rental_amounts(doc):
     
     # Set caution deposit if not already set
     if not doc.caution_deposit_amount:
-        doc.caution_deposit_amount = caution_deposit or 5000  # Default amount
+        doc.caution_deposit_amount = caution_deposit  # Default amount
 
 def validate_exchange_booking(doc):
     """Validate exchange booking details"""
@@ -355,22 +355,47 @@ def create_owner_commission_liabilities(doc):
                     frappe.log_error(f"[DEBUG] Skipping empty item line {idx} on {doc.name}")
                     continue
 
-                item_doc = frappe.get_doc("Item", item.item_code)
+                # Try to fetch the Item doc for the invoice line
+                try:
+                    item_doc = frappe.get_doc("Item", item.item_code)
+                except Exception as e:
+                    frappe.log_error(f"[DEBUG] Could not fetch Item {getattr(item,'item_code',None)} on {doc.name}: {str(e)}\n{frappe.get_traceback()}")
+                    item_doc = None
+
+                # If the invoice line references a service item (rental service), map back to the original physical item
+                # The original Item stores the link in the field `rental_service_item`.
+                if item_doc and not bool(item_doc.get("is_third_party_item")):
+                    # Heuristic: service items are non-stock or have codes ending with '-RENTAL'
+                    is_service_like = (not bool(item_doc.get("is_stock_item"))) or (str(item.item_code).upper().endswith("-RENTAL"))
+                    if is_service_like:
+                        parent_item_code = frappe.db.get_value("Item", {"rental_service_item": item.item_code}, "name")
+                        if parent_item_code:
+                            try:
+                                parent_item_doc = frappe.get_doc("Item", parent_item_code)
+                                frappe.log_error(f"[DEBUG] Mapped service item {item.item_code} to parent item {parent_item_code} for booking {doc.name}")
+                                item_doc = parent_item_doc
+                            except Exception as e:
+                                frappe.log_error(f"[DEBUG] Failed to fetch parent Item {parent_item_code}: {str(e)}\n{frappe.get_traceback()}")
+
+                # If still no item_doc, skip
+                if not item_doc:
+                    frappe.log_error(f"[DEBUG] No Item doc resolved for line {idx} ({getattr(item,'item_code',None)}) on {doc.name}")
+                    continue
+
+                is_third = bool(item_doc.get("is_third_party_item"))
+                supplier = item_doc.get("third_party_supplier")
+                commission_pct = flt(item_doc.get("owner_commission_percent") or 0)
+                line_amount = flt(item.amount or 0)
+
+                frappe.log_error(f"[DEBUG] Line {idx} - item: {item.item_code}, resolved_item: {item_doc.name}, is_third: {is_third}, supplier: {supplier}, commission_pct: {commission_pct}, line_amount: {line_amount}")
+
+                if is_third and supplier and commission_pct and line_amount:
+                    comm_amount = (line_amount * commission_pct) / 100.0
+                    supplier_commissions[supplier] = supplier_commissions.get(supplier, 0.0) + comm_amount
+                    frappe.log_error(f"[DEBUG] Accumulated commission for {supplier}: {supplier_commissions[supplier]}")
+
             except Exception as e:
-                frappe.log_error(f"[DEBUG] Could not fetch Item {getattr(item,'item_code',None)} on {doc.name}: {str(e)}\n{frappe.get_traceback()}")
-                continue
-
-            is_third = bool(item_doc.get("is_third_party_item"))
-            supplier = item_doc.get("third_party_supplier")
-            commission_pct = flt(item_doc.get("owner_commission_percent") or 0)
-            line_amount = flt(item.amount or 0)
-
-            frappe.log_error(f"[DEBUG] Line {idx} - item: {item.item_code}, is_third: {is_third}, supplier: {supplier}, commission_pct: {commission_pct}, line_amount: {line_amount}")
-
-            if is_third and supplier and commission_pct and line_amount:
-                comm_amount = (line_amount * commission_pct) / 100.0
-                supplier_commissions[supplier] = supplier_commissions.get(supplier, 0.0) + comm_amount
-                frappe.log_error(f"[DEBUG] Accumulated commission for {supplier}: {supplier_commissions[supplier]}")
+                frappe.log_error(f"[DEBUG] Error processing line {idx} on {doc.name}: {str(e)}\n{frappe.get_traceback()}")
 
         frappe.log_error(f"[DEBUG] supplier_commissions computed: {supplier_commissions}")
 
