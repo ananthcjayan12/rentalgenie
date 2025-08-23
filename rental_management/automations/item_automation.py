@@ -1,6 +1,35 @@
 import frappe
 from frappe import _
-from frappe.utils import cstr
+from frappe.utils import cstr, flt
+
+def auto_create_supplier_for_item(item_doc):
+    """Auto-create supplier for third-party rental items"""
+    if not item_doc.is_third_party_item:
+        return None
+    
+    try:
+        # Generate supplier name based on item code and name
+        supplier_name = f"Owner-{item_doc.item_code}"
+        
+        # Check if supplier already exists
+        if frappe.db.exists("Supplier", supplier_name):
+            return supplier_name
+        
+        # Create new supplier
+        supplier = frappe.get_doc({
+            "doctype": "Supplier",
+            "supplier_name": supplier_name,
+            "supplier_type": "Individual",
+            "supplier_group": "Local"
+        })
+        supplier.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        return supplier.name
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating supplier for item {item_doc.name}: {str(e)}")
+        return None
 
 def before_item_save(doc, method):
     """Validate and set defaults for rental items"""
@@ -14,7 +43,18 @@ def before_item_save(doc, method):
         if not doc.stock_uom:
             doc.stock_uom = "Nos"
         
-        # Set default item group based on category
+        # Set item category based on item group if not already set
+        if not doc.rental_item_type and doc.item_group:
+            if "dress" in doc.item_group.lower():
+                doc.rental_item_type = "Dress"
+            elif "ornament" in doc.item_group.lower():
+                doc.rental_item_type = "Ornament"
+            elif "accessor" in doc.item_group.lower():
+                doc.rental_item_type = "Accessory"
+            else:
+                doc.rental_item_type = "Other"
+        
+        # Set default item group based on category if needed
         if not doc.item_group or doc.item_group == "All Item Groups":
             if doc.item_category:
                 doc.item_group = doc.item_category
@@ -22,16 +62,35 @@ def before_item_save(doc, method):
                 doc.item_group = "Rental Items"
         
         # Validate rental rate
-        if not doc.rental_rate_per_day or doc.rental_rate_per_day <= 0:
+        rental_rate = flt(doc.rental_rate_per_day)
+        if not rental_rate or rental_rate <= 0:
             frappe.throw(_("Rental Rate Per Day is mandatory for rental items"))
         
         # Enhanced validations for third-party items
         if doc.is_third_party_item:
-            if not doc.owner_commission_percent or doc.owner_commission_percent <= 0:
+            commission_percent = flt(doc.owner_commission_percent)
+            if not commission_percent or commission_percent <= 0:
                 frappe.throw(_("Owner Commission % is mandatory for third-party items"))
             
-            if doc.owner_commission_percent > 100:
+            if commission_percent > 100:
                 frappe.throw(_("Owner Commission % cannot exceed 100%"))
+            
+            # Purchase cost is mandatory for third-party items for proper accounting
+            purchase_cost = flt(doc.purchase_cost)
+            if not purchase_cost or purchase_cost <= 0:
+                frappe.throw(_("Purchase Cost is mandatory for third-party items to create proper accounting entries"))
+                
+            # Auto-create/assign supplier if not already set
+            if not doc.third_party_supplier:
+                supplier_name = auto_create_supplier_for_item(doc)
+                if supplier_name:
+                    doc.third_party_supplier = supplier_name
+        
+        # Clear supplier if not a third-party item
+        if not doc.is_third_party_item:
+            doc.third_party_supplier = ""
+            doc.owner_commission_percent = 0
+            doc.purchase_cost = 0
         
         # Auto-generate item description if not provided
         if not doc.description:
@@ -106,87 +165,181 @@ def create_rental_service_item(item_doc):
     frappe.db.set_value("Item", item_doc.name, "rental_service_item", service_item.name)
 
 def handle_third_party_supplier(item_doc):
-    """Create or link third party supplier"""
-    if not item_doc.third_party_supplier:
-        # Auto-create supplier if not provided
-        supplier_name = f"Owner-{item_doc.item_code}"
-        
-        if not frappe.db.exists("Supplier", supplier_name):
-            supplier = frappe.get_doc({
-                "doctype": "Supplier",
-                "supplier_name": supplier_name,
-                "supplier_type": "Individual",
-                "supplier_group": "Local"
-            })
-            supplier.insert()
-            
-            # Update item with supplier reference
-            frappe.db.set_value("Item", item_doc.name, "third_party_supplier", supplier.name)
+    """Handle supplier creation for third-party items - only if not already done in before_save"""
+    if not item_doc.is_third_party_item:
+        return
+    
+    # If supplier is already set, no need to create again
+    if item_doc.third_party_supplier and frappe.db.exists("Supplier", item_doc.third_party_supplier):
+        return
+    
+    # Create supplier if not already done
+    supplier_name = auto_create_supplier_for_item(item_doc)
+    if supplier_name and supplier_name != item_doc.third_party_supplier:
+        # Update the item document with the supplier reference
+        frappe.db.set_value("Item", item_doc.name, "third_party_supplier", supplier_name)
+        frappe.db.commit()
 
 def create_initial_stock_entry(item_doc):
-    """Create initial stock entry for the rental item"""
+    """Create initial stock entry for rental items (or purchase documents for third-party items)"""
     if not item_doc.is_rental_item:
         return
     
     try:
-        # Get default company
-        company = frappe.defaults.get_global_default("company")
-        if not company:
-            # Get the first company if no default
-            company = frappe.db.get_value("Company", {}, "name")
-        
-        if not company:
-            frappe.log_error(f"No company found. Cannot create stock entry for {item_doc.name}")
-            return
-        
-        # Try to find a rental warehouse first, otherwise use any warehouse
-        rental_warehouse = f"Rental Store - {company}"
-        if not frappe.db.exists("Warehouse", rental_warehouse):
-            # Get any warehouse for the company
-            rental_warehouse = frappe.db.get_value("Warehouse", 
-                                                 {"company": company, "is_group": 0}, 
-                                                 "name")
-        
-        if not rental_warehouse:
-            frappe.log_error(f"No warehouse found for company {company}. Cannot create stock entry for {item_doc.name}")
-            return
-        
-        # Get cost center
-        cost_center = frappe.db.get_value("Company", company, "cost_center")
-        if not cost_center:
-            cost_center = frappe.db.get_value("Cost Center", {"company": company}, "name")
-        
+        # For third-party items, create Purchase Invoice and Purchase Receipt
+        if item_doc.is_third_party_item:
+            create_third_party_purchase_documents(item_doc)
+        else:
+            # For in-house items, create regular stock entry
+            create_inhouse_stock_entry(item_doc)
+            
+    except Exception as e:
+        error_msg = f"Error creating initial stock/purchase documents for {item_doc.name}: {str(e)}"
+        frappe.log_error(error_msg)
+        frappe.msgprint(f"⚠️ Warning: Could not create initial stock/purchase documents. Error: {str(e)}", alert=True)
+
+def create_third_party_purchase_documents(item_doc):
+    """Create Purchase Invoice and Purchase Receipt for third-party items"""
+    # Get default company
+    company = frappe.defaults.get_global_default("company")
+    if not company:
+        company = frappe.db.get_value("Company", {}, "name")
+    
+    if not company:
+        frappe.throw("No company found. Cannot create purchase documents.")
+    
+    # Get warehouse
+    rental_warehouse = f"Rental Store - {company}"
+    if not frappe.db.exists("Warehouse", rental_warehouse):
+        rental_warehouse = frappe.db.get_value("Warehouse", 
+                                             {"company": company, "is_group": 0}, 
+                                             "name")
+    
+    if not rental_warehouse:
+        frappe.throw(f"No warehouse found for company {company}")
+    
+    # Get purchase cost - this is mandatory for third-party items
+    purchase_cost = flt(item_doc.purchase_cost)
+    if not purchase_cost or purchase_cost <= 0:
+        frappe.throw("Purchase Cost is mandatory for third-party items to create proper accounting entries")
+    
+    # Ensure supplier exists
+    if not item_doc.third_party_supplier:
+        frappe.throw("Third Party Supplier is required for creating purchase documents")
+    
+    # Get cost center
+    cost_center = frappe.db.get_value("Company", company, "cost_center")
+    if not cost_center:
+        cost_center = frappe.db.get_value("Cost Center", {"company": company}, "name")
+    
+    # 1. Create Purchase Receipt first
+    purchase_receipt = frappe.get_doc({
+        "doctype": "Purchase Receipt",
+        "supplier": item_doc.third_party_supplier,
+        "company": company,
+        "posting_date": item_doc.purchase_date or frappe.utils.today(),
+        "title": f"Third Party Item Receipt - {item_doc.item_name}",
+        "items": [{
+            "item_code": item_doc.item_code,
+            "item_name": item_doc.item_name,
+            "qty": 1,
+            "rate": purchase_cost,
+            "amount": purchase_cost,
+            "warehouse": rental_warehouse,
+            "uom": item_doc.stock_uom or "Nos",
+            "cost_center": cost_center
+        }]
+    })
+    
+    purchase_receipt.insert()
+    purchase_receipt.submit()
+    
+    # 2. Create Purchase Invoice (with is_paid = 0 to show liability)
+    purchase_invoice = frappe.get_doc({
+        "doctype": "Purchase Invoice",
+        "supplier": item_doc.third_party_supplier,
+        "company": company,
+        "posting_date": item_doc.purchase_date or frappe.utils.today(),
+        "due_date": frappe.utils.add_days(frappe.utils.today(), 30),  # 30 days credit
+        "title": f"Third Party Item Invoice - {item_doc.item_name}",
+        "is_paid": 0,  # Important: Keep as unpaid to show liability
+        "items": [{
+            "item_code": item_doc.item_code,
+            "item_name": item_doc.item_name,
+            "qty": 1,
+            "rate": purchase_cost,
+            "amount": purchase_cost,
+            "purchase_receipt": purchase_receipt.name,
+            "pr_detail": purchase_receipt.items[0].name,
+            "uom": item_doc.stock_uom or "Nos",
+            "cost_center": cost_center
+        }]
+    })
+    
+    purchase_invoice.insert()
+    purchase_invoice.submit()
+    
+    frappe.msgprint(f"✅ Purchase documents created for third-party item:<br>"
+                   f"• Purchase Receipt: {purchase_receipt.name}<br>"
+                   f"• Purchase Invoice: {purchase_invoice.name}<br>"
+                   f"• Amount: ₹{purchase_cost}")
+
+def create_inhouse_stock_entry(item_doc):
+    """Create stock entry for in-house rental items"""
+    # Get default company
+    company = frappe.defaults.get_global_default("company")
+    if not company:
+        company = frappe.db.get_value("Company", {}, "name")
+    
+    if not company:
+        frappe.log_error(f"No company found. Cannot create stock entry for {item_doc.name}")
+        return
+    
+    # Try to find a rental warehouse first, otherwise use any warehouse
+    rental_warehouse = f"Rental Store - {company}"
+    if not frappe.db.exists("Warehouse", rental_warehouse):
+        rental_warehouse = frappe.db.get_value("Warehouse", 
+                                             {"company": company, "is_group": 0}, 
+                                             "name")
+    
+    if not rental_warehouse:
+        frappe.log_error(f"No warehouse found for company {company}. Cannot create stock entry for {item_doc.name}")
+        return
+    
+    # Get cost center
+    cost_center = frappe.db.get_value("Company", company, "cost_center")
+    if not cost_center:
+        cost_center = frappe.db.get_value("Cost Center", {"company": company}, "name")
+    
+    # For in-house items, use purchase_cost if available, otherwise fallback to rental rate calculation
+    if item_doc.purchase_cost and flt(item_doc.purchase_cost) > 0:
+        basic_rate = flt(item_doc.purchase_cost)
+    else:
         # Calculate basic rate (use rental rate * 30 as estimated value)
         basic_rate = float(item_doc.rental_rate_per_day or 0) * 30
         if basic_rate <= 0:
             basic_rate = 1000  # Default fallback value
-        
-        # Create stock entry for initial inventory
-        stock_entry = frappe.get_doc({
-            "doctype": "Stock Entry",
-            "stock_entry_type": "Material Receipt",
-            "company": company,
-            "title": f"Initial Stock - {item_doc.item_name}",
-            "items": [{
-                "item_code": item_doc.item_code,
-                "qty": 1,  # Default quantity for rental items
-                "t_warehouse": rental_warehouse,
-                "basic_rate": basic_rate,
-                "uom": item_doc.stock_uom or "Nos"
-            }]
-        })
-        
-        # Add cost center if available
-        if cost_center:
-            stock_entry.items[0].cost_center = cost_center
-        
-        stock_entry.insert()
-        # Auto-submit the stock entry
-        stock_entry.submit()
-        
-        frappe.msgprint(f"✅ Initial stock entry created: {stock_entry.name}")
-        
-    except Exception as e:
-        error_msg = f"Error creating stock entry for {item_doc.name}: {str(e)}"
-        frappe.log_error(error_msg)
-        frappe.msgprint(f"⚠️ Warning: Could not create initial stock entry. Error: {str(e)}", alert=True)
+    
+    # Create stock entry for initial inventory
+    stock_entry = frappe.get_doc({
+        "doctype": "Stock Entry",
+        "stock_entry_type": "Material Receipt",
+        "company": company,
+        "title": f"Initial Stock - {item_doc.item_name}",
+        "items": [{
+            "item_code": item_doc.item_code,
+            "qty": 1,  # Default quantity for rental items
+            "t_warehouse": rental_warehouse,
+            "basic_rate": basic_rate,
+            "uom": item_doc.stock_uom or "Nos"
+        }]
+    })
+    
+    # Add cost center if available
+    if cost_center:
+        stock_entry.items[0].cost_center = cost_center
+    
+    stock_entry.insert()
+    stock_entry.submit()
+    
+    frappe.msgprint(f"✅ Initial stock entry created: {stock_entry.name}")

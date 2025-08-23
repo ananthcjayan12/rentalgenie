@@ -88,13 +88,13 @@ def calculate_rental_amounts(doc):
             
             if item_doc.get("is_rental_item"):
                 # Calculate commission for this item
-                commission_rate = item_doc.get("owner_commission_percent", 0) or 0
-                if commission_rate > 0 and item.amount:
-                    item_commission = (flt(item.amount) * flt(commission_rate)) / 100
+                commission_rate = item_doc.get("owner_commission_percentage", 0)
+                if commission_rate and item.amount:
+                    item_commission = (item.amount * commission_rate) / 100
                     total_commission += item_commission
                 
                 # Add to caution deposit calculation if needed
-                item_caution = item_doc.get("suggested_caution_deposit", 0) or 0
+                item_caution = item_doc.get("suggested_caution_deposit", 0)
                 if item_caution > caution_deposit:
                     caution_deposit = item_caution
     
@@ -102,7 +102,7 @@ def calculate_rental_amounts(doc):
     
     # Set caution deposit if not already set
     if not doc.caution_deposit_amount:
-        doc.caution_deposit_amount = caution_deposit or 5000  # Default amount
+        doc.caution_deposit_amount = caution_deposit  # Default amount
 
 def validate_exchange_booking(doc):
     """Validate exchange booking details"""
@@ -133,6 +133,13 @@ def on_submit_sales_invoice(doc, method):
         # Create caution deposit entry if amount is specified
         if doc.caution_deposit_amount:
             create_caution_deposit_entry(doc)
+        
+        # Create owner commission liability entries for third-party items
+        try:
+            create_owner_commission_liabilities(doc)
+        except Exception as e:
+            # Log but do not block booking submission
+            frappe.log_error(f"Error creating owner commission entries for {doc.name}: {str(e)}")
         
         # Update customer statistics
         update_customer_stats(doc)
@@ -185,7 +192,7 @@ def create_caution_deposit_entry(doc):
             frappe.log_error(f"No cash account found for company {doc.company}")
             return
         
-        # Create journal entry
+        # Create journal entry - simplified without party details
         je = frappe.get_doc({
             "doctype": "Journal Entry",
             "voucher_type": "Journal Entry",
@@ -195,29 +202,31 @@ def create_caution_deposit_entry(doc):
             "accounts": [
                 {
                     "account": cash_account,
-                    "debit_in_account_currency": doc.caution_deposit_amount,
-                    "credit_in_account_currency": 0,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": doc.name
+                    "debit_in_account_currency": flt(doc.caution_deposit_amount),
+                    "credit_in_account_currency": 0
                 },
                 {
                     "account": caution_deposit_account,
                     "debit_in_account_currency": 0,
-                    "credit_in_account_currency": doc.caution_deposit_amount,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": doc.name,
-                    "party_type": "Customer",
-                    "party": doc.customer
+                    "credit_in_account_currency": flt(doc.caution_deposit_amount)
                 }
             ]
         })
-        je.insert()
-        je.submit()
+        
+        # Try to insert without submit first
+        je.insert(ignore_permissions=True)
+        
+        # Then submit if insertion successful
+        try:
+            je.submit()
+            frappe.msgprint(f"Caution deposit journal entry {je.name} created successfully", alert=True)
+        except Exception as submit_error:
+            frappe.msgprint(f"Journal entry created but submission failed: {str(submit_error)}", alert=True)
         
     except Exception as e:
         # Don't fail the booking if journal entry fails, just log it
         frappe.msgprint(f"Caution deposit journal entry could not be created: {str(e)}", alert=True)
-        print(f"Error creating caution deposit entry for {doc.name}: {str(e)}")
+        frappe.log_error(f"Error creating caution deposit entry for {doc.name}: {str(e)}", "Rental Management")
 
 def create_caution_deposit_account(company):
     """Create caution deposit liability account if it doesn't exist"""
@@ -225,18 +234,19 @@ def create_caution_deposit_account(company):
     account_name = f"Caution Deposits Received - {company_abbr}"
     
     if not frappe.db.exists("Account", account_name):
-        # Get parent account - use Current Liabilities but as a regular liability account
+        # Get parent account - use Current Liabilities
         parent_account = f"Current Liabilities - {company_abbr}"
         
+        # Create as a regular liability account without special account type
         account = frappe.get_doc({
             "doctype": "Account",
             "account_name": "Caution Deposits Received",
             "parent_account": parent_account,
-            "account_type": "Stock Adjustment",  # This doesn't require party
             "company": company,
-            "is_group": 0
+            "is_group": 0,
+            "account_currency": frappe.get_value("Company", company, "default_currency")
         })
-        account.insert()
+        account.insert(ignore_permissions=True)
         return account.name
     
     return account_name
@@ -324,3 +334,179 @@ def mark_returned(booking_name, notes=None):
 def complete_booking(booking_name, notes=None):
     """Quick action to complete booking"""
     return update_booking_status(booking_name, "Completed", notes)
+
+def create_owner_commission_liabilities(doc):
+    """Aggregate owner commissions per supplier and create Journal Entries to reflect liability.
+
+    Added verbose debug logging to help trace why commission JEs may not be created or reflected.
+    """
+    try:
+        company = doc.company
+        frappe.log_error(f"[DEBUG] create_owner_commission_liabilities START - doc: {doc.name}, company: {company}")
+        if not company:
+            frappe.log_error(f"[DEBUG] No company on document {doc.name}")
+            return
+
+        # Aggregate commission amounts by supplier
+        supplier_commissions = {}
+        for idx, item in enumerate(doc.items or []):
+            try:
+                if not item.item_code:
+                    frappe.log_error(f"[DEBUG] Skipping empty item line {idx} on {doc.name}")
+                    continue
+
+                # Try to fetch the Item doc for the invoice line
+                try:
+                    item_doc = frappe.get_doc("Item", item.item_code)
+                except Exception as e:
+                    frappe.log_error(f"[DEBUG] Could not fetch Item {getattr(item,'item_code',None)} on {doc.name}: {str(e)}\n{frappe.get_traceback()}")
+                    item_doc = None
+
+                # If the invoice line references a service item (rental service), map back to the original physical item
+                # The original Item stores the link in the field `rental_service_item`.
+                if item_doc and not bool(item_doc.get("is_third_party_item")):
+                    # Heuristic: service items are non-stock or have codes ending with '-RENTAL'
+                    is_service_like = (not bool(item_doc.get("is_stock_item"))) or (str(item.item_code).upper().endswith("-RENTAL"))
+                    if is_service_like:
+                        parent_item_code = frappe.db.get_value("Item", {"rental_service_item": item.item_code}, "name")
+                        if parent_item_code:
+                            try:
+                                parent_item_doc = frappe.get_doc("Item", parent_item_code)
+                                frappe.log_error(f"[DEBUG] Mapped service item {item.item_code} to parent item {parent_item_code} for booking {doc.name}")
+                                item_doc = parent_item_doc
+                            except Exception as e:
+                                frappe.log_error(f"[DEBUG] Failed to fetch parent Item {parent_item_code}: {str(e)}\n{frappe.get_traceback()}")
+
+                # If still no item_doc, skip
+                if not item_doc:
+                    frappe.log_error(f"[DEBUG] No Item doc resolved for line {idx} ({getattr(item,'item_code',None)}) on {doc.name}")
+                    continue
+
+                is_third = bool(item_doc.get("is_third_party_item"))
+                supplier = item_doc.get("third_party_supplier")
+                commission_pct = flt(item_doc.get("owner_commission_percent") or 0)
+                line_amount = flt(item.amount or 0)
+
+                frappe.log_error(f"[DEBUG] Line {idx} - item: {item.item_code}, resolved_item: {item_doc.name}, is_third: {is_third}, supplier: {supplier}, commission_pct: {commission_pct}, line_amount: {line_amount}")
+
+                if is_third and supplier and commission_pct and line_amount:
+                    comm_amount = (line_amount * commission_pct) / 100.0
+                    supplier_commissions[supplier] = supplier_commissions.get(supplier, 0.0) + comm_amount
+                    frappe.log_error(f"[DEBUG] Accumulated commission for {supplier}: {supplier_commissions[supplier]}")
+
+            except Exception as e:
+                frappe.log_error(f"[DEBUG] Error processing line {idx} on {doc.name}: {str(e)}\n{frappe.get_traceback()}")
+
+        frappe.log_error(f"[DEBUG] supplier_commissions computed: {supplier_commissions}")
+
+        if not supplier_commissions:
+            frappe.log_error(f"[DEBUG] No supplier commissions to process for {doc.name}")
+            return
+
+        company_abbr = frappe.get_value("Company", company, "abbr")
+
+        # Resolve accounts
+        payable_account = frappe.db.get_value("Account", {"account_type": "Payable", "company": company}, "name")
+        frappe.log_error(f"[DEBUG] initial payable_account lookup result: {payable_account}")
+        if not payable_account:
+            # Fallback to caution deposit parent (Current Liabilities) if exists
+            payable_account = f"Current Liabilities - {company_abbr}"
+            frappe.log_error(f"[DEBUG] fallback payable_account: {payable_account}")
+            if not frappe.db.exists("Account", payable_account):
+                try:
+                    parent = None
+                    if frappe.db.exists("Account", f"Current Liabilities - {company_abbr}"):
+                        parent = f"Current Liabilities - {company_abbr}"
+                    else:
+                        parent = frappe.get_value("Account", {"is_group": 1, "company": company}, "name") or None
+                    acct = frappe.get_doc({
+                        "doctype": "Account",
+                        "account_name": "Owner Commission Payable",
+                        "parent_account": parent or "Current Liabilities",
+                        "company": company,
+                        "is_group": 0
+                    })
+                    acct.insert(ignore_permissions=True)
+                    payable_account = acct.name
+                    frappe.log_error(f"[DEBUG] Created payable_account: {payable_account}")
+                except Exception as e:
+                    frappe.log_error(f"[ERROR] Failed to create payable account for {company}: {str(e)}\n{frappe.get_traceback()}")
+                    raise
+
+        # Find or create commission expense account
+        commission_expense_account = None
+        preferred_name = f"Owner Commission Expense - {company_abbr}"
+        if frappe.db.exists("Account", preferred_name):
+            commission_expense_account = preferred_name
+        else:
+            commission_expense_account = frappe.db.get_value("Account", {"account_type": "Expense", "company": company}, "name")
+            frappe.log_error(f"[DEBUG] initial commission_expense_account lookup result: {commission_expense_account}")
+            if not commission_expense_account:
+                try:
+                    parent_expense = None
+                    for candidate in [f"Direct Expenses - {company_abbr}", f"Expenses - {company_abbr}", f"Profit and Loss - {company_abbr}"]:
+                        if frappe.db.exists("Account", candidate):
+                            parent_expense = candidate
+                            break
+                    if not parent_expense:
+                        parent_expense = frappe.get_value("Account", {"company": company, "is_group": 1}, "name")
+                    acct = frappe.get_doc({
+                        "doctype": "Account",
+                        "account_name": "Owner Commission Expense",
+                        "parent_account": parent_expense or "Direct Expenses",
+                        "company": company,
+                        "is_group": 0
+                    })
+                    acct.insert(ignore_permissions=True)
+                    commission_expense_account = acct.name
+                    frappe.log_error(f"[DEBUG] Created commission_expense_account: {commission_expense_account}")
+                except Exception as e:
+                    frappe.log_error(f"[ERROR] Failed to create commission expense account for {company}: {str(e)}\n{frappe.get_traceback()}")
+                    raise
+
+        frappe.log_error(f"[DEBUG] Using payable_account: {payable_account}, commission_expense_account: {commission_expense_account}")
+
+        # For each supplier create a Journal Entry to book the liability
+        for supplier, amount in supplier_commissions.items():
+            try:
+                if flt(amount) <= 0:
+                    frappe.log_error(f"[DEBUG] Skipping zero/negative commission for {supplier}: {amount}")
+                    continue
+
+                je = frappe.get_doc({
+                    "doctype": "Journal Entry",
+                    "voucher_type": "Journal Entry",
+                    "posting_date": doc.posting_date or frappe.utils.nowdate(),
+                    "company": company,
+                    "user_remark": f"Owner commission for booking {doc.name} - Supplier {supplier}",
+                    "accounts": [
+                        {
+                            "account": commission_expense_account,
+                            "debit_in_account_currency": flt(amount),
+                            "credit_in_account_currency": 0
+                        },
+                        {
+                            "account": payable_account,
+                            "debit_in_account_currency": 0,
+                            "credit_in_account_currency": flt(amount),
+                            "party_type": "Supplier",
+                            "party": supplier
+                        }
+                    ]
+                })
+
+                frappe.log_error(f"[DEBUG] Inserting JE for supplier {supplier} amount {amount}")
+                je.insert(ignore_permissions=True)
+                frappe.log_error(f"[DEBUG] JE inserted: {je.name}")
+                try:
+                    je.submit()
+                    frappe.log_error(f"[DEBUG] JE submitted: {je.name}")
+                except Exception as sub_e:
+                    frappe.log_error(f"[ERROR] JE submit failed for {je.name}: {str(sub_e)}\n{frappe.get_traceback()}")
+            except Exception as e:
+                frappe.log_error(f"[ERROR] Failed to create owner commission JE for booking {doc.name}, supplier {supplier}: {str(e)}\n{frappe.get_traceback()}")
+
+    except Exception as e:
+        frappe.log_error(f"[FATAL] create_owner_commission_liabilities failed for {getattr(doc,'name',None)}: {str(e)}\n{frappe.get_traceback()}")
+        # Do not re-raise to avoid blocking booking submission
+        return

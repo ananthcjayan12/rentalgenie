@@ -32,10 +32,10 @@ def create_item_custom_fields():
         # Note: Caution deposit removed from item level - will be manually added at invoice level
         {
             "doctype": "Item", 
-            "fieldname": "item_category",
-            "label": "Item Category",
+            "fieldname": "rental_item_type",
+            "label": "Rental Item Category",
             "fieldtype": "Select",
-            "options": "\nWomen's Wear\nMen's Wear\nAccessories\nJewelry\nFootwear\nOthers",
+            "options": "\nDress\nOrnament\nAccessory\nOther",
             "depends_on": "is_rental_item",
             "insert_after": "rental_rate_per_day"
         },
@@ -43,7 +43,7 @@ def create_item_custom_fields():
             "doctype": "Item",
             "fieldname": "column_break_rental_1", 
             "fieldtype": "Column Break",
-            "insert_after": "item_category"
+            "insert_after": "rental_item_type"
         },
         {
             "doctype": "Item",
@@ -94,8 +94,8 @@ def create_item_custom_fields():
         },
         {
             "doctype": "Item",
-            "fieldname": "supplier_for_third_party",
-            "label": "Third Party Supplier",
+            "fieldname": "third_party_supplier",
+            "label": "Owner (Supplier)",
             "fieldtype": "Link",
             "options": "Supplier",
             "depends_on": "is_third_party_item",
@@ -109,7 +109,7 @@ def create_item_custom_fields():
             "fieldtype": "Section Break",
             "depends_on": "is_rental_item",
             "collapsible": 1,
-            "insert_after": "supplier_for_third_party"
+            "insert_after": "third_party_supplier"
         },
         {
             "doctype": "Item",
