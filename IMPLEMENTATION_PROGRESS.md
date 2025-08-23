@@ -1,8 +1,24 @@
-# Rental Manag---
+# Rental Management System - Implementation Progress
 
-## 📝 Current Phase: Phase 3 - Customer Enhancement 🧪 TESTING
+## 📝 Current Phase: Phase 4 - Sales Invoice & Booking Enhancement 🧪 TESTING
 
-### 🧪 Phase 3 Testing Checklist:
+### 🎯 Latest Update: Third-Party Item Accounting Enhancement
+
+**✅ MAJOR IMPROVEMENT COMPLETED:**
+- **Replaced basic stock entries with proper Purchase Invoice + Purchase Receipt workflow for third-party items**
+- **Enhanced accounting treatment:**
+  - Third-party items now create Purchase Invoice (with is_paid=0) → Shows liability on balance sheet
+  - Purchase Receipt created for asset tracking
+  - Purchase Cost field is now mandatory for third-party items
+  - Proper asset/liability reflection in financial statements
+- **Validation improvements:**
+  - Purchase Cost validation for third-party items
+  - Auto-clearing of irrelevant fields based on item type
+- **Differentiated workflows:**
+  - Third-party items: Purchase Invoice + Receipt (proper accounting)
+  - In-house items: Stock Entry (simple inventory tracking)
+
+### 🧪 Phase 4 Testing Checklist:
 
 ### Test 3.1: Customer Custom Fields ⏳
 - [ ] Navigate to **Selling → Customer → New**
@@ -233,6 +249,53 @@ Rental Management setup completed!
 - [ ] Process partial refund
 - [ ] Process full refund
 - [ ] Verify accounting entries are correct
+
+### Test 4.8: Third-Party Item Accounting Workflow ⭐ **NEW PRIORITY TEST**
+
+**Test Case 1: Third-Party Item with Purchase Invoice/Receipt**
+1. **Create third-party rental item:**
+   - Item Code: `TEST-THIRD-PARTY-001`
+   - Item Name: `Test Designer Lehenga`
+   - Is Rental Item: ✓
+   - Is Third Party Item: ✓
+   - Rental Rate Per Day: `2500`
+   - Caution Deposit: `10000`
+   - Owner Commission %: `60`
+   - **Purchase Cost: `50000`** (Mandatory field)
+
+2. **Save and verify automatic creation:**
+   - [ ] Third-party supplier auto-created (Owner-TEST-THIRD-PARTY-001)
+   - [ ] **Purchase Receipt created** with title "Third Party Item Receipt - Test Designer Lehenga"
+   - [ ] **Purchase Invoice created** with title "Third Party Item Invoice - Test Designer Lehenga"
+   - [ ] Purchase Invoice has `is_paid = 0` (showing liability)
+   - [ ] Both documents submitted successfully
+   - [ ] Success message shows both document names
+
+3. **Verify accounting entries:**
+   - [ ] **Asset side:** Stock value ₹50,000 in warehouse
+   - [ ] **Liability side:** Outstanding amount ₹50,000 to supplier
+   - [ ] GL entries show proper Dr/Cr for asset and liability accounts
+
+**Test Case 2: Third-Party Item Validation**
+1. **Try creating third-party item without Purchase Cost:**
+   - Should show error: "Purchase Cost is mandatory for third-party items"
+2. **Try creating with Purchase Cost = 0:**
+   - Should show same validation error
+
+**Test Case 3: In-House Item Comparison**
+1. **Create in-house rental item:**
+   - Same details as above but `Is Third Party Item: ✗`
+   - Purchase Cost: `25000` (optional for in-house)
+2. **Verify different workflow:**
+   - [ ] **Stock Entry created** (not Purchase documents)
+   - [ ] No supplier created
+   - [ ] No liability shown (owned asset)
+
+**Expected Benefits:**
+- ✅ Proper balance sheet treatment for third-party items
+- ✅ Clear liability tracking for amounts owed to item owners
+- ✅ Accurate asset valuation based on actual purchase cost
+- ✅ Differentiated accounting for owned vs. third-party items
 
 ---
 
