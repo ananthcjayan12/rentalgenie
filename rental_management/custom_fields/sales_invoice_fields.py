@@ -2,7 +2,7 @@ import frappe
 
 def create_sales_invoice_custom_fields():
     """Create custom fields for Sales Invoice doctype for rental bookings"""
-    
+    #dsd
     custom_fields = [
         {
             "doctype": "Sales Invoice",
