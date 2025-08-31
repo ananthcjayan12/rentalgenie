@@ -1,0 +1,694 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head_include %}
+<meta name="description" content="{{ meta_description }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<style>
+:root {
+    --primary-color: #7B2CBF;
+    --secondary-color: #FF6B6B;
+    --background: #F8F9FA;
+    --text-primary: #2C3E50;
+    --text-secondary: #7F8C8D;
+    --border-color: #E1E8ED;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--background);
+    margin: 0;
+    padding: 0;
+    padding-bottom: 80px; /* Space for bottom nav */
+}
+
+.portal-header {
+    background: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-btn {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    text-decoration: none;
+    padding: 0.5rem;
+}
+
+.header-title {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cart-icon {
+    position: relative;
+    padding: 0.5rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 1.25rem;
+}
+
+.cart-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--secondary-color);
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.filters-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.search-input:focus {
+    border-color: var(--primary-color);
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.filter-select {
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    background: white;
+    min-width: 150px;
+}
+
+.filter-select:focus {
+    border-color: var(--primary-color);
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.results-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.view-toggles {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.view-btn {
+    padding: 0.5rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+}
+
+.view-btn.active {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: #f3f0ff;
+}
+
+.items-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.list-view {
+    grid-template-columns: 1fr;
+}
+
+.item-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.item-image-container {
+    position: relative;
+    height: 200px;
+    background: #f5f5f5;
+}
+
+.list-view .item-image-container {
+    height: 150px;
+}
+
+.item-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    background: var(--success-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.item-info {
+    padding: 1.5rem;
+}
+
+.list-view .item-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.item-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.list-view .item-description {
+    margin-bottom: 0.5rem;
+}
+
+.item-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.price-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.item-actions {
+    margin-top: 1rem;
+}
+
+.list-view .item-actions {
+    margin-top: 0;
+    margin-left: 1rem;
+}
+
+.btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.list-view .btn {
+    width: auto;
+    min-width: 120px;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #6A1B9A;
+    transform: translateY(-1px);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 3rem;
+}
+
+.page-btn {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.page-btn:hover:not(.disabled) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.page-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.page-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.no-results i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.error-message {
+    background: #fee;
+    color: #c53030;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        min-width: unset;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .view-toggles {
+        justify-content: center;
+    }
+    
+    .list-view .item-info {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .list-view .item-actions {
+        margin-left: 0;
+        margin-top: 1rem;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+    }
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    transition: color 0.3s;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="categoryPage()" x-init="init()">
+    <!-- Header -->
+    <div class="portal-header">
+        <div class="header-content">
+            <a href="/portal" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-title">
+                {% if current_category %}
+                    {{ current_category.replace('_', ' ').title() }}
+                {% elif current_search %}
+                    Search: {{ current_search }}
+                {% else %}
+                    All Items
+                {% endif %}
+            </div>
+            <div class="header-actions">
+                <a href="/portal/cart" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span x-show="cartCount > 0" x-text="cartCount" class="cart-badge"></span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-container">
+        <!-- Error Message -->
+        {% if error_message %}
+        <div class="error-message">
+            {{ error_message }}
+        </div>
+        {% endif %}
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <form method="get" action="/portal/category">
+                <div class="filter-row">
+                    <!-- Search -->
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" name="search" class="search-input" 
+                               placeholder="Search items..." 
+                               value="{{ current_search or '' }}">
+                    </div>
+                    
+                    <!-- Category Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label">Category</label>
+                        <select name="category" class="filter-select">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.name }}" 
+                                    {% if current_category == category.name %}selected{% endif %}>
+                                {{ category.category_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Sort By -->
+                    <div class="filter-group">
+                        <label class="filter-label">Sort By</label>
+                        <select name="sort_by" class="filter-select">
+                            <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name</option>
+                            <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary" style="height: fit-content;">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Header -->
+        <div class="results-header">
+            <div class="results-info">
+                Showing {{ items|length }} of {{ total_items }} items
+                {% if current_page > 1 %} (Page {{ current_page }}){% endif %}
+            </div>
+            <div class="view-toggles">
+                <button @click="viewMode = 'grid'" 
+                        :class="{'active': viewMode === 'grid'}" 
+                        class="view-btn">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button @click="viewMode = 'list'" 
+                        :class="{'active': viewMode === 'list'}" 
+                        class="view-btn">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Items Grid -->
+        {% if items %}
+        <div class="items-grid" :class="viewMode + '-view'">
+            {% for item in items %}
+            <div class="item-card" @click="goToItem('{{ item.item_code }}')">
+                <div class="item-image-container">
+                    <img src="{{ item.image or '/assets/rental_management/images/placeholder.jpg' }}" 
+                         alt="{{ item.item_name }}" 
+                         class="item-image">
+                    <div class="item-badge">Available</div>
+                </div>
+                <div class="item-info">
+                    <div class="item-details">
+                        <h3 class="item-title">{{ item.item_name }}</h3>
+                        <p class="item-description">{{ item.description or 'Premium rental item available for your special occasions.' }}</p>
+                        <div class="item-price">₹{{ "{:,.0f}".format(item.rental_rate_per_day) }}</div>
+                        <div class="price-label">per day</div>
+                    </div>
+                    <div class="item-actions">
+                        <button onclick="event.stopPropagation(); window.location.href='/portal/item?item={{ item.item_code }}'" class="btn btn-primary">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>No items found</h3>
+            <p>Try adjusting your search terms or filters.</p>
+        </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            <!-- Previous Button -->
+            {% if has_prev %}
+            <a href="{{ base_url }}?{% if url_params %}{{ url_params }}&{% endif %}page={{ prev_page }}" class="page-btn">
+                <i class="fas fa-chevron-left"></i> Previous
+            </a>
+            {% else %}
+            <span class="page-btn disabled">
+                <i class="fas fa-chevron-left"></i> Previous
+            </span>
+            {% endif %}
+
+            <!-- Page Numbers -->
+            {% for page_num in page_numbers %}
+            {% if page_num == current_page %}
+            <span class="page-btn active">{{ page_num }}</span>
+            {% else %}
+            <a href="{{ base_url }}?{% if url_params %}{{ url_params }}&{% endif %}page={{ page_num }}" class="page-btn">{{ page_num }}</a>
+            {% endif %}
+            {% endfor %}
+
+            <!-- Next Button -->
+            {% if has_next %}
+            <a href="{{ base_url }}?{% if url_params %}{{ url_params }}&{% endif %}page={{ next_page }}" class="page-btn">
+                Next <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="page-btn disabled">
+                Next <i class="fas fa-chevron-right"></i>
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/portal" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/portal/category" class="nav-item active">
+            <i class="fas fa-th-large"></i>
+            <span>Browse</span>
+        </a>
+        <a href="/portal/cart" class="nav-item">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+        </a>
+        <a href="/portal/bookings" class="nav-item">
+            <i class="fas fa-calendar-check"></i>
+            <span>Bookings</span>
+        </a>
+        <a href="/portal/profile" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+</div>
+
+<script>
+function categoryPage() {
+    return {
+        cartCount: 0,
+        viewMode: 'grid',
+        
+        async init() {
+            await this.loadCartCount();
+        },
+        
+        async loadCartCount() {
+            try {
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.get_cart_items'
+                });
+                this.cartCount = response.message?.item_count || 0;
+            } catch (error) {
+                console.log('Error loading cart count:', error);
+            }
+        },
+        
+        goToItem(itemCode) {
+            window.location.href = `/portal/item?item=${encodeURIComponent(itemCode)}`;
+        }
+    }
+}
+</script>
+{% endblock %}

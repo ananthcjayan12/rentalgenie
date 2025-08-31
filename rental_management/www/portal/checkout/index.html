@@ -1,0 +1,867 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head_include %}
+<meta name="description" content="{{ meta_description }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<style>
+:root {
+    --primary-color: #7B2CBF;
+    --secondary-color: #FF6B6B;
+    --background: #F8F9FA;
+    --text-primary: #2C3E50;
+    --text-secondary: #7F8C8D;
+    --border-color: #E1E8ED;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--background);
+    margin: 0;
+    padding: 0;
+    padding-bottom: 80px;
+}
+
+.portal-header {
+    background: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-btn {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    text-decoration: none;
+    padding: 0.5rem;
+}
+
+.header-title {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.security-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--success-color);
+    font-size: 0.9rem;
+}
+
+.checkout-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+}
+
+.checkout-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    color: var(--primary-color);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.form-label.required::after {
+    content: "*";
+    color: var(--danger-color);
+    margin-left: 0.25rem;
+}
+
+.form-input {
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+}
+
+.form-input.error {
+    border-color: var(--danger-color);
+}
+
+.form-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.error-message {
+    color: var(--danger-color);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.address-section {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.address-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.address-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.add-address-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.add-address-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.address-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.address-option:hover {
+    border-color: var(--primary-color);
+}
+
+.address-option.selected {
+    border-color: var(--primary-color);
+    background: #f3f0ff;
+}
+
+.address-radio {
+    margin-top: 0.25rem;
+}
+
+.address-details {
+    flex: 1;
+}
+
+.address-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.address-text {
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.terms-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+.terms-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.terms-checkbox input {
+    margin-top: 0.25rem;
+}
+
+.terms-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.terms-text a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.terms-text a:hover {
+    text-decoration: underline;
+}
+
+.order-summary {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+}
+
+.summary-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.order-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.item-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: #f5f5f5;
+}
+
+.item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.item-dates {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.item-price {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.summary-breakdown {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.summary-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.summary-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summary-total {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.place-order-btn {
+    width: 100%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.place-order-btn:hover:not(:disabled) {
+    background: #6A1B9A;
+    transform: translateY(-1px);
+}
+
+.place-order-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.payment-info {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .checkout-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .order-summary {
+        position: static;
+        order: -1;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .checkout-form {
+        padding: 1.5rem;
+    }
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    transition: color 0.3s;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="checkoutPage()" x-init="init()">
+    <!-- Header -->
+    <div class="portal-header">
+        <div class="header-content">
+            <a href="/portal/cart" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-title">Secure Checkout</div>
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>Secure</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="checkout-container">
+        <!-- Alert Messages -->
+        <div x-show="alertMessage" x-text="alertMessage" 
+             :class="'alert ' + alertType" 
+             style="grid-column: 1 / -1; display: none;"></div>
+
+        <!-- Checkout Form -->
+        <div class="checkout-form">
+            <form @submit.prevent="placeOrder()">
+                <!-- Customer Information -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user"></i>
+                        Contact Information
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label required">Full Name</label>
+                            <input type="text" x-model="customerInfo.name" 
+                                   class="form-input" 
+                                   :class="{'error': errors.name}"
+                                   value="{{ customer.customer_name or '' }}" required>
+                            <div x-show="errors.name" x-text="errors.name" class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Phone Number</label>
+                            <input type="tel" x-model="customerInfo.mobile" 
+                                   class="form-input"
+                                   :class="{'error': errors.mobile}"
+                                   value="{{ customer.mobile_no or '' }}" required>
+                            <div x-show="errors.mobile" x-text="errors.mobile" class="error-message"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">Email Address</label>
+                        <input type="email" x-model="customerInfo.email" 
+                               class="form-input"
+                               :class="{'error': errors.email}"
+                               value="{{ frappe.session.user }}" required readonly>
+                        <div x-show="errors.email" x-text="errors.email" class="error-message"></div>
+                    </div>
+                </div>
+
+                <!-- Delivery Address -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Delivery Address
+                    </h3>
+                    
+                    <div class="address-section">
+                        {% if address %}
+                        <!-- Existing Address -->
+                        <div class="address-option selected" @click="selectAddress('existing')">
+                            <input type="radio" name="address" value="existing" 
+                                   x-model="selectedAddress" checked class="address-radio">
+                            <div class="address-details">
+                                <div class="address-name">{{ customer.customer_name or 'Home' }}</div>
+                                <div class="address-text">
+                                    {{ address.address_line1 }}<br>
+                                    {% if address.address_line2 %}{{ address.address_line2 }}<br>{% endif %}
+                                    {{ address.city }}, {{ address.state }} {{ address.pincode }}<br>
+                                    {{ address.country }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- New Address Option -->
+                        <div class="address-option" @click="selectAddress('new')" 
+                             :class="{'selected': selectedAddress === 'new'}">
+                            <input type="radio" name="address" value="new" 
+                                   x-model="selectedAddress" class="address-radio">
+                            <div class="address-details">
+                                <div class="address-name">Add New Address</div>
+                                <div class="address-text">Enter a new delivery address</div>
+                            </div>
+                        </div>
+
+                        <!-- New Address Form -->
+                        <div x-show="selectedAddress === 'new'" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label required">Address Line 1</label>
+                                    <input type="text" x-model="newAddress.address_line1" 
+                                           class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Address Line 2</label>
+                                    <input type="text" x-model="newAddress.address_line2" 
+                                           class="form-input">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label required">City</label>
+                                    <input type="text" x-model="newAddress.city" 
+                                           class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label required">State</label>
+                                    <input type="text" x-model="newAddress.state" 
+                                           class="form-input" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label required">PIN Code</label>
+                                    <input type="text" x-model="newAddress.pincode" 
+                                           class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label required">Country</label>
+                                    <input type="text" x-model="newAddress.country" 
+                                           class="form-input" value="India" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Special Instructions -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-sticky-note"></i>
+                        Special Instructions (Optional)
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Delivery Instructions</label>
+                        <textarea x-model="specialInstructions" 
+                                  class="form-input form-textarea" 
+                                  placeholder="Any special delivery instructions or notes..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="form-section">
+                    <div class="terms-section">
+                        <div class="terms-checkbox">
+                            <input type="checkbox" x-model="agreedToTerms" required>
+                            <div class="terms-text">
+                                I agree to the <a href="/terms" target="_blank">Terms & Conditions</a> 
+                                and <a href="/privacy" target="_blank">Privacy Policy</a>. 
+                                I understand that this is a rental booking and items must be returned 
+                                in good condition by the specified date.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="order-summary">
+            <h3 class="summary-title">
+                <i class="fas fa-receipt"></i>
+                Order Summary
+            </h3>
+            
+            <!-- Order Items -->
+            {% for item in cart_items %}
+            <div class="order-item">
+                <img src="{{ item.item_image or '/assets/rental_management/images/placeholder.jpg' }}" 
+                     alt="{{ item.item_name }}" class="item-image">
+                <div class="item-details">
+                    <div class="item-name">{{ item.item_name }}</div>
+                    <div class="item-dates">
+                        Function: {{ item.function_date.strftime('%d %b %Y') if item.function_date else 'Not set' }}
+                    </div>
+                    <div class="item-dates">
+                        Rental: {{ item.rental_start_date.strftime('%d %b') if item.rental_start_date else 'Not set' }} - {{ item.rental_end_date.strftime('%d %b %Y') if item.rental_end_date else 'Not set' }}
+                    </div>
+                    <div class="item-price">₹{{ "{:,.0f}".format(item.total_amount) }}</div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- Summary Breakdown -->
+            <div class="summary-breakdown">
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal ({{ item_count }} items)</span>
+                    <span class="summary-value">₹{{ "{:,.0f}".format(subtotal) }}</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span class="summary-label">Delivery Charge</span>
+                    <span class="summary-value">
+                        {% if delivery_charge == 0 %}
+                        <span style="color: var(--success-color);">FREE</span>
+                        {% else %}
+                        ₹{{ "{:,.0f}".format(delivery_charge) }}
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="summary-row summary-total">
+                    <span class="summary-label">Total Amount</span>
+                    <span class="summary-value">₹{{ "{:,.0f}".format(grand_total) }}</span>
+                </div>
+            </div>
+            
+            <!-- Place Order Button -->
+            <button @click="placeOrder()" 
+                    :disabled="isProcessing || !agreedToTerms"
+                    class="place-order-btn">
+                <i class="fas fa-lock"></i>
+                <span x-show="!isProcessing">Place Order</span>
+                <span x-show="isProcessing">Processing...</span>
+            </button>
+            
+            <div class="payment-info">
+                <i class="fas fa-shield-alt"></i>
+                Your booking will be confirmed and payment can be made on delivery
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/portal" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/portal/category" class="nav-item">
+            <i class="fas fa-th-large"></i>
+            <span>Browse</span>
+        </a>
+        <a href="/portal/cart" class="nav-item">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+        </a>
+        <a href="/portal/bookings" class="nav-item">
+            <i class="fas fa-calendar-check"></i>
+            <span>Bookings</span>
+        </a>
+        <a href="/portal/profile" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+</div>
+
+<script>
+function checkoutPage() {
+    return {
+        customerInfo: {
+            name: '{{ customer.customer_name or "" }}',
+            mobile: '{{ customer.mobile_no or "" }}',
+            email: '{{ frappe.session.user }}'
+        },
+        selectedAddress: 'existing',
+        newAddress: {
+            address_line1: '',
+            address_line2: '',
+            city: '',
+            state: '',
+            pincode: '',
+            country: 'India'
+        },
+        specialInstructions: '',
+        agreedToTerms: false,
+        isProcessing: false,
+        alertMessage: '',
+        alertType: '',
+        errors: {},
+        
+        async init() {
+            // Initialize checkout page
+            {% if not address %}
+            this.selectedAddress = 'new';
+            {% endif %}
+        },
+        
+        selectAddress(type) {
+            this.selectedAddress = type;
+            this.errors = {}; // Clear errors when switching
+        },
+        
+        validateForm() {
+            this.errors = {};
+            let isValid = true;
+            
+            // Validate customer info
+            if (!this.customerInfo.name.trim()) {
+                this.errors.name = 'Name is required';
+                isValid = false;
+            }
+            
+            if (!this.customerInfo.mobile.trim()) {
+                this.errors.mobile = 'Phone number is required';
+                isValid = false;
+            } else if (!/^\d{10}$/.test(this.customerInfo.mobile.replace(/\D/g, ''))) {
+                this.errors.mobile = 'Please enter a valid 10-digit phone number';
+                isValid = false;
+            }
+            
+            if (!this.customerInfo.email.trim()) {
+                this.errors.email = 'Email is required';
+                isValid = false;
+            }
+            
+            // Validate new address if selected
+            if (this.selectedAddress === 'new') {
+                if (!this.newAddress.address_line1.trim()) {
+                    this.errors.address_line1 = 'Address is required';
+                    isValid = false;
+                }
+                if (!this.newAddress.city.trim()) {
+                    this.errors.city = 'City is required';
+                    isValid = false;
+                }
+                if (!this.newAddress.state.trim()) {
+                    this.errors.state = 'State is required';
+                    isValid = false;
+                }
+                if (!this.newAddress.pincode.trim()) {
+                    this.errors.pincode = 'PIN code is required';
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
+        },
+        
+        async placeOrder() {
+            if (this.isProcessing) return;
+            
+            if (!this.validateForm()) {
+                this.alertMessage = 'Please fill in all required fields correctly.';
+                this.alertType = 'alert-error';
+                return;
+            }
+            
+            if (!this.agreedToTerms) {
+                this.alertMessage = 'Please agree to the terms and conditions.';
+                this.alertType = 'alert-error';
+                return;
+            }
+            
+            this.isProcessing = true;
+            this.alertMessage = '';
+            
+            try {
+                const orderData = {
+                    customer_info: this.customerInfo,
+                    address_type: this.selectedAddress,
+                    new_address: this.selectedAddress === 'new' ? this.newAddress : null,
+                    special_instructions: this.specialInstructions
+                };
+                
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.create_booking_from_cart',
+                    args: orderData
+                });
+                
+                if (response.message.success) {
+                    this.alertMessage = '✅ Booking created successfully!';
+                    this.alertType = 'alert-success';
+                    
+                    // Redirect to booking confirmation page
+                    setTimeout(() => {
+                        window.location.href = `/portal/booking-confirmation?booking=${response.message.booking_id}`;
+                    }, 2000);
+                } else {
+                    this.alertMessage = response.message.message || 'Failed to create booking';
+                    this.alertType = 'alert-error';
+                }
+                
+            } catch (error) {
+                this.alertMessage = 'Error creating booking: ' + error.message;
+                this.alertType = 'alert-error';
+            } finally {
+                this.isProcessing = false;
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

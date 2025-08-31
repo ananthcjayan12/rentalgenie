@@ -1,0 +1,571 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head_include %}
+<meta name="description" content="{{ meta_description }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<style>
+:root {
+    --primary-color: #7B2CBF;
+    --secondary-color: #FF6B6B;
+    --background: #F8F9FA;
+    --text-primary: #2C3E50;
+    --text-secondary: #7F8C8D;
+    --border-color: #E1E8ED;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--background);
+    margin: 0;
+    padding: 0;
+    padding-bottom: 80px;
+}
+
+.portal-header {
+    background: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-btn {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    text-decoration: none;
+    padding: 0.5rem;
+}
+
+.header-title {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.bookings-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.booking-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.booking-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.booking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.booking-id {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.booking-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-confirmed {
+    background: #e6fffa;
+    color: #047857;
+}
+
+.status-delivered {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-returned {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.status-cancelled {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.booking-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.booking-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f5f5f5;
+}
+
+.booking-details {
+    min-width: 0;
+}
+
+.booking-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.booking-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.booking-info i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+    width: 16px;
+}
+
+.booking-amount {
+    text-align: right;
+}
+
+.amount-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.amount-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.booking-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #6A1B9A;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--text-secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6c7d;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.browse-btn {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.browse-btn:hover {
+    background: #6A1B9A;
+    transform: translateY(-1px);
+}
+
+.error-message {
+    background: #fee;
+    color: #c53030;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.filters-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.filter-tab {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.filter-tab.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.filter-tab:hover:not(.active) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .booking-content {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .booking-image {
+        margin: 0 auto;
+    }
+    
+    .booking-amount {
+        text-align: center;
+    }
+    
+    .booking-actions {
+        flex-direction: column;
+    }
+    
+    .filter-tabs {
+        justify-content: center;
+    }
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    transition: color 0.3s;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="bookingsPage()" x-init="init()">
+    <!-- Header -->
+    <div class="portal-header">
+        <div class="header-content">
+            <a href="/portal" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-title">My Bookings</div>
+        </div>
+    </div>
+
+    <div class="bookings-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">My Bookings</h1>
+            <p class="page-subtitle">
+                {% if customer_name %}Welcome back, {{ customer_name }}!{% endif %} 
+                Track and manage your rental bookings.
+            </p>
+        </div>
+
+        <!-- Error Message -->
+        {% if error_message %}
+        <div class="error-message">
+            {{ error_message }}
+        </div>
+        {% endif %}
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filter-tabs">
+                <button @click="filterStatus = 'all'" 
+                        :class="{'active': filterStatus === 'all'}" 
+                        class="filter-tab">
+                    All Bookings
+                </button>
+                <button @click="filterStatus = 'confirmed'" 
+                        :class="{'active': filterStatus === 'confirmed'}" 
+                        class="filter-tab">
+                    Confirmed
+                </button>
+                <button @click="filterStatus = 'delivered'" 
+                        :class="{'active': filterStatus === 'delivered'}" 
+                        class="filter-tab">
+                    Delivered
+                </button>
+                <button @click="filterStatus = 'returned'" 
+                        :class="{'active': filterStatus === 'returned'}" 
+                        class="filter-tab">
+                    Returned
+                </button>
+            </div>
+        </div>
+
+        <!-- Bookings List -->
+        {% if bookings %}
+        <div class="bookings-list">
+            {% for booking in bookings %}
+            <div class="booking-card" 
+                 x-show="filterStatus === 'all' || filterStatus === '{{ booking.status.lower() }}'"
+                 @click="viewBooking('{{ booking.name }}')">
+                
+                <div class="booking-header">
+                    <div>
+                        <div class="booking-id">{{ booking.name }}</div>
+                        <div class="booking-date">Booked on {{ booking.posting_date }}</div>
+                    </div>
+                    <div class="status-badge status-{{ booking.status.lower() }}">
+                        {{ booking.status }}
+                    </div>
+                </div>
+                
+                <div class="booking-content">
+                    <img src="{{ booking.first_item_image or '/assets/rental_management/images/placeholder.jpg' }}" 
+                         alt="{{ booking.first_item_name }}" class="booking-image">
+                    
+                    <div class="booking-details">
+                        <div class="booking-title">
+                            {{ booking.first_item_name }}
+                            {% if booking.item_count > 1 %}
+                            + {{ booking.item_count - 1 }} more item{{ 's' if booking.item_count > 2 else '' }}
+                            {% endif %}
+                        </div>
+                        {% if booking.earliest_rental_date %}
+                        <div class="booking-info">
+                            <i class="fas fa-calendar"></i>
+                            Rental: {{ booking.earliest_rental_date }} to {{ booking.latest_rental_date }}
+                        </div>
+                        {% endif %}
+                        <div class="booking-info">
+                            <i class="fas fa-shopping-bag"></i>
+                            {{ booking.item_count }} item{{ 's' if booking.item_count != 1 else '' }}
+                        </div>
+                    </div>
+                    
+                    <div class="booking-amount">
+                        <div class="amount-value">₹{{ "{:,.0f}".format(booking.total) }}</div>
+                        <div class="amount-label">Total Amount</div>
+                    </div>
+                </div>
+                
+                <div class="booking-actions" @click.stop>
+                    <a href="/portal/booking-details?booking={{ booking.name }}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i>
+                        View Details
+                    </a>
+                    {% if booking.status == 'Confirmed' %}
+                    <button class="btn btn-outline" @click="contactSupport('{{ booking.name }}')">
+                        <i class="fas fa-phone"></i>
+                        Contact Support
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h3>No bookings yet</h3>
+            <p>Start browsing our amazing rental collection!</p>
+            <a href="/portal/category" class="browse-btn">Browse Items</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/portal" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/portal/category" class="nav-item">
+            <i class="fas fa-th-large"></i>
+            <span>Browse</span>
+        </a>
+        <a href="/portal/cart" class="nav-item">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+        </a>
+        <a href="/portal/bookings" class="nav-item active">
+            <i class="fas fa-calendar-check"></i>
+            <span>Bookings</span>
+        </a>
+        <a href="/portal/profile" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+</div>
+
+<script>
+function bookingsPage() {
+    return {
+        filterStatus: 'all',
+        
+        async init() {
+            // Any initialization if needed
+        },
+        
+        viewBooking(bookingId) {
+            window.location.href = `/portal/booking-details?booking=${encodeURIComponent(bookingId)}`;
+        },
+        
+        contactSupport(bookingId) {
+            // For now, show an alert. In production, this could open a chat or call
+            alert(`For support with booking ${bookingId}, please call us at +91 9876543210 or email support@blushandglow.com`);
+        }
+    }
+}
+</script>
+{% endblock %}

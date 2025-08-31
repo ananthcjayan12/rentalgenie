@@ -1,0 +1,647 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head_include %}
+<meta name="description" content="{{ meta_description }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<style>
+:root {
+    --primary-color: #7B2CBF;
+    --secondary-color: #FF6B6B;
+    --background: #F8F9FA;
+    --text-primary: #2C3E50;
+    --text-secondary: #7F8C8D;
+    --border-color: #E1E8ED;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--background);
+    margin: 0;
+    padding: 0;
+    padding-bottom: 80px;
+}
+
+.portal-header {
+    background: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-btn {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    text-decoration: none;
+    padding: 0.5rem;
+}
+
+.header-title {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cart-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+}
+
+.cart-items-section {
+    min-width: 0;
+}
+
+.cart-summary-section {
+    width: 350px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.cart-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 1rem;
+    align-items: start;
+}
+
+.item-image-container {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.item-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-details {
+    min-width: 0;
+}
+
+.item-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.item-dates {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.item-dates i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+}
+
+.item-pricing {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.price-breakdown {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.item-total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.item-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-remove {
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-remove:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.btn-edit {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+.btn-edit:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.cart-summary {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 100px;
+}
+
+.summary-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.summary-row:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.summary-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summary-total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.checkout-btn {
+    width: 100%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.checkout-btn:hover:not(:disabled) {
+    background: #6A1B9A;
+    transform: translateY(-1px);
+}
+
+.checkout-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.continue-shopping {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.continue-shopping a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.continue-shopping a:hover {
+    text-decoration: underline;
+}
+
+.empty-cart {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-cart i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-cart h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.empty-cart p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.browse-btn {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.browse-btn:hover {
+    background: #6A1B9A;
+    transform: translateY(-1px);
+}
+
+.error-message {
+    background: #fee;
+    color: #c53030;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .cart-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .cart-summary-section {
+        width: auto;
+        order: -1;
+    }
+    
+    .cart-summary {
+        position: static;
+    }
+    
+    .cart-item {
+        grid-template-columns: 80px 1fr;
+        gap: 1rem;
+    }
+    
+    .item-actions {
+        grid-column: 1 / -1;
+        justify-content: space-between;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .item-image-container {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    transition: color 0.3s;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="cartPage()" x-init="init()">
+    <!-- Header -->
+    <div class="portal-header">
+        <div class="header-content">
+            <a href="/portal" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-title">Shopping Cart ({{ item_count }})</div>
+        </div>
+    </div>
+
+    <div class="cart-container">
+        <!-- Error Message -->
+        {% if error_message %}
+        <div class="error-message" style="grid-column: 1 / -1;">
+            {{ error_message }}
+        </div>
+        {% endif %}
+
+        <!-- Alert Messages -->
+        <div x-show="alertMessage" x-text="alertMessage" 
+             :class="'alert ' + alertType" 
+             style="grid-column: 1 / -1; display: none;"></div>
+
+        {% if cart_items %}
+        <!-- Cart Items Section -->
+        <div class="cart-items-section">
+            <h2 class="section-title">Your Items</h2>
+            
+            <div class="cart-items-list">
+                {% for item in cart_items %}
+                <div class="cart-item" data-cart-item="{{ item.name }}">
+                    <div class="item-image-container">
+                        <img src="{{ item.item_image or '/assets/rental_management/images/placeholder.jpg' }}" 
+                             alt="{{ item.item_name }}" 
+                             class="item-image">
+                    </div>
+                    
+                    <div class="item-details">
+                        <h3 class="item-title">{{ item.item_name }}</h3>
+                        
+                        <div class="item-dates">
+                            <div><i class="fas fa-calendar"></i>Function: {{ item.function_date.strftime('%d %b %Y') if item.function_date else 'Not set' }}</div>
+                            <div><i class="fas fa-calendar-alt"></i>Rental: {{ item.rental_start_date.strftime('%d %b') if item.rental_start_date else 'Not set' }} - {{ item.rental_end_date.strftime('%d %b %Y') if item.rental_end_date else 'Not set' }}</div>
+                        </div>
+                        
+                        <div class="item-pricing">
+                            <div class="price-breakdown">
+                                ₹{{ "{:,.0f}".format(item.rental_rate) }}/day × {{ item.rental_days }} days
+                            </div>
+                            <div class="item-total">₹{{ "{:,.0f}".format(item.total_amount) }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="item-actions">
+                        <a href="/portal/item?item={{ item.item_code }}" class="btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <button @click="removeItem('{{ item.name }}')" 
+                                :disabled="isRemoving" 
+                                class="btn-remove">
+                            <i class="fas fa-trash"></i>
+                            <span x-show="!isRemoving">Remove</span>
+                            <span x-show="isRemoving">Removing...</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Cart Summary Section -->
+        <div class="cart-summary-section">
+            <div class="cart-summary">
+                <h3 class="summary-title">Order Summary</h3>
+                
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal ({{ item_count }} items)</span>
+                    <span class="summary-value">₹{{ "{:,.0f}".format(subtotal) }}</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span class="summary-label">Delivery Charge</span>
+                    <span class="summary-value">
+                        {% if delivery_charge == 0 %}
+                        <span style="color: var(--success-color);">FREE</span>
+                        {% else %}
+                        ₹{{ "{:,.0f}".format(delivery_charge) }}
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="summary-row">
+                    <span class="summary-label summary-total">Total</span>
+                    <span class="summary-value summary-total">₹{{ "{:,.0f}".format(grand_total) }}</span>
+                </div>
+                
+                <button @click="proceedToCheckout()" 
+                        :disabled="isProcessing || {{ item_count }} === 0"
+                        class="checkout-btn">
+                    <i class="fas fa-lock"></i>
+                    <span x-show="!isProcessing">Proceed to Checkout</span>
+                    <span x-show="isProcessing">Processing...</span>
+                </button>
+                
+                <div class="continue-shopping">
+                    <a href="/portal/category">← Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Empty Cart -->
+        <div class="empty-cart" style="grid-column: 1 / -1;">
+            <i class="fas fa-shopping-cart"></i>
+            <h3>Your cart is empty</h3>
+            <p>Add some amazing rental items to get started!</p>
+            <a href="/portal/category" class="browse-btn">Browse Items</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/portal" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/portal/category" class="nav-item">
+            <i class="fas fa-th-large"></i>
+            <span>Browse</span>
+        </a>
+        <a href="/portal/cart" class="nav-item active">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+        </a>
+        <a href="/portal/bookings" class="nav-item">
+            <i class="fas fa-calendar-check"></i>
+            <span>Bookings</span>
+        </a>
+        <a href="/portal/profile" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+</div>
+
+<script>
+function cartPage() {
+    return {
+        alertMessage: '',
+        alertType: '',
+        isRemoving: false,
+        isProcessing: false,
+        
+        async init() {
+            // Any initialization if needed
+        },
+        
+        async removeItem(cartItemName) {
+            if (this.isRemoving) return;
+            
+            if (!confirm('Are you sure you want to remove this item from your cart?')) {
+                return;
+            }
+            
+            this.isRemoving = true;
+            this.alertMessage = '';
+            
+            try {
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.remove_from_cart',
+                    args: {
+                        cart_item_name: cartItemName
+                    }
+                });
+                
+                if (response.message.success) {
+                    this.alertMessage = '✅ Item removed from cart successfully!';
+                    this.alertType = 'alert-success';
+                    
+                    // Remove the item from DOM
+                    const cartItemElement = document.querySelector(`[data-cart-item="${cartItemName}"]`);
+                    if (cartItemElement) {
+                        cartItemElement.remove();
+                    }
+                    
+                    // Reload page after a moment to update totals
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    this.alertMessage = response.message.message || 'Failed to remove item';
+                    this.alertType = 'alert-error';
+                }
+                
+            } catch (error) {
+                this.alertMessage = 'Error removing item: ' + error.message;
+                this.alertType = 'alert-error';
+            } finally {
+                this.isRemoving = false;
+            }
+        },
+        
+        async proceedToCheckout() {
+            if (this.isProcessing) return;
+            
+            this.isProcessing = true;
+            
+            try {
+                // For now, redirect to a simple checkout page
+                // In a full implementation, this would validate cart and proceed to payment
+                window.location.href = '/portal/checkout';
+                
+            } catch (error) {
+                this.alertMessage = 'Error proceeding to checkout: ' + error.message;
+                this.alertType = 'alert-error';
+                this.isProcessing = false;
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

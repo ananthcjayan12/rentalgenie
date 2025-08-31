@@ -1,0 +1,750 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head_include %}
+<meta name="description" content="{{ meta_description }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<style>
+:root {
+    --primary-color: #7B2CBF;
+    --secondary-color: #FF6B6B;
+    --background: #F8F9FA;
+    --text-primary: #2C3E50;
+    --text-secondary: #7F8C8D;
+    --border-color: #E1E8ED;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--background);
+    margin: 0;
+    padding: 0;
+    padding-bottom: 80px; /* Space for bottom nav */
+}
+
+.portal-header {
+    background: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-btn {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    text-decoration: none;
+    padding: 0.5rem;
+}
+
+.header-title {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cart-icon {
+    position: relative;
+    padding: 0.5rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 1.25rem;
+}
+
+.cart-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--secondary-color);
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.product-detail {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.product-gallery {
+    position: relative;
+    height: 400px;
+    background: #f5f5f5;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.availability-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.available {
+    background: var(--success-color);
+    color: white;
+}
+
+.unavailable {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.product-info {
+    padding: 2rem;
+}
+
+.product-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.product-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.price-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.rental-price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.price-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.booking-section {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.date-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.date-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.date-input {
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.date-input:focus {
+    border-color: var(--primary-color);
+}
+
+.rental-summary {
+    background: var(--background);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.summary-total {
+    font-weight: 600;
+    color: var(--text-primary);
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #6A1B9A;
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.related-items {
+    margin-top: 3rem;
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.item-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.item-card:hover {
+    transform: translateY(-2px);
+}
+
+.item-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.item-info {
+    padding: 1rem;
+}
+
+.item-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.item-price {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #10B981;
+}
+
+.alert-error {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #EF4444;
+}
+
+.alert-warning {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #F59E0B;
+}
+
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    z-index: 100;
+    padding: 0.5rem 0;
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: color 0.3s;
+}
+
+.nav-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.nav-item span {
+    font-size: 0.75rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .date-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .product-info {
+        padding: 1.5rem;
+    }
+    
+    .product-title {
+        font-size: 1.5rem;
+    }
+    
+    .rental-price {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div x-data="itemDetailApp()">
+    <!-- Header -->
+    <header class="portal-header">
+        <div class="header-content">
+            <a href="/portal" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-title">{{ item.item_name }}</div>
+            <div class="header-actions">
+                <a href="/portal/cart" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" x-show="cartCount > 0" x-text="cartCount"></span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Product Detail -->
+    <div class="product-container">
+        <div class="product-detail">
+            <!-- Product Gallery -->
+            <div class="product-gallery">
+                <img src="{{ item.images[0] if item.images else '/assets/rental_management/images/placeholder.jpg' }}" 
+                     alt="{{ item.item_name }}" class="product-image">
+                
+                <div class="availability-badge" :class="item.is_available ? 'available' : 'unavailable'">
+                    <span x-text="item.is_available ? 'Available' : 'Not Available'"></span>
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <h1 class="product-title">{{ item.item_name }}</h1>
+                <p class="product-description">{{ item.description }}</p>
+
+                <!-- Price Section -->
+                <div class="price-section">
+                    <div class="rental-price">₹{{ item.rental_rate_per_day }}</div>
+                    <div class="price-label">per day</div>
+                </div>
+
+                <!-- Booking Section -->
+                <div class="booking-section">
+                    <h3 class="section-title">Select Rental Dates</h3>
+                    
+                    <!-- Alert Messages -->
+                    <div x-show="alertMessage" :class="alertType" class="alert" x-text="alertMessage"></div>
+                    
+                    <!-- Date Inputs -->
+                    <div class="date-inputs">
+                        <div class="date-group">
+                            <label class="date-label">Function Date</label>
+                            <input type="date" class="date-input" x-model="functionDate" 
+                                   @change="updateRentalDates()" :min="minDate">
+                        </div>
+                        <div class="date-group">
+                            <label class="date-label">Return Date</label>
+                            <input type="date" class="date-input" x-model="returnDate" 
+                                   @change="calculateTotal()" :min="minReturnDate">
+                        </div>
+                    </div>
+
+                    <!-- Rental Summary -->
+                    <div class="rental-summary" x-show="rentalDays > 0">
+                        <div class="summary-row">
+                            <span>Rental Period:</span>
+                            <span x-text="rentalDays + ' days'"></span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Rate per day:</span>
+                            <span>₹{{ item.rental_rate_per_day }}</span>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Total Amount:</span>
+                            <span x-text="'₹' + totalAmount"></span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="btn btn-outline" @click="checkAvailability()" 
+                                :disabled="!canCheckAvailability" :class="{'loading': isChecking}">
+                            <span x-text="isChecking ? 'Checking...' : 'Check Availability'"></span>
+                        </button>
+                        <button class="btn btn-primary" @click="addToCart()" 
+                                :disabled="!canAddToCart" :class="{'loading': isAdding}">
+                            <span x-text="isAdding ? 'Adding...' : 'Add to Cart'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Items -->
+        {% if related_items %}
+        <div class="related-items">
+            <h3 class="section-title">You May Also Like</h3>
+            <div class="items-grid">
+                {% for related_item in related_items %}
+                <div class="item-card" @click="goToItem('{{ related_item.item_code }}')">
+                    <img src="{{ related_item.image or '/assets/rental_management/images/placeholder.jpg' }}" 
+                         alt="{{ related_item.item_name }}" class="item-image">
+                    <div class="item-info">
+                        <h4 class="item-name">{{ related_item.item_name }}</h4>
+                        <div class="item-price">₹{{ related_item.rental_rate_per_day }}/day</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="/portal" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/portal/categories" class="nav-item">
+            <i class="fas fa-th-large"></i>
+            <span>Categories</span>
+        </a>
+        <a href="/portal/bookings" class="nav-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Booking</span>
+        </a>
+        <a href="/portal/profile" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>My Account</span>
+        </a>
+    </nav>
+</div>
+
+<script>
+function itemDetailApp() {
+    return {
+        // Item data from server
+        item: {{ item | tojson }},
+        cartCount: 0,
+        
+        // Form data
+        functionDate: '',
+        returnDate: '',
+        rentalDays: 0,
+        totalAmount: 0,
+        
+        // State
+        isChecking: false,
+        isAdding: false,
+        isAvailable: null,
+        alertMessage: '',
+        alertType: 'alert-info',
+        
+        // Computed properties
+        get minDate() {
+            // Allow booking from tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return tomorrow.toISOString().split('T')[0];
+        },
+        
+        get minReturnDate() {
+            if (!this.functionDate) return this.minDate;
+            
+            // Return date should be at least 1 day after function date
+            const functionDate = new Date(this.functionDate);
+            functionDate.setDate(functionDate.getDate() + 1);
+            return functionDate.toISOString().split('T')[0];
+        },
+        
+        get canCheckAvailability() {
+            return this.functionDate && this.returnDate && this.rentalDays > 0;
+        },
+        
+        get canAddToCart() {
+            return this.canCheckAvailability && this.isAvailable === true;
+        },
+        
+        init() {
+            this.loadCartCount();
+            
+            // Set default function date to next week
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            this.functionDate = nextWeek.toISOString().split('T')[0];
+            this.updateRentalDates();
+        },
+        
+        async loadCartCount() {
+            try {
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.get_cart_items'
+                });
+                this.cartCount = response.message?.item_count || 0;
+            } catch (error) {
+                console.log('Error loading cart count:', error);
+            }
+        },
+        
+        updateRentalDates() {
+            if (this.functionDate) {
+                // Set rental start date to 2 days before function
+                const functionDate = new Date(this.functionDate);
+                const startDate = new Date(functionDate);
+                startDate.setDate(startDate.getDate() - 2);
+                
+                // Set return date to 1 day after function if not set
+                if (!this.returnDate) {
+                    const endDate = new Date(functionDate);
+                    endDate.setDate(endDate.getDate() + 1);
+                    this.returnDate = endDate.toISOString().split('T')[0];
+                }
+                
+                this.calculateTotal();
+            }
+        },
+        
+        calculateTotal() {
+            if (this.functionDate && this.returnDate) {
+                const functionDate = new Date(this.functionDate);
+                const returnDate = new Date(this.returnDate);
+                
+                // Calculate start date (2 days before function)
+                const startDate = new Date(functionDate);
+                startDate.setDate(startDate.getDate() - 2);
+                
+                // Calculate rental days
+                const timeDiff = returnDate.getTime() - startDate.getTime();
+                this.rentalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                
+                if (this.rentalDays > 0) {
+                    this.totalAmount = this.rentalDays * this.item.rental_rate_per_day;
+                } else {
+                    this.rentalDays = 0;
+                    this.totalAmount = 0;
+                }
+                
+                // Reset availability when dates change
+                this.isAvailable = null;
+                this.alertMessage = '';
+            }
+        },
+        
+        async checkAvailability() {
+            if (!this.canCheckAvailability) return;
+            
+            this.isChecking = true;
+            this.alertMessage = '';
+            
+            try {
+                const functionDate = new Date(this.functionDate);
+                const startDate = new Date(functionDate);
+                startDate.setDate(startDate.getDate() - 2);
+                
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.check_item_availability',
+                    args: {
+                        item_code: this.item.item_code,
+                        start_date: startDate.toISOString().split('T')[0],
+                        end_date: this.returnDate
+                    }
+                });
+                
+                this.isAvailable = response.message.is_available;
+                
+                if (this.isAvailable) {
+                    this.alertMessage = '✅ Item is available for selected dates!';
+                    this.alertType = 'alert-success';
+                } else {
+                    this.alertMessage = '❌ ' + response.message.message;
+                    this.alertType = 'alert-error';
+                }
+                
+            } catch (error) {
+                this.alertMessage = 'Error checking availability: ' + error.message;
+                this.alertType = 'alert-error';
+                this.isAvailable = false;
+            } finally {
+                this.isChecking = false;
+            }
+        },
+        
+        async addToCart() {
+            if (!this.canAddToCart) return;
+            
+            this.isAdding = true;
+            
+            try {
+                const functionDate = new Date(this.functionDate);
+                const startDate = new Date(functionDate);
+                startDate.setDate(startDate.getDate() - 2);
+                
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.add_to_cart',
+                    args: {
+                        item_code: this.item.item_code,
+                        rental_start_date: startDate.toISOString().split('T')[0],
+                        rental_end_date: this.returnDate,
+                        function_date: this.functionDate
+                    }
+                });
+                
+                if (response.message.success) {
+                    this.alertMessage = '🎉 Item added to cart successfully!';
+                    this.alertType = 'alert-success';
+                    this.cartCount = response.message.cart_count;
+                    
+                    // Optionally redirect to cart after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/portal/cart';
+                    }, 2000);
+                } else {
+                    this.alertMessage = response.message.message;
+                    this.alertType = 'alert-error';
+                }
+                
+            } catch (error) {
+                this.alertMessage = 'Error adding to cart: ' + error.message;
+                this.alertType = 'alert-error';
+            } finally {
+                this.isAdding = false;
+            }
+        },
+        
+        goToItem(itemCode) {
+            window.location.href = `/portal/item?item=${encodeURIComponent(itemCode)}`;
+        }
+    }
+}
+</script>
+{% endblock %}
