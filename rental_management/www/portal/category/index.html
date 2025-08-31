@@ -522,7 +522,7 @@ body {
                             {% for category in categories %}
                             <option value="{{ category.name }}" 
                                     {% if current_category == category.name %}selected{% endif %}>
-                                {{ category.category_name }}
+                                {{ category.label }}
                             </option>
                             {% endfor %}
                         </select>
@@ -617,6 +617,7 @@ body {
             {% endif %}
 
             <!-- Page Numbers -->
+            {% if page_numbers %}
             {% for page_num in page_numbers %}
             {% if page_num == current_page %}
             <span class="page-btn active">{{ page_num }}</span>
@@ -624,6 +625,7 @@ body {
             <a href="{{ base_url }}?{% if url_params %}{{ url_params }}&{% endif %}page={{ page_num }}" class="page-btn">{{ page_num }}</a>
             {% endif %}
             {% endfor %}
+            {% endif %}
 
             <!-- Next Button -->
             {% if has_next %}

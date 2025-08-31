@@ -29,7 +29,7 @@ def get_rental_categories():
         return []
 
 @frappe.whitelist(allow_guest=True)
-def get_rental_items(category=None, search=None, filters=None, page=1, limit=20):
+def get_rental_items(category=None, search=None, sort_by="name", filters=None, page=1, limit=20):
     """Get rental items for portal listing"""
     try:
         page = cint(page)
@@ -60,6 +60,17 @@ def get_rental_items(category=None, search=None, filters=None, page=1, limit=20)
                 
         where_clause = " AND ".join(conditions)
         
+        # Handle sorting
+        order_clause = "total_rental_count DESC, modified DESC"  # default
+        if sort_by == "name":
+            order_clause = "item_name ASC"
+        elif sort_by == "price_low":
+            order_clause = "rental_rate_per_day ASC"
+        elif sort_by == "price_high":
+            order_clause = "rental_rate_per_day DESC"
+        elif sort_by == "newest":
+            order_clause = "modified DESC"
+        
         items = frappe.db.sql(f"""
             SELECT 
                 item_code,
@@ -74,7 +85,7 @@ def get_rental_items(category=None, search=None, filters=None, page=1, limit=20)
                 rental_service_item
             FROM `tabItem`
             WHERE {where_clause}
-            ORDER BY total_rental_count DESC, modified DESC
+            ORDER BY {order_clause}
             LIMIT %s OFFSET %s
         """, values + [limit, start], as_dict=True)
         

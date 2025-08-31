@@ -21,7 +21,7 @@ def get_context(context):
         )
         
         context.items = items_data.get('items', [])
-        context.total_items = items_data.get('total', 0)
+        context.total_items = items_data.get('total_count', 0)
         context.has_more = items_data.get('has_more', False)
         
         # Get all categories for filter
@@ -29,9 +29,9 @@ def get_context(context):
         context.categories = categories_data.get('categories', [])
         
         # Current filters
-        context.current_category = category
-        context.current_search = search
-        context.current_sort = sort_by
+        context.current_category = category or ''
+        context.current_search = search or ''
+        context.current_sort = sort_by or 'name'
         context.current_page = page
         context.per_page = per_page
         
@@ -78,5 +78,20 @@ def get_context(context):
         frappe.log_error(f"Error loading category page: {str(e)}")
         context.items = []
         context.categories = []
+        context.total_items = 0
+        context.has_more = False
+        context.current_category = category or ''
+        context.current_search = search or ''
+        context.current_sort = sort_by or 'name'
+        context.current_page = page
+        context.per_page = per_page
+        context.total_pages = 1
+        context.has_prev = False
+        context.has_next = False
+        context.prev_page = None
+        context.next_page = None
+        context.page_numbers = [1]
+        context.base_url = "/portal/category"
+        context.url_params = ""
         context.error_message = "Unable to load items. Please try again later."
         return context
