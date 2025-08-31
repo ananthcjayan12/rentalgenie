@@ -61,18 +61,167 @@ body {
 }
 
 .profile-container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
 }
 
-.profile-header {
+/* Customer Search Mode */
+.customer-search {
     background: white;
     border-radius: 12px;
     padding: 2rem;
-    margin-bottom: 2rem;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.search-header {
     text-align: center;
+    margin-bottom: 2rem;
+}
+
+.search-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.search-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.customer-search-box {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: var(--primary-color);
+}
+
+.search-btn, .new-customer-btn {
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.search-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.search-btn:hover {
+    background: #6A1B9A;
+}
+
+.new-customer-btn {
+    background: var(--success-color);
+    color: white;
+}
+
+.new-customer-btn:hover {
+    background: #059669;
+}
+
+.recent-customers {
+    margin-top: 2rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.customers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.customer-card {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.customer-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.customer-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.customer-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.customer-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Customer Profile View Mode */
+.customer-profile {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    height: fit-content;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
 .profile-avatar {
@@ -83,7 +232,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 1rem;
     color: white;
     font-size: 2rem;
 }
@@ -97,110 +246,52 @@ body {
 
 .profile-email {
     color: var(--text-secondary);
-    font-size: 1rem;
 }
 
-.stats-grid {
+.profile-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin: 2rem 0;
-}
-
-.stat-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.stat-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.stat-label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.profile-section {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.section-title i {
-    color: var(--primary-color);
-}
-
-.info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.info-row:last-child {
-    border-bottom: none;
-}
-
-.info-label {
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-.info-value {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.action-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
     margin-top: 2rem;
 }
 
+.stat-card {
+    background: var(--background);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-title {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.profile-actions {
+    margin-top: 2rem;
+}
+
 .btn {
-    padding: 1rem 1.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
     border-radius: 8px;
     font-weight: 600;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s;
     cursor: pointer;
-    border: none;
-    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s;
 }
 
 .btn-primary {
     background: var(--primary-color);
     color: white;
-}
-
-.btn-primary:hover {
-    background: #6A1B9A;
-    transform: translateY(-1px);
 }
 
 .btn-outline {
@@ -209,34 +300,106 @@ body {
     border: 2px solid var(--primary-color);
 }
 
-.btn-outline:hover {
-    background: var(--primary-color);
-    color: white;
+.bookings-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-.error-message {
-    background: #fee;
-    color: #c53030;
+.booking-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 1rem;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    margin-bottom: 2rem;
-    text-align: center;
+    margin-bottom: 1rem;
 }
 
-/* Responsive Design */
+.booking-details h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.booking-meta {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.booking-amount {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 1rem;
+}
+
+.status-confirmed { background: #e6fffa; color: #047857; }
+.status-delivered { background: #dbeafe; color: #1e40af; }
+.status-returned { background: #f3f4f6; color: #374151; }
+
+/* New Customer Form */
+.new-customer-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-top: 2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .action-buttons {
+    .customer-profile {
         grid-template-columns: 1fr;
     }
     
-    .info-row {
+    .customers-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .customer-search-box {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
     }
 }
 
@@ -276,112 +439,261 @@ body {
 {% endblock %}
 
 {% block content %}
-<div x-data="profilePage()">
+<div x-data="profilePage()" x-init="init()">
     <!-- Header -->
     <div class="portal-header">
         <div class="header-content">
             <a href="/portal" class="back-btn">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <div class="header-title">My Profile</div>
+            <div class="header-title">
+                {% if mode == 'view' %}Customer Profile{% else %}Customer Management{% endif %}
+            </div>
         </div>
     </div>
 
     <div class="profile-container">
-        <!-- Error Message -->
-        {% if error_message %}
-        <div class="error-message">
-            {{ error_message }}
-        </div>
-        {% endif %}
-
-        <!-- Profile Header -->
-        <div class="profile-header">
-            <div class="profile-avatar">
-                <i class="fas fa-user"></i>
-            </div>
-            <div class="profile-name">{{ customer.customer_name or 'Guest User' }}</div>
-            <div class="profile-email">{{ customer_email }}</div>
-        </div>
-
-        <!-- Statistics -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">{{ stats.total_bookings or 0 }}</div>
-                <div class="stat-label">Total Bookings</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{{ stats.active_bookings or 0 }}</div>
-                <div class="stat-label">Active Rentals</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">₹{{ "{:,.0f}".format(stats.total_spent or 0) }}</div>
-                <div class="stat-label">Total Spent</div>
-            </div>
-        </div>
-
-        <!-- Personal Information -->
-        <div class="profile-section">
-            <h3 class="section-title">
-                <i class="fas fa-user"></i>
-                Personal Information
-            </h3>
-            
-            <div class="info-row">
-                <span class="info-label">Full Name</span>
-                <span class="info-value">{{ customer.customer_name or 'Not set' }}</span>
+        {% if mode == 'search' %}
+        <!-- Customer Search Mode -->
+        <div class="customer-search">
+            <div class="search-header">
+                <h1 class="search-title">Select Customer</h1>
+                <p class="search-subtitle">Search for an existing customer or create a new one</p>
             </div>
             
-            <div class="info-row">
-                <span class="info-label">Email Address</span>
-                <span class="info-value">{{ customer_email }}</span>
+            <div class="customer-search-box">
+                <input type="text" 
+                       x-model="searchQuery" 
+                       @input="searchCustomers()"
+                       placeholder="Search by name, phone, or email..." 
+                       class="search-input">
+                <button @click="searchCustomers()" class="search-btn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button @click="showNewCustomerForm = !showNewCustomerForm" class="new-customer-btn">
+                    <i class="fas fa-plus"></i> New Customer
+                </button>
             </div>
-            
-            <div class="info-row">
-                <span class="info-label">Phone Number</span>
-                <span class="info-value">{{ customer.mobile_no or 'Not set' }}</span>
-            </div>
-        </div>
 
-        <!-- Address Information -->
-        {% if address %}
-        <div class="profile-section">
-            <h3 class="section-title">
-                <i class="fas fa-map-marker-alt"></i>
-                Default Address
-            </h3>
-            
-            <div class="info-row">
-                <span class="info-label">Address</span>
-                <div class="info-value">
-                    {{ address.address_line1 }}<br>
-                    {% if address.address_line2 %}{{ address.address_line2 }}<br>{% endif %}
-                    {{ address.city }}, {{ address.state }} {{ address.pincode }}<br>
-                    {{ address.country }}
+            <!-- Live Search Results -->
+            <div x-show="searchResults.length > 0" class="search-results">
+                <h3 class="section-title">Search Results</h3>
+                <div class="customers-grid">
+                    <template x-for="customer in searchResults" :key="customer.name">
+                        <div class="customer-card" @click="selectCustomer(customer.name)">
+                            <div class="customer-name" x-text="customer.customer_name"></div>
+                            <div class="customer-info" x-show="customer.mobile_no">
+                                <i class="fas fa-phone"></i> <span x-text="customer.mobile_no"></span>
+                            </div>
+                            <div class="customer-info" x-show="customer.email_id">
+                                <i class="fas fa-envelope"></i> <span x-text="customer.email_id"></span>
+                            </div>
+                            <div class="customer-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value" x-text="customer.booking_count || 0"></div>
+                                    <div class="stat-label">Bookings</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" x-text="customer.last_booking_date ? new Date(customer.last_booking_date).toLocaleDateString() : 'New'"></div>
+                                    <div class="stat-label">Last Booking</div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- New Customer Form -->
+            <div x-show="showNewCustomerForm" class="new-customer-form" style="display: none;">
+                <h3 class="section-title">Create New Customer</h3>
+                <form @submit.prevent="createCustomer()">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Customer Name *</label>
+                            <input type="text" x-model="newCustomer.customer_name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number *</label>
+                            <input type="tel" x-model="newCustomer.mobile_no" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email (Optional)</label>
+                            <input type="email" x-model="newCustomer.email_id" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <input type="text" x-model="newCustomer.address_line1" class="form-input" placeholder="Address Line 1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input type="text" x-model="newCustomer.city" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">State</label>
+                            <input type="text" x-model="newCustomer.state" class="form-input">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem;">
+                            <i class="fas fa-save"></i> Create Customer
+                        </button>
+                        <button type="button" @click="showNewCustomerForm = false" class="btn btn-outline" style="width: auto; padding: 0.75rem 2rem;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Edit Customer Form -->
+            <div x-show="showEditCustomerForm" class="new-customer-form" style="display: none;">
+                <h3 class="section-title">Edit Customer Details</h3>
+                <form @submit.prevent="updateCustomer()">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Customer Name *</label>
+                            <input type="text" x-model="editCustomer.customer_name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number *</label>
+                            <input type="tel" x-model="editCustomer.mobile_no" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email (Optional)</label>
+                            <input type="email" x-model="editCustomer.email_id" class="form-input">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem;">
+                            <i class="fas fa-save"></i> Update Customer
+                        </button>
+                        <button type="button" @click="showEditCustomerForm = false" class="btn btn-outline" style="width: auto; padding: 0.75rem 2rem;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Recent Customers -->
+            <div class="recent-customers">
+                <h3 class="section-title">Recent Customers</h3>
+                <div class="customers-grid">
+                    {% for customer in recent_customers %}
+                    <div class="customer-card" @click="selectCustomer('{{ customer.name }}')">
+                        <div class="customer-name">{{ customer.customer_name }}</div>
+                        {% if customer.mobile_no %}
+                        <div class="customer-info">
+                            <i class="fas fa-phone"></i> {{ customer.mobile_no }}
+                        </div>
+                        {% endif %}
+                        {% if customer.email_id %}
+                        <div class="customer-info">
+                            <i class="fas fa-envelope"></i> {{ customer.email_id }}
+                        </div>
+                        {% endif %}
+                        <div class="customer-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">{{ customer.booking_count or 0 }}</div>
+                                <div class="stat-label">Bookings</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">
+                                    {% if customer.last_booking_date %}
+                                    {{ customer.last_booking_date.strftime('%d %b') }}
+                                    {% else %}
+                                    New
+                                    {% endif %}
+                                </div>
+                                <div class="stat-label">Last Booking</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-        {% endif %}
 
-        <!-- Quick Actions -->
-        <div class="action-buttons">
-            <a href="/portal/bookings" class="btn btn-primary">
-                <i class="fas fa-calendar-check"></i>
-                View Bookings
-            </a>
-            <button class="btn btn-outline" onclick="alert('Profile editing feature coming soon!')">
-                <i class="fas fa-edit"></i>
-                Edit Profile
-            </button>
-            <a href="/portal/category" class="btn btn-outline">
-                <i class="fas fa-shopping-bag"></i>
-                Browse Items
-            </a>
-            <button class="btn btn-outline" onclick="alert('For support, call +91 9876543210')">
-                <i class="fas fa-headset"></i>
-                Contact Support
-            </button>
+        {% else %}
+        <!-- Customer Profile View Mode -->
+        <div class="customer-profile">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h2 class="profile-name">{{ customer.customer_name }}</h2>
+                    {% if customer.email_id %}
+                    <p class="profile-email">{{ customer.email_id }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ total_bookings }}</div>
+                        <div class="stat-title">Total Bookings</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">₹{{ "{:,.0f}".format(total_spent) }}</div>
+                        <div class="stat-title">Total Spent</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ active_bookings }}</div>
+                        <div class="stat-title">Active Bookings</div>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button @click="startNewBooking()" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Booking
+                    </button>
+                    <button @click="editCustomerDetails()" class="btn btn-outline">
+                        <i class="fas fa-edit"></i> Edit Details
+                    </button>
+                </div>
+
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--background); border-radius: 8px;">
+                    <h4 style="margin: 0 0 0.5rem 0;">Contact Information</h4>
+                    {% if customer.mobile_no %}
+                    <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-phone"></i> {{ customer.mobile_no }}</p>
+                    {% endif %}
+                    {% if customer.email_id %}
+                    <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-envelope"></i> {{ customer.email_id }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bookings-section">
+                <h3 class="section-title">Recent Bookings</h3>
+                
+                {% if customer_bookings %}
+                {% for booking in customer_bookings %}
+                <div class="booking-item" @click="viewBookingDetails('{{ booking.name }}')" style="cursor: pointer;">
+                    <div class="booking-details">
+                        <h4>{{ booking.name }}</h4>
+                        <div class="booking-meta">
+                            {{ booking.item_count }} items • {{ booking.posting_date.strftime('%d %b %Y') }}
+                            {% if booking.earliest_rental_date %}
+                            • Rental: {{ booking.earliest_rental_date.strftime('%d %b') }} - {{ booking.latest_rental_date.strftime('%d %b') }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div class="booking-amount">₹{{ "{:,.0f}".format(booking.total) }}</div>
+                        <span class="status-badge status-{{ booking.booking_status.lower() }}">
+                            {{ booking.booking_status }}
+                        </span>
+                        <i class="fas fa-chevron-right" style="margin-left: 0.5rem; color: var(--text-secondary);"></i>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>No bookings yet. Start by creating a new booking!</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
+        {% endif %}
     </div>
 
     <!-- Bottom Navigation -->
@@ -403,17 +715,150 @@ body {
             <span>Bookings</span>
         </a>
         <a href="/portal/profile" class="nav-item active">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
+            <i class="fas fa-users"></i>
+            <span>Customers</span>
         </a>
     </div>
 </div>
 
+{% if mode == 'view' %}
+<script>
+// Pass customer data to JavaScript
+window.currentCustomer = {
+    name: '{{ customer.name }}',
+    customer_name: '{{ customer.customer_name }}',
+    mobile_no: '{{ customer.mobile_no or "" }}',
+    email_id: '{{ customer.email_id or "" }}'
+};
+</script>
+{% endif %}
+
 <script>
 function profilePage() {
     return {
+        searchQuery: '',
+        showNewCustomerForm: false,
+        showEditCustomerForm: false,
+        searchResults: [],
+        newCustomer: {
+            customer_name: '',
+            mobile_no: '',
+            email_id: '',
+            address_line1: '',
+            city: '',
+            state: '',
+            pincode: ''
+        },
+        editCustomer: {
+            name: '',
+            customer_name: '',
+            mobile_no: '',
+            email_id: ''
+        },
+        
         async init() {
-            // Any initialization if needed
+            // Initialize profile page
+        },
+        
+        async searchCustomers() {
+            if (this.searchQuery.length < 2) {
+                this.searchResults = [];
+                return;
+            }
+            
+            try {
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.search_customers',
+                    args: {
+                        query: this.searchQuery
+                    }
+                });
+                
+                this.searchResults = response.message || [];
+                
+            } catch (error) {
+                console.log('Error searching customers:', error);
+                this.searchResults = [];
+            }
+        },
+        
+        selectCustomer(customerId) {
+            window.location.href = `/portal/profile?customer=${encodeURIComponent(customerId)}`;
+        },
+        
+        async createCustomer() {
+            if (!this.newCustomer.customer_name || !this.newCustomer.mobile_no) {
+                alert('Customer name and mobile number are required');
+                return;
+            }
+            
+            try {
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.create_customer',
+                    args: this.newCustomer
+                });
+                
+                if (response.message.success) {
+                    // Redirect to new customer profile
+                    window.location.href = `/portal/profile?customer=${response.message.customer.name}`;
+                } else {
+                    alert('Error creating customer: ' + response.message.message);
+                }
+                
+            } catch (error) {
+                alert('Error creating customer: ' + error.message);
+            }
+        },
+        
+        startNewBooking() {
+            // Clear any existing cart and start fresh
+            window.location.href = '/portal/category';
+        },
+        
+        async editCustomerDetails() {
+            // Load current customer data for editing
+            if (window.currentCustomer) {
+                this.editCustomer = {
+                    name: window.currentCustomer.name,
+                    customer_name: window.currentCustomer.customer_name,
+                    mobile_no: window.currentCustomer.mobile_no,
+                    email_id: window.currentCustomer.email_id
+                };
+                this.showEditCustomerForm = true;
+            }
+        },
+        
+        async updateCustomer() {
+            if (!this.editCustomer.customer_name || !this.editCustomer.mobile_no) {
+                alert('Customer name and mobile number are required');
+                return;
+            }
+            
+            try {
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.update_customer',
+                    args: {
+                        customer_id: this.editCustomer.name,
+                        customer_name: this.editCustomer.customer_name,
+                        mobile_no: this.editCustomer.mobile_no,
+                        email_id: this.editCustomer.email_id
+                    }
+                });
+                
+                if (response.message.success) {
+                    // Reload page to show updated data
+                    window.location.reload();
+                } else {
+                    alert('Error updating customer: ' + response.message.message);
+                }
+                
+            } catch (error) {
+                alert('Error updating customer: ' + error.message);
+            }
+        },
+        
+        viewBookingDetails(bookingId) {
+            window.location.href = `/portal/booking-confirmation?invoice=${encodeURIComponent(bookingId)}`;
         }
     }
 }

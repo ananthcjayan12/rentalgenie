@@ -434,3 +434,190 @@ def get_customer_cart(customer):
     """Get customer's active cart"""
     cart_name = frappe.db.get_value("Rental Cart", {"customer": customer, "status": "Active"}, "name")
     return frappe.get_doc("Rental Cart", cart_name) if cart_name else None
+
+# Customer Management APIs for Shopkeeper Interface
+
+@frappe.whitelist()
+def search_customers(query=""):
+    """Search customers by name, mobile, or email"""
+    try:
+        if not query:
+            return []
+            
+        query = f"%{query}%"
+        
+        customers = frappe.db.sql("""
+            SELECT 
+                name, customer_name, mobile_no, email_id, customer_group,
+                creation, modified,
+                (SELECT COUNT(*) FROM `tabSales Invoice` 
+                 WHERE customer = c.name AND is_rental_booking = 1 AND docstatus = 1) as booking_count,
+                (SELECT MAX(posting_date) FROM `tabSales Invoice` 
+                 WHERE customer = c.name AND is_rental_booking = 1 AND docstatus = 1) as last_booking_date
+            FROM `tabCustomer` c
+            WHERE (customer_name LIKE %s 
+                   OR mobile_no LIKE %s 
+                   OR email_id LIKE %s
+                   OR name LIKE %s)
+            AND disabled = 0
+            ORDER BY modified DESC
+            LIMIT 20
+        """, (query, query, query, query), as_dict=True)
+        
+        return customers
+        
+    except Exception as e:
+        frappe.log_error(f"Error searching customers: {str(e)}")
+        return []
+
+@frappe.whitelist()
+def create_customer(customer_name, mobile_no, email_id="", address_line1="", city="", state="", pincode=""):
+    """Create a new customer"""
+    try:
+        # Validate required fields
+        if not customer_name or not mobile_no:
+            return {'success': False, 'message': 'Customer name and mobile number are required'}
+        
+        # Check if customer with same mobile already exists
+        existing = frappe.db.get_value("Customer", {"mobile_no": mobile_no}, "name")
+        if existing:
+            return {'success': False, 'message': 'Customer with this mobile number already exists'}
+        
+        # Create customer
+        customer_doc = frappe.get_doc({
+            "doctype": "Customer",
+            "customer_name": customer_name.strip(),
+            "mobile_no": mobile_no.strip(),
+            "email_id": email_id.strip() if email_id else "",
+            "customer_group": "Individual",
+            "territory": "All Territories"
+        })
+        
+        customer_doc.insert(ignore_permissions=True)
+        
+        # Create address if provided
+        if address_line1:
+            address_doc = frappe.get_doc({
+                "doctype": "Address",
+                "address_title": customer_name,
+                "address_line1": address_line1.strip(),
+                "city": city.strip() if city else "",
+                "state": state.strip() if state else "",
+                "pincode": pincode.strip() if pincode else "",
+                "country": "India",
+                "address_type": "Billing",
+                "is_primary_address": 1,
+                "links": [{
+                    "link_doctype": "Customer",
+                    "link_name": customer_doc.name
+                }]
+            })
+            address_doc.insert(ignore_permissions=True)
+            
+            # Update customer with primary address
+            customer_doc.customer_primary_address = address_doc.name
+            customer_doc.save(ignore_permissions=True)
+        
+        return {
+            'success': True, 
+            'message': 'Customer created successfully',
+            'customer': {
+                'name': customer_doc.name,
+                'customer_name': customer_doc.customer_name,
+                'mobile_no': customer_doc.mobile_no,
+                'email_id': customer_doc.email_id
+            }
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating customer: {str(e)}")
+        return {'success': False, 'message': f'Error creating customer: {str(e)}'}
+
+@frappe.whitelist()
+def get_customer_details(customer_id):
+    """Get detailed customer information"""
+    try:
+        customer = frappe.get_doc("Customer", customer_id)
+        
+        # Get customer's addresses
+        addresses = frappe.get_all("Address", 
+            filters={"link_name": customer_id, "link_doctype": "Customer"},
+            fields=["name", "address_title", "address_line1", "address_line2", 
+                   "city", "state", "pincode", "country", "address_type", "is_primary_address"])
+        
+        # Get booking statistics
+        booking_stats = frappe.db.sql("""
+            SELECT 
+                COUNT(*) as total_bookings,
+                SUM(total) as total_spent,
+                COUNT(CASE WHEN booking_status IN ('Confirmed', 'Delivered') THEN 1 END) as active_bookings,
+                COUNT(CASE WHEN booking_status = 'Completed' THEN 1 END) as completed_bookings,
+                MAX(posting_date) as last_booking_date
+            FROM `tabSales Invoice`
+            WHERE customer = %s 
+            AND is_rental_booking = 1
+            AND docstatus = 1
+        """, (customer_id,), as_dict=True)
+        
+        stats = booking_stats[0] if booking_stats else {
+            'total_bookings': 0, 'total_spent': 0, 'active_bookings': 0, 
+            'completed_bookings': 0, 'last_booking_date': None
+        }
+        
+        # Get recent bookings
+        recent_bookings = frappe.db.sql("""
+            SELECT 
+                si.name, si.posting_date, si.total, si.booking_status,
+                si.customer_name, si.due_date,
+                COUNT(sii.name) as item_count,
+                MIN(sii.rental_start_date) as earliest_rental_date,
+                MAX(sii.rental_end_date) as latest_rental_date
+            FROM `tabSales Invoice` si
+            LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+            WHERE si.customer = %s 
+            AND si.is_rental_booking = 1
+            AND si.docstatus = 1
+            GROUP BY si.name
+            ORDER BY si.posting_date DESC
+            LIMIT 10
+        """, (customer_id,), as_dict=True)
+        
+        return {
+            'success': True,
+            'customer': customer.as_dict(),
+            'addresses': addresses,
+            'stats': stats,
+            'recent_bookings': recent_bookings
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting customer details: {str(e)}")
+        return {'success': False, 'message': f'Error loading customer details: {str(e)}'}
+
+@frappe.whitelist()
+def update_customer(customer_id, customer_name, mobile_no, email_id=""):
+    """Update customer information"""
+    try:
+        customer = frappe.get_doc("Customer", customer_id)
+        
+        # Update fields
+        customer.customer_name = customer_name.strip()
+        customer.mobile_no = mobile_no.strip()
+        customer.email_id = email_id.strip() if email_id else ""
+        
+        customer.save(ignore_permissions=True)
+        
+        return {
+            'success': True,
+            'message': 'Customer updated successfully',
+            'customer': {
+                'name': customer.name,
+                'customer_name': customer.customer_name,
+                'mobile_no': customer.mobile_no,
+                'email_id': customer.email_id
+            }
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error updating customer: {str(e)}")
+        return {'success': False, 'message': f'Error updating customer: {str(e)}'}
