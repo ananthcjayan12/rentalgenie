@@ -1,0 +1,99 @@
+{
+ "actions": [],
+ "creation": "2025-08-23 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "service_item_code",
+  "column_break_3",
+  "rental_rate_per_day",
+  "rental_days",
+  "line_total",
+  "section_break_7",
+  "rental_start_date",
+  "rental_end_date",
+  "function_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "item_code.rental_service_item",
+   "fieldname": "service_item_code",
+   "fieldtype": "Link",
+   "label": "Service Item Code",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "item_code.rental_rate_per_day",
+   "fieldname": "rental_rate_per_day",
+   "fieldtype": "Currency",
+   "label": "Rate Per Day",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rental_days",
+   "fieldtype": "Int",
+   "label": "Rental Days",
+   "read_only": 1
+  },
+  {
+   "fieldname": "line_total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "rental_start_date",
+   "fieldtype": "Date",
+   "label": "Rental Start Date"
+  },
+  {
+   "fieldname": "rental_end_date",
+   "fieldtype": "Date",
+   "label": "Rental End Date"
+  },
+  {
+   "fieldname": "function_date",
+   "fieldtype": "Date",
+   "label": "Function Date"
+  }
+ ],
+ "istable": 1,
+ "modified": "2025-08-23 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Rental Management",
+ "name": "Rental Cart Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
