@@ -466,7 +466,7 @@ body {
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="/portal/categories" class="nav-item">
+        <a href="/portal/category" class="nav-item">
             <i class="fas fa-th-large"></i>
             <span>Categories</span>
         </a>
@@ -507,7 +507,7 @@ function portalApp() {
             clearTimeout(this.searchTimeout);
             this.searchTimeout = setTimeout(() => {
                 if (this.searchQuery.length > 2) {
-                    window.location.href = `/portal/search?q=${encodeURIComponent(this.searchQuery)}`;
+                    window.location.href = `/portal/category?search=${encodeURIComponent(this.searchQuery)}`;
                 }
             }, 500);
         },

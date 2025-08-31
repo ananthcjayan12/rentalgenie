@@ -79,7 +79,7 @@ def get_context(context):
                 LEFT JOIN `tabSales Invoice` si ON c.name = si.customer AND si.is_rental_booking = 1
                 WHERE c.customer_group = 'Individual' AND c.disabled = 0
                 GROUP BY c.name
-                ORDER BY last_booking_date DESC NULLS LAST, c.creation DESC
+                ORDER BY CASE WHEN last_booking_date IS NULL THEN 1 ELSE 0 END, last_booking_date DESC, c.creation DESC
                 LIMIT 20
             """, as_dict=True)
             
