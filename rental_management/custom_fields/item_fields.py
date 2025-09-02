@@ -13,12 +13,21 @@ def create_item_custom_fields():
             "collapsible": 1
         },
         {
+            "doctype": "Item",
+            "fieldname": "item_images",
+            "label": "Item Images",
+            "fieldtype": "Table",
+            "options": "Item Image",
+            "insert_after": "rental_section",
+            "description": "Upload multiple images for this item. First image will be used as primary."
+        },
+        {
             "doctype": "Item", 
             "fieldname": "is_rental_item",
             "label": "Enable for Rental",
             "fieldtype": "Check",
             "default": 0,
-            "insert_after": "rental_section"
+            "insert_after": "item_images"
         },
         {
             "doctype": "Item",

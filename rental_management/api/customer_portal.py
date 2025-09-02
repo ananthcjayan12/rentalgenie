@@ -71,32 +71,43 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
         elif sort_by == "newest":
             order_clause = "modified DESC"
         
+        # Get service items instead of main items
         items = frappe.db.sql(f"""
             SELECT 
-                item_code,
-                item_name,
-                rental_rate_per_day,
-                rental_item_type,
-                image,
-                current_rental_status,
-                is_third_party_item,
-                description,
-                total_rental_count,
-                rental_service_item
-            FROM `tabItem`
-            WHERE {where_clause}
-            ORDER BY {order_clause}
+                s.item_code as service_item_code,
+                s.item_name as service_item_name,
+                s.image as service_image,
+                m.item_code as main_item_code,
+                m.item_name as main_item_name,
+                m.rental_rate_per_day,
+                m.rental_item_type,
+                m.current_rental_status,
+                m.is_third_party_item,
+                m.description,
+                m.total_rental_count
+            FROM `tabItem` s
+            JOIN `tabItem` m ON s.item_code = CONCAT(m.item_code, '-RENTAL')
+            WHERE m.{where_clause}
+            AND s.item_group = 'Services'
+            ORDER BY m.{order_clause}
             LIMIT %s OFFSET %s
         """, values + [limit, start], as_dict=True)
         
-        # Add computed fields
+        # Add computed fields and multiple images
         for item in items:
             item['is_available'] = item['current_rental_status'] == 'Available'
-            item['rental_service_code'] = item['rental_service_item']
+            item['item_code'] = item['service_item_code']  # Use service item code
+            item['item_name'] = item['service_item_name']
+            item['main_item_code'] = item['main_item_code']  # Keep reference to main item
+            
+            # Get multiple images for the main item
+            item['images'] = get_item_images(item['main_item_code'])
+            item['primary_image'] = item['images'][0] if item['images'] else item['service_image']
+            
             # Add discount calculation if needed
             item['discount_percent'] = 0  # Placeholder for future discount logic
             
-        # Get total count for pagination
+        # Get total count for pagination (count main items, not service items)
         total_count = frappe.db.sql(f"""
             SELECT COUNT(*) as count
             FROM `tabItem`
@@ -118,33 +129,39 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
 def get_item_details(item_code):
     """Get detailed item information for product page"""
     try:
-        item = frappe.get_doc("Item", item_code)
+        # Check if this is a service item (ends with -RENTAL)
+        if item_code.endswith('-RENTAL'):
+            # This is a service item, get the main item
+            main_item_code = item_code.replace('-RENTAL', '')
+            main_item = frappe.get_doc("Item", main_item_code)
+            service_item = frappe.get_doc("Item", item_code)
+        else:
+            # This is a main item, get its service item
+            main_item = frappe.get_doc("Item", item_code)
+            service_item_code = f"{item_code}-RENTAL"
+            service_item = frappe.get_doc("Item", service_item_code) if frappe.db.exists("Item", service_item_code) else None
         
-        if not item.is_rental_item or item.approval_status != 'Approved':
+        if not main_item.is_rental_item or main_item.approval_status != 'Approved':
             frappe.throw(_("Item not available for rental"))
             
-        # Get item images (placeholder - extend based on your image storage)
-        images = [item.image] if item.image else []
+        # Get multiple images from main item
+        images = get_item_images(main_item.item_code)
         
-        # Get rental service item for booking
-        service_item = None
-        if item.rental_service_item:
-            service_item = frappe.get_doc("Item", item.rental_service_item)
-            
         return {
-            'item_code': item.item_code,
-            'item_name': item.item_name,
-            'description': item.description,
-            'rental_rate_per_day': item.rental_rate_per_day,
-            'rental_item_type': item.rental_item_type,
-            'current_rental_status': item.current_rental_status,
-            'is_available': item.current_rental_status == 'Available',
-            'total_rental_count': item.total_rental_count,
-            'condition_rating': item.condition_rating,
+            'item_code': service_item.item_code if service_item else main_item.item_code,
+            'main_item_code': main_item.item_code,
+            'item_name': service_item.item_name if service_item else main_item.item_name,
+            'description': main_item.description,
+            'rental_rate_per_day': main_item.rental_rate_per_day,
+            'rental_item_type': main_item.rental_item_type,
+            'current_rental_status': main_item.current_rental_status,
+            'is_available': main_item.current_rental_status == 'Available',
+            'total_rental_count': main_item.total_rental_count or 0,
+            'condition_rating': getattr(main_item, 'condition_rating', 0),
             'images': images,
-            'service_item_code': item.rental_service_item,
-            'is_third_party': item.is_third_party_item,
-            'purchase_cost': item.purchase_cost if item.is_third_party_item else None
+            'service_item_code': service_item.item_code if service_item else None,
+            'is_third_party': main_item.is_third_party_item,
+            'purchase_cost': main_item.purchase_cost if main_item.is_third_party_item else None
         }
         
     except Exception as e:
@@ -632,3 +649,53 @@ def update_customer(customer_id, customer_name, mobile_number, email_id=""):
     except Exception as e:
         frappe.log_error(f"Error updating customer: {str(e)}")
         return {'success': False, 'message': f'Error updating customer: {str(e)}'}
+
+def get_item_images(item_code):
+    """Get all images for an item"""
+    try:
+        # Get images from Item Image child table
+        images = frappe.get_all("Item Image",
+                              filters={"item": item_code},
+                              fields=["image", "image_description", "is_primary"],
+                              order_by="is_primary desc, display_order")
+        
+        # If no images in child table, fallback to main image field
+        if not images:
+            main_image = frappe.db.get_value("Item", item_code, "image")
+            if main_image:
+                return [main_image]
+            return []
+        
+        # Return list of image URLs
+        return [img.image for img in images if img.image]
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting images for item {item_code}: {str(e)}")
+        return []
+
+def get_primary_item_image(item_code):
+    """Get primary image for an item"""
+    try:
+        # First try to get primary image from child table
+        primary_image = frappe.db.get_value("Item Image",
+                                          {"item": item_code, "is_primary": 1},
+                                          "image")
+        
+        if primary_image:
+            return primary_image
+            
+        # Fallback to first image in child table
+        first_image = frappe.db.get_value("Item Image",
+                                        {"item": item_code},
+                                        "image",
+                                        order_by="display_order")
+        
+        if first_image:
+            return first_image
+            
+        # Final fallback to main image field
+        return frappe.db.get_value("Item", item_code, "image")
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting primary image for item {item_code}: {str(e)}")
+        return None

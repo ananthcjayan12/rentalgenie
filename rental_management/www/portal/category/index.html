@@ -250,7 +250,21 @@ body {
     padding: 0.25rem 0.75rem;
     border-radius: 12px;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 500;
+}
+
+.images-indicator {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .item-info {
@@ -573,10 +587,17 @@ body {
             {% for item in items %}
             <div class="item-card" @click="goToItem('{{ item.item_code }}')">
                 <div class="item-image-container">
-                    <img src="{{ item.image or '/assets/rental_management/images/placeholder.jpg' }}" 
+                    <img src="{{ item.primary_image or '/assets/rental_management/images/placeholder.jpg' }}" 
                          alt="{{ item.item_name }}" 
                          class="item-image">
-                    <div class="item-badge">Available</div>
+                    <!-- Show multiple images indicator if more than 1 image -->
+                    {% if item.images|length > 1 %}
+                    <div class="images-indicator">
+                        <i class="fas fa-images"></i>
+                        <span>{{ item.images|length }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="item-badge">{{ 'Available' if item.is_available else 'Not Available' }}</div>
                 </div>
                 <div class="item-info">
                     <div class="item-details">

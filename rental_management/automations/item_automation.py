@@ -151,9 +151,15 @@ def create_rental_service_item(item_doc):
         "is_stock_item": 0,  # Service item
         "is_sales_item": 1,
         "include_item_in_manufacturing": 0,
-        "description": f"Rental service for {item_doc.item_name}"
+        "description": f"Rental service for {item_doc.item_name}",
+        # Copy images and important details from original item
+        "image": item_doc.image,
+        "website_image": item_doc.website_image if hasattr(item_doc, 'website_image') else None
     })
     service_item.insert()
+    
+    # Copy multiple images from original item to service item
+    copy_item_images(item_doc.name, service_item.name)
     
     # Create Item Price for the service item
     if item_doc.rental_rate_per_day:
@@ -348,3 +354,52 @@ def create_inhouse_stock_entry(item_doc):
     stock_entry.submit()
     
     frappe.msgprint(f"✅ Initial stock entry created: {stock_entry.name}")
+
+def copy_item_images(from_item, to_item):
+    """Copy all item images from original item to service item"""
+    try:
+        # Get all images from the original item
+        original_images = frappe.get_all("Item Image", 
+                                       filters={"item": from_item},
+                                       fields=["image", "image_description", "is_primary", "display_order"],
+                                       order_by="display_order")
+        
+        if not original_images:
+            return
+            
+        # Copy each image to the service item
+        for img in original_images:
+            # Check if image already exists for service item
+            existing = frappe.db.exists("Item Image", {
+                "item": to_item,
+                "image": img.image
+            })
+            
+            if not existing:
+                new_image = frappe.get_doc({
+                    "doctype": "Item Image",
+                    "item": to_item,
+                    "image": img.image,
+                    "image_description": img.image_description,
+                    "is_primary": img.is_primary,
+                    "display_order": img.display_order
+                })
+                new_image.insert()
+        
+        # Update the main image field of service item with primary image
+        primary_image = frappe.db.get_value("Item Image", 
+                                           {"item": from_item, "is_primary": 1}, 
+                                           "image")
+        if primary_image:
+            frappe.db.set_value("Item", to_item, "image", primary_image)
+            
+    except Exception as e:
+        frappe.log_error(f"Error copying images from {from_item} to {to_item}: {str(e)}")
+
+def copy_item_attachments(from_item, to_item):
+    """Copy all attachments from original item to service item"""
+    try:
+        # This function can be used for copying other attachments if needed
+        pass
+    except Exception as e:
+        frappe.log_error(f"Error copying attachments from {from_item} to {to_item}: {str(e)}")
