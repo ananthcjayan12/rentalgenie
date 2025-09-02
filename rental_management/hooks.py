@@ -83,7 +83,7 @@ app_license = "mit"
 # ------------
 
 # before_install = "rental_management.install.before_install"
-# after_install = "rental_management.install.after_install"
+after_install = "rental_management.setup.install.after_install"
 
 # Uninstallation
 # ------------
@@ -251,5 +251,5 @@ doc_events = {
 # Installation
 # ------------
 
-after_install = "rental_management.setup.install.after_install"
+# after_install = "rental_management.setup.install.after_install"
 
