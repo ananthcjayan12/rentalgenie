@@ -317,7 +317,7 @@ def create_booking_from_cart(customer_info, address_type, new_address=None, spec
             customer_doc = frappe.get_doc({
                 "doctype": "Customer",
                 "customer_name": customer_info.get('name'),
-                "mobile_no": customer_info.get('mobile'),
+                "mobile_number": customer_info.get('mobile'),
                 "email_id": customer_info.get('email', ''),
                 "customer_group": "Individual",
                 "territory": "All Territories"
@@ -448,7 +448,7 @@ def get_customer_cart(customer):
 
 # Customer Management APIs for Shopkeeper Interface
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def search_customers(query=""):
     """Search customers by name, mobile, or email"""
     try:
@@ -459,7 +459,7 @@ def search_customers(query=""):
         
         customers = frappe.db.sql("""
             SELECT 
-                name, customer_name, mobile_no, email_id, customer_group,
+                name, customer_name, mobile_number, email_id, customer_group,
                 creation, modified,
                 (SELECT COUNT(*) FROM `tabSales Invoice` 
                  WHERE customer = c.name AND is_rental_booking = 1 AND docstatus = 1) as booking_count,
@@ -467,7 +467,7 @@ def search_customers(query=""):
                  WHERE customer = c.name AND is_rental_booking = 1 AND docstatus = 1) as last_booking_date
             FROM `tabCustomer` c
             WHERE (customer_name LIKE %s 
-                   OR mobile_no LIKE %s 
+                   OR mobile_number LIKE %s 
                    OR email_id LIKE %s
                    OR name LIKE %s)
             AND disabled = 0
@@ -481,7 +481,7 @@ def search_customers(query=""):
         frappe.log_error(f"Error searching customers: {str(e)}")
         return []
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def create_customer(customer_name, mobile_no, email_id="", address_line1="", city="", state="", pincode=""):
     """Create a new customer"""
     try:
@@ -490,15 +490,15 @@ def create_customer(customer_name, mobile_no, email_id="", address_line1="", cit
             return {'success': False, 'message': 'Customer name and mobile number are required'}
         
         # Check if customer with same mobile already exists
-        existing = frappe.db.get_value("Customer", {"mobile_no": mobile_no}, "name")
+        existing = frappe.db.get_value("Customer", {"mobile_number": mobile_no}, "name")
         if existing:
             return {'success': False, 'message': 'Customer with this mobile number already exists'}
         
-        # Create customer
+        # Create customer with correct field names
         customer_doc = frappe.get_doc({
             "doctype": "Customer",
             "customer_name": customer_name.strip(),
-            "mobile_no": mobile_no.strip(),
+            "mobile_number": mobile_no.strip(),  # ERPNext uses mobile_number, not mobile_no
             "email_id": email_id.strip() if email_id else "",
             "customer_group": "Individual",
             "territory": "All Territories"
@@ -535,7 +535,7 @@ def create_customer(customer_name, mobile_no, email_id="", address_line1="", cit
             'customer': {
                 'name': customer_doc.name,
                 'customer_name': customer_doc.customer_name,
-                'mobile_no': customer_doc.mobile_no,
+                'mobile_number': customer_doc.mobile_number,
                 'email_id': customer_doc.email_id
             }
         }
@@ -613,7 +613,7 @@ def update_customer(customer_id, customer_name, mobile_no, email_id=""):
         
         # Update fields
         customer.customer_name = customer_name.strip()
-        customer.mobile_no = mobile_no.strip()
+        customer.mobile_number = mobile_no.strip()  # ERPNext uses mobile_number
         customer.email_id = email_id.strip() if email_id else ""
         
         customer.save(ignore_permissions=True)
@@ -624,7 +624,7 @@ def update_customer(customer_id, customer_name, mobile_no, email_id=""):
             'customer': {
                 'name': customer.name,
                 'customer_name': customer.customer_name,
-                'mobile_no': customer.mobile_no,
+                'mobile_number': customer.mobile_number,
                 'email_id': customer.email_id
             }
         }

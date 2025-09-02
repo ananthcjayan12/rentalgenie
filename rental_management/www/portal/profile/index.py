@@ -72,7 +72,7 @@ def get_context(context):
             
             # Get recent customers for quick selection
             recent_customers = frappe.db.sql("""
-                SELECT DISTINCT c.name, c.customer_name, c.mobile_no, c.email_id,
+                SELECT DISTINCT c.name, c.customer_name, c.mobile_number, c.email_id,
                        COUNT(si.name) as booking_count,
                        MAX(si.posting_date) as last_booking_date
                 FROM `tabCustomer` c

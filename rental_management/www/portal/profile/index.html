@@ -482,8 +482,8 @@ body {
                     <template x-for="customer in searchResults" :key="customer.name">
                         <div class="customer-card" @click="selectCustomer(customer.name)">
                             <div class="customer-name" x-text="customer.customer_name"></div>
-                            <div class="customer-info" x-show="customer.mobile_no">
-                                <i class="fas fa-phone"></i> <span x-text="customer.mobile_no"></span>
+                            <div class="customer-info" x-show="customer.mobile_number">
+                                <i class="fas fa-phone"></i> <span x-text="customer.mobile_number"></span>
                             </div>
                             <div class="customer-info" x-show="customer.email_id">
                                 <i class="fas fa-envelope"></i> <span x-text="customer.email_id"></span>
@@ -514,7 +514,7 @@ body {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Mobile Number *</label>
-                            <input type="tel" x-model="newCustomer.mobile_no" class="form-input" required>
+                            <input type="tel" x-model="newCustomer.mobile_number" class="form-input" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email (Optional)</label>
@@ -555,7 +555,7 @@ body {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Mobile Number *</label>
-                            <input type="tel" x-model="editCustomer.mobile_no" class="form-input" required>
+                            <input type="tel" x-model="editCustomer.mobile_number" class="form-input" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email (Optional)</label>
@@ -580,9 +580,9 @@ body {
                     {% for customer in recent_customers %}
                     <div class="customer-card" @click="selectCustomer('{{ customer.name }}')">
                         <div class="customer-name">{{ customer.customer_name }}</div>
-                        {% if customer.mobile_no %}
+                        {% if customer.mobile_number %}
                         <div class="customer-info">
-                            <i class="fas fa-phone"></i> {{ customer.mobile_no }}
+                            <i class="fas fa-phone"></i> {{ customer.mobile_number }}
                         </div>
                         {% endif %}
                         {% if customer.email_id %}
@@ -652,8 +652,8 @@ body {
 
                 <div style="margin-top: 1rem; padding: 1rem; background: var(--background); border-radius: 8px;">
                     <h4 style="margin: 0 0 0.5rem 0;">Contact Information</h4>
-                    {% if customer.mobile_no %}
-                    <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-phone"></i> {{ customer.mobile_no }}</p>
+                    {% if customer.mobile_number %}
+                    <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-phone"></i> {{ customer.mobile_number }}</p>
                     {% endif %}
                     {% if customer.email_id %}
                     <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-envelope"></i> {{ customer.email_id }}</p>
@@ -727,7 +727,7 @@ body {
 window.currentCustomer = {
     name: '{{ customer.name }}',
     customer_name: '{{ customer.customer_name }}',
-    mobile_no: '{{ customer.mobile_no or "" }}',
+    mobile_number: '{{ customer.mobile_number or "" }}',
     email_id: '{{ customer.email_id or "" }}'
 };
 </script>
@@ -742,7 +742,7 @@ function profilePage() {
         searchResults: [],
         newCustomer: {
             customer_name: '',
-            mobile_no: '',
+            mobile_number: '',
             email_id: '',
             address_line1: '',
             city: '',
@@ -752,7 +752,7 @@ function profilePage() {
         editCustomer: {
             name: '',
             customer_name: '',
-            mobile_no: '',
+            mobile_number: '',
             email_id: ''
         },
         
@@ -787,7 +787,7 @@ function profilePage() {
         },
         
         async createCustomer() {
-            if (!this.newCustomer.customer_name || !this.newCustomer.mobile_no) {
+            if (!this.newCustomer.customer_name || !this.newCustomer.mobile_number) {
                 alert('Customer name and mobile number are required');
                 return;
             }
@@ -821,7 +821,7 @@ function profilePage() {
                 this.editCustomer = {
                     name: window.currentCustomer.name,
                     customer_name: window.currentCustomer.customer_name,
-                    mobile_no: window.currentCustomer.mobile_no,
+                    mobile_number: window.currentCustomer.mobile_number,
                     email_id: window.currentCustomer.email_id
                 };
                 this.showEditCustomerForm = true;
@@ -829,7 +829,7 @@ function profilePage() {
         },
         
         async updateCustomer() {
-            if (!this.editCustomer.customer_name || !this.editCustomer.mobile_no) {
+            if (!this.editCustomer.customer_name || !this.editCustomer.mobile_number) {
                 alert('Customer name and mobile number are required');
                 return;
             }
@@ -840,7 +840,7 @@ function profilePage() {
                     args: {
                         customer_id: this.editCustomer.name,
                         customer_name: this.editCustomer.customer_name,
-                        mobile_no: this.editCustomer.mobile_no,
+                        mobile_no: this.editCustomer.mobile_number,
                         email_id: this.editCustomer.email_id
                     }
                 });
