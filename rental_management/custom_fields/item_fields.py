@@ -62,7 +62,6 @@ def create_item_custom_fields():
             "fieldtype": "Select", 
             "options": "Pending Approval\nApproved\nRejected",
             "default": "Pending Approval",
-            "read_only": 1,
             "insert_after": "current_rental_status"
         },
         # Third Party Section
