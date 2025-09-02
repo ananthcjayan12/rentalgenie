@@ -28,7 +28,7 @@ def get_context(context):
         # Get customer details if available
         customer_email = frappe.session.user
         customer = frappe.db.get_value("Customer", {"email_id": customer_email}, 
-                                     ["name", "customer_name", "mobile_no", "customer_primary_address"], 
+                                     ["name", "customer_name", "mobile_number", "customer_primary_address"], 
                                      as_dict=True)
         
         context.customer = customer or {}

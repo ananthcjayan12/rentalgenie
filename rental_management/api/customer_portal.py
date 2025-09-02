@@ -482,15 +482,15 @@ def search_customers(query=""):
         return []
 
 @frappe.whitelist(allow_guest=True)
-def create_customer(customer_name, mobile_no, email_id="", address_line1="", city="", state="", pincode=""):
+def create_customer(customer_name, mobile_number, email_id="", address_line1="", city="", state="", pincode=""):
     """Create a new customer"""
     try:
         # Validate required fields
-        if not customer_name or not mobile_no:
+        if not customer_name or not mobile_number:
             return {'success': False, 'message': 'Customer name and mobile number are required'}
         
         # Check if customer with same mobile already exists
-        existing = frappe.db.get_value("Customer", {"mobile_number": mobile_no}, "name")
+        existing = frappe.db.get_value("Customer", {"mobile_number": mobile_number}, "name")
         if existing:
             return {'success': False, 'message': 'Customer with this mobile number already exists'}
         
@@ -498,7 +498,7 @@ def create_customer(customer_name, mobile_no, email_id="", address_line1="", cit
         customer_doc = frappe.get_doc({
             "doctype": "Customer",
             "customer_name": customer_name.strip(),
-            "mobile_number": mobile_no.strip(),  # ERPNext uses mobile_number, not mobile_no
+            "mobile_number": mobile_number.strip(),  # ERPNext uses mobile_number
             "email_id": email_id.strip() if email_id else "",
             "customer_group": "Individual",
             "territory": "All Territories"
@@ -606,14 +606,14 @@ def get_customer_details(customer_id):
         return {'success': False, 'message': f'Error loading customer details: {str(e)}'}
 
 @frappe.whitelist()
-def update_customer(customer_id, customer_name, mobile_no, email_id=""):
+def update_customer(customer_id, customer_name, mobile_number, email_id=""):
     """Update customer information"""
     try:
         customer = frappe.get_doc("Customer", customer_id)
         
         # Update fields
         customer.customer_name = customer_name.strip()
-        customer.mobile_number = mobile_no.strip()  # ERPNext uses mobile_number
+        customer.mobile_number = mobile_number.strip()  # ERPNext uses mobile_number
         customer.email_id = email_id.strip() if email_id else ""
         
         customer.save(ignore_permissions=True)

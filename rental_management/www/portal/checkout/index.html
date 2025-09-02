@@ -513,7 +513,7 @@ body {
                             <input type="tel" x-model="customerInfo.mobile" 
                                    class="form-input"
                                    :class="{'error': errors.mobile}"
-                                   value="{{ customer.mobile_no or '' }}" required>
+                                   value="{{ customer.mobile_number or '' }}" required>
                             <div x-show="errors.mobile" x-text="errors.mobile" class="error-message"></div>
                         </div>
                     </div>
@@ -733,7 +733,7 @@ function checkoutPage() {
     return {
         customerInfo: {
             name: '{{ customer.customer_name or "" }}',
-            mobile: '{{ customer.mobile_no or "" }}',
+            mobile: '{{ customer.mobile_number or "" }}',
             email: '{{ frappe.session.user }}'
         },
         selectedAddress: 'existing',

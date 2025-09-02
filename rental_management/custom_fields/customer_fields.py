@@ -9,7 +9,7 @@ def create_customer_custom_fields():
             "fieldname": "customer_management_section",
             "label": "Customer Management",
             "fieldtype": "Section Break",
-            "insert_after": "mobile_no",
+            "insert_after": "mobile_number",
             "collapsible": 1
         },
         {
