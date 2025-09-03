@@ -360,38 +360,55 @@ def create_inhouse_stock_entry(item_doc):
 def copy_item_images(from_item, to_item):
     """Copy all item images from original item to service item"""
     try:
-        # Get all images from the original item
-        original_images = frappe.get_all("Item Image", 
-                                       filters={"item": from_item},
-                                       fields=["image", "image_description", "is_primary", "display_order"],
-                                       order_by="display_order")
+        # Prefer querying by child table parent link (robust)
+        original_images = frappe.get_all(
+            "Item Image",
+            filters={"parent": from_item},
+            fields=["image", "image_description", "is_primary", "display_order"],
+            order_by="display_order, creation"
+        )
+        
+        # Fallback: if legacy rows used 'item' field
+        if not original_images:
+            original_images = frappe.get_all(
+                "Item Image",
+                filters={"item": from_item},
+                fields=["image", "image_description", "is_primary", "display_order"],
+                order_by="display_order, creation"
+            )
         
         if not original_images:
             return
             
-        # Copy each image to the service item
         for img in original_images:
-            # Check if image already exists for service item
-            existing = frappe.db.exists("Item Image", {
-                "item": to_item,
-                "image": img.image
+            existing = frappe.db.exists("Item Image", {"parent": to_item, "image": img.get("image")}) or \
+                       frappe.db.exists("Item Image", {"item": to_item, "image": img.get("image")})
+            if existing:
+                continue
+            new_image = frappe.get_doc({
+                "doctype": "Item Image",
+                # Insert as child of target Item
+                "parent": to_item,
+                "parenttype": "Item",
+                "parentfield": "item_images",
+                "item": to_item,  # keep for compatibility, hidden in UI
+                "image": img.get("image"),
+                "image_description": img.get("image_description"),
+                "is_primary": img.get("is_primary"),
+                "display_order": img.get("display_order") or 1
             })
-            
-            if not existing:
-                new_image = frappe.get_doc({
-                    "doctype": "Item Image",
-                    "item": to_item,
-                    "image": img.image,
-                    "image_description": img.image_description,
-                    "is_primary": img.is_primary,
-                    "display_order": img.display_order
-                })
-                new_image.insert()
+            new_image.insert()
         
         # Update the main image field of service item with primary image
-        primary_image = frappe.db.get_value("Item Image", 
-                                           {"item": from_item, "is_primary": 1}, 
-                                           "image")
+        primary_image = frappe.db.get_value(
+            "Item Image",
+            {"parent": from_item, "is_primary": 1},
+            "image"
+        ) or frappe.db.get_value(
+            "Item Image",
+            {"item": from_item, "is_primary": 1},
+            "image"
+        )
         if primary_image:
             frappe.db.set_value("Item", to_item, "image", primary_image)
             
@@ -414,11 +431,26 @@ def on_item_update(doc, method):
         service_item = getattr(doc, "rental_service_item", None)
         if not service_item:
             return
+        
+        # Backfill hidden 'item' field in child rows for compatibility
+        frappe.db.sql(
+            """
+            UPDATE `tabItem Image`
+            SET item = %(item)s
+            WHERE parent = %(item)s AND (item IS NULL OR item = '')
+            """,
+            {"item": doc.name}
+        )
+        
         # Sync approval status
         if doc.approval_status:
             frappe.db.set_value("Item", service_item, "approval_status", doc.approval_status)
-        # Optionally keep primary image in sync
+        
+        # Sync primary image and copy any new images
+        copy_item_images(doc.name, service_item)
         primary_image = frappe.db.get_value(
+            "Item Image", {"parent": doc.name, "is_primary": 1}, "image"
+        ) or frappe.db.get_value(
             "Item Image", {"item": doc.name, "is_primary": 1}, "image"
         )
         if primary_image:

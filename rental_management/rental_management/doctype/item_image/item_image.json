@@ -6,20 +6,24 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "item",
   "image",
   "image_description",
   "is_primary",
-  "display_order"
+  "display_order",
+  "item"  
  ],
  "fields": [
   {
    "fieldname": "item",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Item",
    "options": "Item",
-   "reqd": 1
+   "reqd": 0,
+   "hidden": 1,
+   "read_only": 1,
+   "no_copy": 1,
+   "in_list_view": 0,
+   "description": "Deprecated: parent Item is inferred from the form"
   },
   {
    "fieldname": "image",
