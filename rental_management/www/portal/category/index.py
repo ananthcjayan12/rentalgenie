@@ -24,9 +24,9 @@ def get_context(context):
         context.total_items = items_data.get('total_count', 0)
         context.has_more = items_data.get('has_more', False)
         
-        # Get all categories for filter
+        # Get all categories for filter (function returns a list)
         categories_data = get_rental_categories()
-        context.categories = categories_data.get('categories', [])
+        context.categories = categories_data or []
         
         # Current filters
         context.current_category = category or ''
