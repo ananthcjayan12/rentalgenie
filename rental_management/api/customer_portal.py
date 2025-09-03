@@ -5,24 +5,38 @@ import json
 
 @frappe.whitelist(allow_guest=True)
 def get_rental_categories():
-    """Get rental item categories for portal home page"""
+    """Get rental item categories for portal home page (count only enabled/approved service items)"""
     try:
         categories = frappe.db.sql("""
-            SELECT DISTINCT rental_item_type as name, 
-                   rental_item_type as label,
-                   COUNT(*) as item_count
-            FROM `tabItem` 
-            WHERE is_rental_item = 1 
-            AND approval_status = 'Approved'
-            AND disabled = 0
-            AND rental_item_type IS NOT NULL
-            GROUP BY rental_item_type
+            SELECT 
+                m.rental_item_type AS name,
+                m.rental_item_type AS label,
+                COUNT(s.item_code) AS item_count
+            FROM `tabItem` m
+            JOIN `tabItem` s ON s.item_code = CONCAT(m.item_code, '-RENTAL')
+            WHERE m.is_rental_item = 1
+              AND m.approval_status = 'Approved'
+              AND m.disabled = 0
+              AND s.is_stock_item = 0
+              AND s.disabled = 0
+              AND COALESCE(s.approval_status, m.approval_status) = 'Approved'
+              AND m.rental_item_type IS NOT NULL
+            GROUP BY m.rental_item_type
             ORDER BY item_count DESC
         """, as_dict=True)
         
-        # Add default image for categories
+        # Map icons per category for better visual distinction
+        icon_map = {
+            'Dress': 'fa-person-dress',
+            'Ornament': 'fa-gem',
+            'Accessory': 'fa-star',
+            'Other': 'fa-tags'
+        }
+        
+        # Add default image and icon for categories
         for category in categories:
-            category['image'] = f"/assets/rental_management/images/categories/{category['name'].lower()}.jpg"
+            category['image'] = f"/assets/rental_management/images/categories/{(category['name'] or '').lower()}.jpg"
+            category['icon'] = icon_map.get(category.get('label'), 'fa-tag')
             
         return categories
     except Exception as e:
@@ -54,6 +68,7 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
             search_term = f"%{search}%"
             values.extend([search_term, search_term])
             
+        trending_mode = False
         # Parse filters if provided
         if filters:
             if isinstance(filters, str):
@@ -63,6 +78,12 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
                 min_price, max_price = filters['price_range']
                 conditions_m.append("m.rental_rate_per_day BETWEEN %s AND %s")
                 values.extend([min_price, max_price])
+            
+            # Allow a simple trending flag from callers
+            if filters.get('is_trending'):
+                trending_mode = True
+                # Optional: only consider items that have been rented at least once
+                conditions_m.append("COALESCE(m.total_rental_count, 0) > 0")
                 
         where_clause_m = " AND ".join(conditions_m)
         
@@ -75,6 +96,8 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
             order_clause = "m.rental_rate_per_day DESC"
         elif sort_by == "newest":
             order_clause = "m.modified DESC"
+        elif sort_by == "trending" or trending_mode:
+            order_clause = "m.total_rental_count DESC, m.modified DESC"
         else:
             order_clause = "m.total_rental_count DESC, m.modified DESC"
         
@@ -130,14 +153,21 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
             conditions_plain.append("(item_name LIKE %s OR description LIKE %s)")
         if filters and isinstance(filters, dict) and filters.get('price_range'):
             conditions_plain.append("rental_rate_per_day BETWEEN %s AND %s")
+        if trending_mode:
+            conditions_plain.append("COALESCE(total_rental_count, 0) > 0")
         where_clause_plain = " AND ".join(conditions_plain)
         
-        # Get total count for pagination (count main items, not service items)
-        total_count = frappe.db.sql(f"""
+        # Get total count for pagination (count only mains that have a qualifying service item)
+        total_count_row = frappe.db.sql(f"""
             SELECT COUNT(*) as count
-            FROM `tabItem`
-            WHERE {where_clause_plain}
-        """, values, as_dict=True)[0]['count'] if items is not None else 0
+            FROM `tabItem` m
+            JOIN `tabItem` s ON s.item_code = CONCAT(m.item_code, '-RENTAL')
+            WHERE {where_clause_m}
+              AND s.is_stock_item = 0
+              AND s.disabled = 0
+              AND COALESCE(s.approval_status, m.approval_status) = 'Approved'
+        """, values, as_dict=True)
+        total_count = total_count_row[0]['count'] if total_count_row else 0
         
         return {
             'items': items,

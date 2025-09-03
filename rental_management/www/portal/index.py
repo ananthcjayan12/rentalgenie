@@ -7,8 +7,8 @@ def get_context(context):
     # Get categories for the main navigation
     context.categories = get_rental_categories()
     
-    # Get trending/featured items for home page
-    trending_items = get_rental_items(filters={'is_trending': True}, limit=6)
+    # Get trending/featured items for home page (sorted by trending)
+    trending_items = get_rental_items(filters={'is_trending': True}, sort_by='trending', limit=6)
     context.trending_items = trending_items.get('items', [])
     
     # Get discounted items
