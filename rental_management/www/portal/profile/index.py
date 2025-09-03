@@ -8,16 +8,34 @@ def get_context(context):
         customer_id = frappe.form_dict.get('customer')
         
         if customer_id:
-            # Show specific customer details
-            customer = frappe.get_doc("Customer", customer_id)
+            # Show specific customer details (use db.get_value to avoid permission issues)
+            customer = frappe.db.get_value(
+                "Customer",
+                customer_id,
+                ["name", "customer_name", "mobile_number", "email_id"],
+                as_dict=True,
+            )
+            if not customer:
+                context.mode = 'search'
+                context.error_message = "Customer not found"
+                return context
             context.customer = customer
             context.mode = 'view'
             
-            # Get customer's addresses
-            addresses = frappe.get_all("Address", 
-                filters={"link_name": customer_id, "link_doctype": "Customer"},
-                fields=["name", "address_title", "address_line1", "address_line2", 
-                       "city", "state", "pincode", "country", "address_type", "is_primary_address"])
+            # Get customer's addresses using Dynamic Link join
+            addresses = frappe.db.sql(
+                """
+                SELECT a.name, a.address_title, a.address_line1, a.address_line2,
+                       a.city, a.state, a.pincode, a.country, a.address_type, a.is_primary_address
+                FROM `tabAddress` a
+                JOIN `tabDynamic Link` dl
+                  ON dl.parent = a.name AND dl.parenttype = 'Address'
+                WHERE dl.link_doctype = 'Customer' AND dl.link_name = %s
+                ORDER BY a.is_primary_address DESC, a.modified DESC
+                """,
+                (customer_id,),
+                as_dict=True,
+            )
             context.customer_addresses = addresses
             
             # Get customer's bookings
@@ -41,7 +59,8 @@ def get_context(context):
             context.customer_bookings = bookings
             
             # Get customer statistics
-            booking_stats = frappe.db.sql("""
+            booking_stats = frappe.db.sql(
+                """
                 SELECT 
                     COUNT(*) as total_bookings,
                     SUM(total) as total_spent,
@@ -52,7 +71,10 @@ def get_context(context):
                 WHERE customer = %s 
                 AND is_rental_booking = 1
                 AND docstatus = 1
-            """, (customer_id,), as_dict=True)
+            """,
+                (customer_id,),
+                as_dict=True,
+            )
             
             stats = booking_stats[0] if booking_stats else {
                 'total_bookings': 0, 'total_spent': 0, 'active_bookings': 0, 
@@ -71,7 +93,8 @@ def get_context(context):
             context.customer_bookings = []
             
             # Get recent customers for quick selection
-            recent_customers = frappe.db.sql("""
+            recent_customers = frappe.db.sql(
+                """
                 SELECT DISTINCT c.name, c.customer_name, c.mobile_number, c.email_id,
                        COUNT(si.name) as booking_count,
                        MAX(si.posting_date) as last_booking_date
@@ -81,14 +104,16 @@ def get_context(context):
                 GROUP BY c.name
                 ORDER BY CASE WHEN last_booking_date IS NULL THEN 1 ELSE 0 END, last_booking_date DESC, c.creation DESC
                 LIMIT 20
-            """, as_dict=True)
+            """,
+                as_dict=True,
+            )
             
             context.recent_customers = recent_customers
         
         # Page metadata
         if customer_id:
-            context.page_title = f"Customer Profile - {context.customer.customer_name} | Blush & Glow"
-            context.meta_description = f"Manage bookings and profile for {context.customer.customer_name}"
+            context.page_title = f"Customer Profile - {context.customer['customer_name']} | Blush & Glow"
+            context.meta_description = f"Manage bookings and profile for {context.customer['customer_name']}"
         else:
             context.page_title = "Customer Management | Blush & Glow"
             context.meta_description = "Select and manage customer profiles and bookings"

@@ -274,21 +274,35 @@ def get_cart_items():
         
         for item in cart_items:
             try:
-                item_details = frappe.get_doc("Item", item['item_code'])
-                rental_days = (getdate(item['rental_end_date']) - getdate(item['rental_start_date'])).days + 1
-                line_total = item_details.rental_rate_per_day * rental_days
+                item_code = item['item_code']
+                # Resolve service vs main item for images
+                main_item_code = item_code[:-7] if item_code.endswith('-RENTAL') else item_code
+
+                item_details = frappe.get_doc("Item", item_code)
+
+                # Normalize dates to date objects for template strftime
+                start_date = getdate(item['rental_start_date']) if item.get('rental_start_date') else None
+                end_date = getdate(item['rental_end_date']) if item.get('rental_end_date') else None
+                function_date = getdate(item.get('function_date')) if item.get('function_date') else None
+
+                rental_days = ((end_date - start_date).days + 1) if (start_date and end_date) else 0
+                line_total = (item_details.rental_rate_per_day or 0) * rental_days
+
+                # Prefer primary image from main item (multi-image support), fallback to service item image
+                images = get_item_images(main_item_code)
+                primary_image = images[0] if images else getattr(item_details, 'image', None)
                 
                 processed_items.append({
-                    'cart_item_id': item.get('cart_item_id', item['item_code']),  # Use for removal
-                    'item_code': item['item_code'],
+                    'cart_item_id': item.get('cart_item_id', item_code),  # Use for removal
+                    'item_code': item_code,
                     'item_name': item_details.item_name,
-                    'item_image': item_details.image,
+                    'item_image': primary_image,
                     'rental_rate': item_details.rental_rate_per_day,
-                    'rental_start_date': item['rental_start_date'],
-                    'rental_end_date': item['rental_end_date'],
+                    'rental_start_date': start_date,
+                    'rental_end_date': end_date,
                     'rental_days': rental_days,
                     'total_amount': line_total,
-                    'function_date': item.get('function_date')
+                    'function_date': function_date
                 })
                 
                 total_amount += line_total
@@ -349,14 +363,19 @@ def add_to_cart(item_code, rental_start_date, rental_end_date, function_date=Non
         return {'success': False, 'message': str(e)}
 
 @frappe.whitelist(allow_guest=True)
-def remove_from_cart(cart_item_id):
-    """Remove item from session-based cart"""
+def remove_from_cart(cart_item_id=None, cart_item_name=None):
+    """Remove item from session-based cart (supports legacy param cart_item_name)"""
     try:
+        # Backward compatibility with older param name
+        _cart_item_id = cart_item_id or cart_item_name
+        if not _cart_item_id:
+            return {'success': False, 'message': 'Missing cart item id'}
+
         # Get current cart from session
         cart_items = frappe.session.get('cart_items', [])
         
         # Find and remove the item
-        cart_items = [item for item in cart_items if item.get('cart_item_id') != cart_item_id]
+        cart_items = [item for item in cart_items if item.get('cart_item_id') != _cart_item_id]
         
         # Save updated cart to session
         frappe.session['cart_items'] = cart_items
