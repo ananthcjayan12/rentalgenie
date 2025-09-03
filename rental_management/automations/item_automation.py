@@ -112,7 +112,7 @@ def before_item_save(doc, method):
         doc.rental_rate_per_day = 0
         doc.rental_item_type = ""
         doc.current_rental_status = ""
-        doc.approval_status = ""
+        # doc.approval_status = ""  # Do not clear for service items so status persists
         doc.is_third_party_item = 0
         doc.owner_commission_percent = 0
         doc.third_party_supplier = ""
@@ -154,7 +154,9 @@ def create_rental_service_item(item_doc):
         "description": f"Rental service for {item_doc.item_name}",
         # Copy images and important details from original item
         "image": item_doc.image,
-        "website_image": item_doc.website_image if hasattr(item_doc, 'website_image') else None
+        "website_image": item_doc.website_image if hasattr(item_doc, 'website_image') else None,
+        # Keep approval status in sync at creation
+        "approval_status": item_doc.approval_status or "Pending Approval",
     })
     service_item.insert()
     
@@ -403,3 +405,24 @@ def copy_item_attachments(from_item, to_item):
         pass
     except Exception as e:
         frappe.log_error(f"Error copying attachments from {from_item} to {to_item}: {str(e)}")
+
+def on_item_update(doc, method):
+    """Keep service item in sync when rental item is updated"""
+    try:
+        if not getattr(doc, "is_rental_item", 0):
+            return
+        service_item = getattr(doc, "rental_service_item", None)
+        if not service_item:
+            return
+        # Sync approval status
+        if doc.approval_status:
+            frappe.db.set_value("Item", service_item, "approval_status", doc.approval_status)
+        # Optionally keep primary image in sync
+        primary_image = frappe.db.get_value(
+            "Item Image", {"item": doc.name, "is_primary": 1}, "image"
+        )
+        if primary_image:
+            frappe.db.set_value("Item", service_item, "image", primary_image)
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"Error syncing service item for {doc.name}: {str(e)}")

@@ -3,21 +3,9 @@ from rental_management.custom_fields.item_fields import create_item_custom_field
 from rental_management.custom_fields.customer_fields import create_customer_custom_fields
 from rental_management.custom_fields.sales_invoice_fields import create_sales_invoice_custom_fields
 
-def ensure_child_doctypes_registered():
-    """Reload child doctypes required by custom fields before inserting them."""
-    try:
-        # Make sure our child table exists in the DB schema
-        frappe.reload_doc("rental_management", "doctype", "item_image")
-    except Exception as e:
-        # Log but don't crash install; creation of Custom Field will fail if missing
-        frappe.log_error(f"Failed to reload child doctype Item Image: {str(e)}")
-
 def after_install():
     """Setup custom fields and configurations after app installation"""
     print("Setting up Rental Management...")
-
-    # Ensure child doctypes referenced by custom fields are available
-    ensure_child_doctypes_registered()
     
     # Create custom fields
     create_item_custom_fields()

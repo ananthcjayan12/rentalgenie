@@ -83,7 +83,7 @@ app_license = "mit"
 # ------------
 
 # before_install = "rental_management.install.before_install"
-after_install = "rental_management.setup.install.after_install"
+# after_install = "rental_management.install.after_install"
 
 # Uninstallation
 # ------------
@@ -140,7 +140,8 @@ after_install = "rental_management.setup.install.after_install"
 doc_events = {
 	"Item": {
 		"before_save": "rental_management.automations.item_automation.before_item_save",
-		"after_insert": "rental_management.automations.item_automation.after_item_insert"
+		"after_insert": "rental_management.automations.item_automation.after_item_insert",
+        "on_update": "rental_management.automations.item_automation.on_item_update",
 	},
 	"Customer": {
 		"before_save": "rental_management.automations.customer_automation.before_customer_save"
@@ -251,5 +252,5 @@ doc_events = {
 # Installation
 # ------------
 
-# after_install = "rental_management.setup.install.after_install"
+after_install = "rental_management.setup.install.after_install"
 
