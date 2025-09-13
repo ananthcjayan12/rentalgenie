@@ -14,6 +14,9 @@ def validate_sales_invoice(doc, method):
         # Calculate rental amounts
         calculate_rental_amounts(doc)
         
+        # Calculate pending amount after advance payments
+        calculate_pending_amount(doc)
+        
         # Validate exchange booking
         if doc.is_exchange_booking:
             validate_exchange_booking(doc)
@@ -595,3 +598,106 @@ def create_advance_payment_account(company):
         return account.name
     
     return account_name
+
+def calculate_pending_amount(doc):
+    """Calculate pending amount after advance payment and caution deposit"""
+    if not doc.is_rental_booking:
+        return
+    
+    # Get total invoice amount
+    total_amount = flt(doc.grand_total or doc.total or 0)
+    
+    # Get advance payment and caution deposit amounts
+    advance_amount = flt(doc.advance_amount or 0)
+    caution_deposit = flt(doc.caution_deposit_amount or 0)
+    
+    # Calculate pending amount
+    pending_amount = total_amount - advance_amount
+    
+    # Note: Caution deposit is not deducted from pending amount 
+    # as it's a refundable security deposit, not a payment towards the invoice
+    
+    # Set the outstanding amount to pending amount
+    doc.outstanding_amount = pending_amount
+    
+    # Add a custom field to track this for reporting
+    if hasattr(doc, 'pending_payment_amount'):
+        doc.pending_payment_amount = pending_amount
+    
+    return pending_amount
+
+@frappe.whitelist()
+def create_payment_with_advance_allocation(sales_invoice_name, payment_amount, payment_mode="Cash"):
+    """Create payment entry considering advance payment allocation"""
+    try:
+        si_doc = frappe.get_doc("Sales Invoice", sales_invoice_name)
+        
+        if not si_doc.is_rental_booking:
+            frappe.throw(_("This is not a rental booking"))
+        
+        # Calculate amounts
+        total_amount = flt(si_doc.grand_total)
+        advance_amount = flt(si_doc.advance_amount or 0)
+        payment_amount = flt(payment_amount)
+        
+        # The payment should only be for remaining balance
+        remaining_balance = total_amount - advance_amount
+        
+        if payment_amount > remaining_balance:
+            frappe.throw(_("Payment amount cannot exceed remaining balance of {0}").format(remaining_balance))
+        
+        # Create payment entry for the actual payment
+        if payment_amount > 0:
+            payment_entry = frappe.get_doc({
+                "doctype": "Payment Entry",
+                "payment_type": "Receive",
+                "party_type": "Customer", 
+                "party": si_doc.customer,
+                "company": si_doc.company,
+                "posting_date": frappe.utils.nowdate(),
+                "paid_amount": payment_amount,
+                "received_amount": payment_amount,
+                "references": [{
+                    "reference_doctype": "Sales Invoice",
+                    "reference_name": sales_invoice_name,
+                    "allocated_amount": payment_amount
+                }]
+            })
+            
+            payment_entry.insert(ignore_permissions=True)
+            payment_entry.submit()
+        
+        return {
+            "status": "success",
+            "remaining_balance": remaining_balance - payment_amount
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@frappe.whitelist()
+def get_pending_amount(sales_invoice_name):
+    """Get pending amount for a rental booking after advance payments"""
+    try:
+        si_doc = frappe.get_doc("Sales Invoice", sales_invoice_name)
+        
+        if not si_doc.is_rental_booking:
+            return {"error": "Not a rental booking"}
+        
+        total_amount = flt(si_doc.grand_total)
+        advance_amount = flt(si_doc.advance_amount or 0)
+        caution_deposit = flt(si_doc.caution_deposit_amount or 0)
+        
+        # Calculate pending amount (total - advance, caution deposit is separate)
+        pending_amount = total_amount - advance_amount
+        
+        return {
+            "total_amount": total_amount,
+            "advance_amount": advance_amount,
+            "caution_deposit": caution_deposit,
+            "pending_amount": pending_amount,
+            "outstanding_amount": si_doc.outstanding_amount
+        }
+        
+    except Exception as e:
+        return {"error": str(e)}
