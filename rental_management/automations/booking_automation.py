@@ -196,7 +196,7 @@ def create_caution_deposit_entry(doc):
             frappe.log_error(f"No cash account found for company {doc.company}")
             return
         
-        # Create journal entry - simplified without party details
+        # Create journal entry for caution deposit
         je = frappe.get_doc({
             "doctype": "Journal Entry",
             "voucher_type": "Journal Entry",
@@ -212,7 +212,9 @@ def create_caution_deposit_entry(doc):
                 {
                     "account": caution_deposit_account,
                     "debit_in_account_currency": 0,
-                    "credit_in_account_currency": flt(doc.caution_deposit_amount)
+                    "credit_in_account_currency": flt(doc.caution_deposit_amount),
+                    "party_type": "Customer",
+                    "party": doc.customer
                 }
             ]
         })
