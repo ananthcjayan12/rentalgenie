@@ -611,11 +611,9 @@ def calculate_pending_amount(doc):
     advance_amount = flt(doc.advance_amount or 0)
     caution_deposit = flt(doc.caution_deposit_amount or 0)
     
-    # Calculate pending amount
-    pending_amount = total_amount - advance_amount
-    
-    # Note: Caution deposit is not deducted from pending amount 
-    # as it's a refundable security deposit, not a payment towards the invoice
+    # Calculate pending amount (total - advance - caution deposit)
+    # Both advance and caution deposit are money already received from customer
+    pending_amount = total_amount - advance_amount - caution_deposit
     
     # Set the outstanding amount to pending amount
     doc.outstanding_amount = pending_amount
@@ -688,8 +686,9 @@ def get_pending_amount(sales_invoice_name):
         advance_amount = flt(si_doc.advance_amount or 0)
         caution_deposit = flt(si_doc.caution_deposit_amount or 0)
         
-        # Calculate pending amount (total - advance, caution deposit is separate)
-        pending_amount = total_amount - advance_amount
+        # Calculate pending amount (total - advance - caution deposit)
+        # Both advance and caution deposit are money already received from customer
+        pending_amount = total_amount - advance_amount - caution_deposit
         
         return {
             "total_amount": total_amount,

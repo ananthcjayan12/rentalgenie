@@ -104,6 +104,7 @@ function get_rental_pending_amount(frm) {
                                 <div>
                                     <p><strong>Total Invoice:</strong> ${format_currency(r.message.total_amount)}</p>
                                     <p><strong>Advance Paid:</strong> ${format_currency(r.message.advance_amount)}</p>
+                                    <p><strong>Caution Deposit:</strong> ${format_currency(r.message.caution_deposit)}</p>
                                     <p><strong>Pending Amount:</strong> ${format_currency(r.message.pending_amount)}</p>
                                 </div>
                             `,
