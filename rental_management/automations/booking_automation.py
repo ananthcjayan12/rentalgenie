@@ -130,6 +130,10 @@ def on_submit_sales_invoice(doc, method):
         # Update item rental status
         update_item_rental_status(doc, "Booked")
         
+        # Create advance payment entry if amount is specified
+        if doc.advance_amount:
+            create_advance_payment_entry(doc)
+        
         # Create caution deposit entry if amount is specified
         if doc.caution_deposit_amount:
             create_caution_deposit_entry(doc)
@@ -510,3 +514,82 @@ def create_owner_commission_liabilities(doc):
         frappe.log_error(f"[FATAL] create_owner_commission_liabilities failed for {getattr(doc,'name',None)}: {str(e)}\n{frappe.get_traceback()}")
         # Do not re-raise to avoid blocking booking submission
         return
+
+def create_advance_payment_entry(doc):
+    """Create journal entry for advance payment received"""
+    try:
+        company_abbr = frappe.get_value("Company", doc.company, "abbr")
+        
+        # Create advance payment liability account if it doesn't exist
+        advance_payment_account = create_advance_payment_account(doc.company)
+        
+        # Get default cash account
+        cash_account = frappe.get_value("Company", doc.company, "default_cash_account")
+        if not cash_account:
+            cash_account = frappe.db.get_value("Account", 
+                                             {"account_type": "Cash", "company": doc.company}, 
+                                             "name")
+        
+        if not cash_account:
+            frappe.log_error(f"No cash account found for company {doc.company}")
+            return
+        
+        # Create journal entry for advance payment
+        je = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry",
+            "posting_date": doc.posting_date,
+            "company": doc.company,
+            "user_remark": f"Advance payment received for booking {doc.name}",
+            "accounts": [
+                {
+                    "account": cash_account,
+                    "debit_in_account_currency": flt(doc.advance_amount),
+                    "credit_in_account_currency": 0
+                },
+                {
+                    "account": advance_payment_account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": flt(doc.advance_amount),
+                    "party_type": "Customer",
+                    "party": doc.customer
+                }
+            ]
+        })
+        
+        # Insert and submit the journal entry
+        je.insert(ignore_permissions=True)
+        
+        try:
+            je.submit()
+            frappe.msgprint(f"Advance payment journal entry {je.name} created successfully", alert=True)
+        except Exception as submit_error:
+            frappe.msgprint(f"Advance payment journal entry created but submission failed: {str(submit_error)}", alert=True)
+        
+    except Exception as e:
+        # Don't fail the booking if journal entry fails, just log it
+        frappe.msgprint(f"Advance payment journal entry could not be created: {str(e)}", alert=True)
+        frappe.log_error(f"Error creating advance payment entry for {doc.name}: {str(e)}", "Rental Management")
+
+def create_advance_payment_account(company):
+    """Create advance payment liability account if it doesn't exist"""
+    company_abbr = frappe.get_value("Company", company, "abbr")
+    account_name = f"Customer Advance Payments - {company_abbr}"
+    
+    if not frappe.db.exists("Account", account_name):
+        # Get parent account - use Current Liabilities
+        parent_account = f"Current Liabilities - {company_abbr}"
+        
+        # Create the advance payment liability account
+        account = frappe.get_doc({
+            "doctype": "Account",
+            "account_name": "Customer Advance Payments",
+            "parent_account": parent_account,
+            "company": company,
+            "is_group": 0,
+            "account_currency": frappe.get_value("Company", company, "default_currency")
+        })
+        account.insert(ignore_permissions=True)
+        return account.name
+    
+    return account_name
