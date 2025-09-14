@@ -2,15 +2,38 @@ import frappe
 from rental_management.api.customer_portal import get_rental_items, get_rental_categories
 
 def get_context(context):
-    """Get context for category listing page"""
+    """Get context for category listing page with customer context"""
     
     category = frappe.form_dict.get('category', '')
     search = frappe.form_dict.get('search', '')
     sort_by = frappe.form_dict.get('sort_by', 'name')
     page = int(frappe.form_dict.get('page', 1))
+    customer_id = frappe.form_dict.get('customer', '')  # Sales staff customer selection
     per_page = 12
     
     try:
+        # Handle customer context for sales staff portal
+        context.customer_id = customer_id
+        context.customer = None
+        if customer_id:
+            # Get customer details for header display
+            customer_data = frappe.db.get_value(
+                "Customer",
+                customer_id,
+                ["name", "customer_name", "mobile_number"],
+                as_dict=True
+            )
+            if customer_data:
+                context.customer = customer_data
+                
+                # Get customer's current cart count
+                cart_count = frappe.db.count("Rental Cart", {
+                    "customer": customer_id,
+                    "docstatus": 0
+                })
+                context.cart_count = cart_count
+            else:
+                context.error_message = "Customer not found"
         # Get items for the category
         items_data = get_rental_items(
             category=category,
@@ -60,8 +83,10 @@ def get_context(context):
             context.page_title = "All Rentals | Blush & Glow"
             context.meta_description = "Browse our complete collection of rental items. Premium quality at affordable rates."
         
-        # Build URL parameters for pagination
+        # Build URL parameters for pagination and customer context
         url_params = []
+        if customer_id:
+            url_params.append(f"customer={customer_id}")
         if category:
             url_params.append(f"category={category}")
         if search:

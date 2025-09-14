@@ -515,15 +515,31 @@ body {
     <!-- Header -->
     <header class="portal-header">
         <div class="header-content">
-            <a href="/portal" class="back-btn">
+            <a href="{% if customer_id %}/portal/category?customer={{ customer_id }}{% else %}/portal{% endif %}" class="back-btn">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <div class="header-title">{{ item.item_name }}</div>
+            <div class="header-title">
+                {% if customer %}{{ customer.customer_name }} - {% endif %}{{ item.item_name }}
+            </div>
             <div class="header-actions">
+                {% if customer_id %}
+                <!-- Customer info display -->
+                <div class="customer-info" style="margin-right: 1rem; text-align: right;">
+                    <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">{{ customer.customer_name }}</div>
+                    {% if customer.mobile_number %}
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ customer.mobile_number }}</div>
+                    {% endif %}
+                </div>
+                <a href="/portal/cart?customer={{ customer_id }}" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" x-show="cartCount > 0" x-text="cartCount"></span>
+                </a>
+                {% else %}
                 <a href="/portal/cart" class="cart-icon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-badge" x-show="cartCount > 0" x-text="cartCount"></span>
                 </a>
+                {% endif %}
             </div>
         </div>
     </header>
@@ -696,11 +712,19 @@ body {
 </div>
 
 <script>
+// Pass server-side data to JavaScript
+const itemPageData = {
+    customerId: '{{ customer_id if customer_id else "" }}',
+    cartCount: {{ cart_count if customer_id else 0 }},
+    item: {{ item | tojson }}
+};
+
 function itemDetailApp() {
     return {
         // Item data from server
-        item: {{ item | tojson }},
-        cartCount: 0,
+        item: itemPageData.item,
+        cartCount: itemPageData.cartCount,
+        customerId: itemPageData.customerId,
         
         // Form data
         functionDate: '',
@@ -752,10 +776,22 @@ function itemDetailApp() {
         
         async loadCartCount() {
             try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.get_cart_items'
-                });
-                this.cartCount = response.message?.item_count || 0;
+                if (this.customerId) {
+                    // Use customer-based cart API
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.get_customer_cart_items',
+                        args: {
+                            customer_id: this.customerId
+                        }
+                    });
+                    this.cartCount = response.message?.item_count || 0;
+                } else {
+                    // Fallback to session-based cart
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.get_cart_items'
+                    });
+                    this.cartCount = response.message?.item_count || 0;
+                }
             } catch (error) {
                 console.log('Error loading cart count:', error);
             }
@@ -854,14 +890,34 @@ function itemDetailApp() {
                 const startDate = new Date(functionDate);
                 startDate.setDate(startDate.getDate() - 2);
                 
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.add_to_cart',
-                    args: {
+                // Use customer-based or session-based cart API based on context
+                let apiMethod, apiArgs;
+                
+                if (this.customerId) {
+                    // Customer-based cart for sales staff portal
+                    apiMethod = 'rental_management.api.customer_portal.add_to_customer_cart';
+                    apiArgs = {
+                        item_code: this.item.item_code,
+                        customer_id: this.customerId,
+                        rental_start_date: startDate.toISOString().split('T')[0],
+                        rental_end_date: this.returnDate,
+                        function_date: this.functionDate,
+                        quantity: 1
+                    };
+                } else {
+                    // Session-based cart for direct customer access
+                    apiMethod = 'rental_management.api.customer_portal.add_to_cart';
+                    apiArgs = {
                         item_code: this.item.item_code,
                         rental_start_date: startDate.toISOString().split('T')[0],
                         rental_end_date: this.returnDate,
                         function_date: this.functionDate
-                    }
+                    };
+                }
+                
+                const response = await frappe.call({
+                    method: apiMethod,
+                    args: apiArgs
                 });
                 
                 if (response.message.success) {
@@ -869,9 +925,13 @@ function itemDetailApp() {
                     this.alertType = 'alert-success';
                     this.cartCount = response.message.cart_count;
                     
-                    // Optionally redirect to cart after 2 seconds
+                    // Redirect to cart after 2 seconds
                     setTimeout(() => {
-                        window.location.href = '/portal/cart';
+                        if (this.customerId) {
+                            window.location.href = `/portal/cart?customer=${encodeURIComponent(this.customerId)}`;
+                        } else {
+                            window.location.href = '/portal/cart';
+                        }
                     }, 2000);
                 } else {
                     this.alertMessage = response.message.message;
@@ -887,7 +947,13 @@ function itemDetailApp() {
         },
         
         goToItem(itemCode) {
-            window.location.href = `/portal/item?item=${encodeURIComponent(itemCode)}`;
+            // Include customer context in item URL
+            const params = new URLSearchParams();
+            params.append('item', itemCode);
+            if (this.customerId) {
+                params.append('customer', this.customerId);
+            }
+            window.location.href = `/portal/item?${params.toString()}`;
         }
     }
 }

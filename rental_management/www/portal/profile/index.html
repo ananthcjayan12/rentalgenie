@@ -811,8 +811,19 @@ function profilePage() {
         },
         
         startNewBooking() {
-            // Clear any existing cart and start fresh
-            window.location.href = '/portal/category';
+            // Navigate to item browsing with customer context
+            const customerId = '{{ customer.name if customer else "" }}';
+            if (customerId) {
+                // Store customer context globally for navigation
+                window.selectedCustomer = {
+                    id: customerId,
+                    name: '{{ customer.customer_name if customer else "" }}',
+                    mobile: '{{ customer.mobile_number if customer else "" }}'
+                };
+                window.location.href = `/portal/category?customer=${encodeURIComponent(customerId)}`;
+            } else {
+                window.location.href = '/portal/category';
+            }
         },
         
         async editCustomerDetails() {

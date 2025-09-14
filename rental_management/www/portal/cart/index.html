@@ -426,10 +426,21 @@ body {
     <!-- Header -->
     <div class="portal-header">
         <div class="header-content">
-            <a href="/portal" class="back-btn">
+            <a href="{% if customer_id %}/portal/category?customer={{ customer_id }}{% else %}/portal{% endif %}" class="back-btn">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <div class="header-title">Shopping Cart ({{ item_count }})</div>
+            <div class="header-title">
+                {% if customer %}{{ customer.customer_name }} - {% endif %}Shopping Cart ({{ item_count }})
+            </div>
+            {% if customer_id %}
+            <!-- Customer info display -->
+            <div class="customer-info" style="margin-left: auto; text-align: right;">
+                <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">{{ customer.customer_name }}</div>
+                {% if customer.mobile_number %}
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ customer.mobile_number }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -569,12 +580,18 @@ body {
 </div>
 
 <script>
+// Pass server-side data to JavaScript
+const cartPageData = {
+    customerId: '{{ customer_id if customer_id else "" }}'
+};
+
 function cartPage() {
     return {
         alertMessage: '',
         alertType: '',
         isRemoving: false,
         isProcessing: false,
+        customerId: cartPageData.customerId,
         
         async init() {
             // Any initialization if needed
@@ -583,7 +600,7 @@ function cartPage() {
         async removeItem(cartItemId) {
             if (this.isRemoving) return;
             
-            if (!confirm('Are you sure you want to remove this item from your cart?')) {
+            if (!confirm('Are you sure you want to remove this item from the cart?')) {
                 return;
             }
             
@@ -591,11 +608,26 @@ function cartPage() {
             this.alertMessage = '';
             
             try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.remove_from_cart',
-                    args: {
+                let apiMethod, apiArgs;
+                
+                if (this.customerId) {
+                    // Customer-based cart for sales staff portal
+                    apiMethod = 'rental_management.api.customer_portal.remove_from_customer_cart';
+                    apiArgs = {
+                        cart_item_id: cartItemId,
+                        customer_id: this.customerId
+                    };
+                } else {
+                    // Session-based cart
+                    apiMethod = 'rental_management.api.customer_portal.remove_from_cart';
+                    apiArgs = {
                         cart_item_id: cartItemId
-                    }
+                    };
+                }
+                
+                const response = await frappe.call({
+                    method: apiMethod,
+                    args: apiArgs
                 });
                 
                 if (response.message.success) {
@@ -631,9 +663,12 @@ function cartPage() {
             this.isProcessing = true;
             
             try {
-                // For now, redirect to a simple checkout page
-                // In a full implementation, this would validate cart and proceed to payment
-                window.location.href = '/portal/checkout';
+                // Redirect to checkout with customer context
+                if (this.customerId) {
+                    window.location.href = `/portal/checkout?customer=${encodeURIComponent(this.customerId)}`;
+                } else {
+                    window.location.href = '/portal/checkout';
+                }
                 
             } catch (error) {
                 this.alertMessage = 'Error proceeding to checkout: ' + error.message;

@@ -2,13 +2,36 @@ import frappe
 from rental_management.api.customer_portal import get_item_details, check_item_availability
 
 def get_context(context):
-    """Get context for item detail page"""
+    """Get context for item detail page with customer context"""
     
     item_code = frappe.form_dict.get('item')
+    customer_id = frappe.form_dict.get('customer', '')  # Sales staff customer selection
+    
     if not item_code:
         frappe.throw("Item not specified")
     
     try:
+        # Handle customer context for sales staff portal
+        context.customer_id = customer_id
+        context.customer = None
+        if customer_id:
+            # Get customer details for header display
+            customer_data = frappe.db.get_value(
+                "Customer",
+                customer_id,
+                ["name", "customer_name", "mobile_number"],
+                as_dict=True
+            )
+            if customer_data:
+                context.customer = customer_data
+                
+                # Get customer's current cart count
+                cart_count = frappe.db.count("Rental Cart", {
+                    "customer": customer_id,
+                    "docstatus": 0
+                })
+                context.cart_count = cart_count
+        
         # Get item details
         context.item = get_item_details(item_code)
         
