@@ -837,7 +837,7 @@ function checkoutPage() {
                 };
                 
                 const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.create_booking_from_cart',
+                    method: 'rental_management.api.customer_portal.create_customer_booking_from_cart',
                     args: orderData
                 });
                 

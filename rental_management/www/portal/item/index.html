@@ -786,11 +786,8 @@ function itemDetailApp() {
                     });
                     this.cartCount = response.message?.item_count || 0;
                 } else {
-                    // Fallback to session-based cart
-                    const response = await frappe.call({
-                        method: 'rental_management.api.customer_portal.get_cart_items'
-                    });
-                    this.cartCount = response.message?.item_count || 0;
+                    // No customer selected - show 0 cart count
+                    this.cartCount = 0;
                 }
             } catch (error) {
                 console.log('Error loading cart count:', error);
@@ -905,14 +902,9 @@ function itemDetailApp() {
                         quantity: 1
                     };
                 } else {
-                    // Session-based cart for direct customer access
-                    apiMethod = 'rental_management.api.customer_portal.add_to_cart';
-                    apiArgs = {
-                        item_code: this.item.item_code,
-                        rental_start_date: startDate.toISOString().split('T')[0],
-                        rental_end_date: this.returnDate,
-                        function_date: this.functionDate
-                    };
+                    // No customer selected - cannot add to cart
+                    this.showMessage('Please select a customer first', 'error');
+                    return;
                 }
                 
                 const response = await frappe.call({

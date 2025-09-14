@@ -1,5 +1,5 @@
 import frappe
-from rental_management.api.customer_portal import get_cart_items, get_customer_cart_items
+from rental_management.api.customer_portal import get_customer_cart_items
 
 def get_context(context):
     """Get context for shopping cart page with customer context"""
@@ -28,8 +28,9 @@ def get_context(context):
                 context.error_message = "Customer not found"
                 cart_data = {'items': [], 'total': 0, 'item_count': 0}
         else:
-            # Get session-based cart items (fallback)
-            cart_data = get_cart_items()
+            # No customer selected - show empty cart
+            context.error_message = "Please select a customer to view cart"
+            cart_data = {'items': [], 'total': 0, 'item_count': 0}
             
         context.cart_items = cart_data.get('items', [])
         context.cart_total = cart_data.get('total', 0)

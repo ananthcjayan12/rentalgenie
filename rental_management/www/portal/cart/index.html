@@ -618,11 +618,11 @@ function cartPage() {
                         customer_id: this.customerId
                     };
                 } else {
-                    // Session-based cart
-                    apiMethod = 'rental_management.api.customer_portal.remove_from_cart';
-                    apiArgs = {
-                        cart_item_id: cartItemId
-                    };
+                    // No customer selected - cannot remove from cart
+                    this.alertMessage = '❌ Please select a customer first';
+                    this.alertType = 'alert-danger';
+                    this.showAlert = true;
+                    return;
                 }
                 
                 const response = await frappe.call({

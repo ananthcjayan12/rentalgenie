@@ -414,8 +414,16 @@ function portalApp() {
         
         async loadCartCount() {
             try {
+                if (!this.currentCustomer) {
+                    this.cartCount = 0;
+                    return;
+                }
+                
                 const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.get_cart_items'
+                    method: 'rental_management.api.customer_portal.get_customer_cart_items',
+                    args: {
+                        customer_id: this.currentCustomer
+                    }
                 });
                 this.cartCount = response.message?.item_count || 0;
             } catch (error) {

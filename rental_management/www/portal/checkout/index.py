@@ -1,17 +1,21 @@
 import frappe
-from rental_management.api.customer_portal import get_cart_items
+from rental_management.api.customer_portal import get_customer_cart_items
 
 def get_context(context):
     """Get context for checkout page"""
     
+    customer_id = frappe.form_dict.get('customer', '')  # Sales staff customer selection
+    
     try:
-        # Check if user is logged in
-        if not frappe.session.user or frappe.session.user == 'Guest':
-            frappe.local.flags.redirect_location = '/login?redirect-to=/portal/checkout'
-            raise frappe.Redirect
+        # Handle customer context for sales staff portal
+        if not customer_id:
+            context.error_message = "Please select a customer to proceed with checkout"
+            context.cart_items = []
+            context.item_count = 0
+            return
             
-        # Get cart items
-        cart_data = get_cart_items()
+        # Get customer-specific cart items
+        cart_data = get_customer_cart_items(customer_id)
         context.cart_items = cart_data.get('items', [])
         context.item_count = cart_data.get('item_count', 0)
         
