@@ -88,36 +88,62 @@ Created comprehensive customer-based cart management system:
 
 ### Database Schema:
 ```sql
--- Rental Cart now supports customer-based storage
+-- Rental Cart doctype structure (header + child table)
 CREATE TABLE `tabRental Cart` (
+    `name` VARCHAR(140) PRIMARY KEY,
     `customer` VARCHAR(140),              # Link to Customer  
-    `item_code` VARCHAR(140),             # Rental item
-    `quantity` INT(11),                   # Quantity
+    `status` VARCHAR(140),                # Active/Converted/Abandoned
+    `session_id` VARCHAR(140),            # Legacy field (optional)
+    `created_date` DATE,                  # Cart creation date
+    `total_amount` DECIMAL(18,6),         # Calculated total
+    `docstatus` INT(1) DEFAULT 0,         # 0=Draft, 1=Submitted
+    INDEX `customer_idx` (`customer`),
+    INDEX `customer_status_idx` (`customer`, `status`, `docstatus`)
+);
+
+-- Rental Cart Item child table
+CREATE TABLE `tabRental Cart Item` (
+    `name` VARCHAR(140) PRIMARY KEY,
+    `parent` VARCHAR(140),                # Link to Rental Cart
+    `item_code` VARCHAR(140),             # Rental service item
+    `item_name` VARCHAR(140),             # Item display name
+    `rental_rate_per_day` DECIMAL(18,6),  # Daily rental rate
+    `rental_days` INT(11),                # Number of rental days
+    `line_total` DECIMAL(18,6),           # Total for this line
     `rental_start_date` DATE,             # Rental period start
     `rental_end_date` DATE,               # Rental period end  
     `function_date` DATE,                 # Event/function date
-    `created_by` VARCHAR(140),            # Sales staff user
-    INDEX `customer_idx` (`customer`),
-    INDEX `customer_active_idx` (`customer`, `docstatus`)
+    INDEX `parent_idx` (`parent`)
 );
 ```
 
 ### API Architecture:
 ```python
-# Customer-based operations (new)
+# Customer-based operations (database-driven)
 @frappe.whitelist()
-def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_date, function_date=None, quantity=1)
+def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_date, function_date=None, quantity=1):
+    """Add item to customer's Rental Cart doctype in database"""
 
 @frappe.whitelist() 
-def get_customer_cart_items(customer_id)
+def get_customer_cart_items(customer_id):
+    """Get items from customer's Rental Cart doctype"""
 
 @frappe.whitelist()
-def remove_from_customer_cart(cart_item_id, customer_id)
+def remove_from_customer_cart(cart_item_id, customer_id):
+    """Remove specific item from customer's Rental Cart"""
 
-# Session-based operations (legacy, maintained for compatibility)
+# Session-based operations (memory-driven, fallback)
 @frappe.whitelist(allow_guest=True)
-def add_to_cart(item_code, rental_start_date, rental_end_date, function_date=None)
+def add_to_cart(item_code, rental_start_date, rental_end_date, function_date=None):
+    """Legacy session-based cart using frappe.session storage"""
 ```
+
+### Cart Storage Implementation:
+- **Customer-based**: Uses `Rental Cart` doctype with child table `Rental Cart Item`
+- **Session-based**: Uses `frappe.session['cart_items']` list in memory
+- **Isolation**: Each customer has separate cart document in database
+- **Persistence**: Customer carts persist across browser sessions
+- **Performance**: Database queries for customer cart, memory access for session cart
 
 ### Frontend Data Flow:
 ```javascript
@@ -176,27 +202,50 @@ if (customerId) {
 ## 🧪 Ready for Testing
 
 ### Test Scenarios:
-1. **Customer Selection**:
-   - Search for existing customers
-   - Create new customers
-   - View customer profiles and history
 
-2. **Cart Operations**:
-   - Add items to customer cart
-   - Remove items from customer cart  
-   - Verify cart isolation between customers
-   - Switch between customers and verify cart persistence
+#### 1. Customer-Based Cart (Database):
+```bash
+# Test customer cart operations
+python3 test_customer_cart.py
+```
 
-3. **Booking Creation**:
-   - Create bookings from customer cart
-   - Verify customer association in booking
-   - Test booking confirmation and payment
+**Manual Testing Steps**:
+1. Navigate to `/portal/profile` 
+2. Search for existing customer or create new one
+3. Click "Start Shopping" → should go to `/portal/category?customer=CUST-001`
+4. Browse items → URLs should include `customer` parameter
+5. Add item to cart → should use `add_to_customer_cart` API
+6. View cart at `/portal/cart?customer=CUST-001` → should show customer's items only
+7. Remove items → should use `remove_from_customer_cart` API
 
-4. **Edge Cases**:
-   - Customer switching with items in cart
-   - Browser refresh maintaining customer context
-   - Concurrent sales staff operations
-   - Invalid customer handling
+#### 2. Session-Based Cart (Memory):
+**Manual Testing Steps**:
+1. Navigate directly to `/portal/category` (without customer parameter)
+2. Add items to cart → should use session-based `add_to_cart` API
+3. View cart at `/portal/cart` → should show session items
+4. Verify isolation: Customer cart ≠ Session cart
+
+#### 3. Cart Isolation Testing:
+1. **Customer A**: Add items to CUST-001's cart
+2. **Customer B**: Add different items to CUST-002's cart  
+3. **Verification**: Each customer should see only their items
+4. **Session Cart**: Should be separate from both customer carts
+
+#### 4. Database Verification:
+```sql
+-- Check customer carts in database
+SELECT rc.name, rc.customer, rc.status, COUNT(rci.name) as item_count 
+FROM `tabRental Cart` rc 
+LEFT JOIN `tabRental Cart Item` rci ON rc.name = rci.parent 
+WHERE rc.status = 'Active' 
+GROUP BY rc.name;
+
+-- Check specific customer's cart items
+SELECT rci.item_code, rci.item_name, rci.rental_start_date, rci.rental_end_date, rci.line_total
+FROM `tabRental Cart` rc
+JOIN `tabRental Cart Item` rci ON rc.name = rci.parent
+WHERE rc.customer = 'CUST-001' AND rc.status = 'Active';
+```
 
 ## 🎉 Implementation Success
 

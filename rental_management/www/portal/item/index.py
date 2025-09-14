@@ -25,12 +25,18 @@ def get_context(context):
             if customer_data:
                 context.customer = customer_data
                 
-                # Get customer's current cart count
-                cart_count = frappe.db.count("Rental Cart", {
+                # Get customer's current cart count from database
+                cart_doc = frappe.db.get_value("Rental Cart", {
                     "customer": customer_id,
+                    "status": "Active",
                     "docstatus": 0
                 })
-                context.cart_count = cart_count
+                
+                if cart_doc:
+                    cart = frappe.get_doc("Rental Cart", cart_doc)
+                    context.cart_count = len(cart.items)
+                else:
+                    context.cart_count = 0
         
         # Get item details
         context.item = get_item_details(item_code)

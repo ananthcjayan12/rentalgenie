@@ -259,383 +259,17 @@ def check_item_availability(item_code, start_date, end_date):
         frappe.log_error(f"Error checking availability for {item_code}: {str(e)}")
         return {'is_available': False, 'message': 'Error checking availability'}
 
-@frappe.whitelist(allow_guest=True)
-def get_cart_items():
-    """Get session-based cart items for shopkeeper portal"""
-    try:
-        # Get cart items from session instead of user-based cart
-        cart_items = frappe.session.get('cart_items', [])
-        
-        if not cart_items:
-            return {'items': [], 'total': 0, 'item_count': 0}
-            
-        processed_items = []
-        total_amount = 0
-        
-        for item in cart_items:
-            try:
-                item_code = item['item_code']
-                # Resolve service vs main item for images
-                main_item_code = item_code[:-7] if item_code.endswith('-RENTAL') else item_code
 
-                item_details = frappe.get_doc("Item", item_code)
 
-                # Normalize dates to date objects for template strftime
-                start_date = getdate(item['rental_start_date']) if item.get('rental_start_date') else None
-                end_date = getdate(item['rental_end_date']) if item.get('rental_end_date') else None
-                function_date = getdate(item.get('function_date')) if item.get('function_date') else None
 
-                rental_days = ((end_date - start_date).days + 1) if (start_date and end_date) else 0
-                line_total = (item_details.rental_rate_per_day or 0) * rental_days
 
-                # Prefer primary image from main item (multi-image support), fallback to service item image
-                images = get_item_images(main_item_code)
-                primary_image = images[0] if images else getattr(item_details, 'image', None)
-                
-                processed_items.append({
-                    'cart_item_id': item.get('cart_item_id', item_code),  # Use for removal
-                    'item_code': item_code,
-                    'item_name': item_details.item_name,
-                    'item_image': primary_image,
-                    'rental_rate': item_details.rental_rate_per_day,
-                    'rental_start_date': start_date,
-                    'rental_end_date': end_date,
-                    'rental_days': rental_days,
-                    'total_amount': line_total,
-                    'function_date': function_date
-                })
-                
-                total_amount += line_total
-                
-            except Exception as e:
-                # Skip invalid items
-                frappe.log_error(f"Error processing cart item {item.get('item_code')}: {str(e)}")
-                continue
-        
-        return {
-            'items': processed_items,
-            'total': total_amount,
-            'item_count': len(processed_items)
-        }
-        
-    except Exception as e:
-        frappe.log_error(f"Error getting cart items: {str(e)}")
-        return {'items': [], 'total': 0, 'item_count': 0}
 
-@frappe.whitelist(allow_guest=True)
-def add_to_cart(item_code, rental_start_date, rental_end_date, function_date=None):
-    """Add item to session-based cart for shopkeeper portal"""
-    try:
-        # Check item availability
-        availability = check_item_availability(item_code, rental_start_date, rental_end_date)
-        if not availability['is_available']:
-            return {'success': False, 'message': availability['message']}
-            
-        # Get current cart from session
-        cart_items = frappe.session.get('cart_items', [])
-        
-        # Generate unique cart item ID
-        import uuid
-        cart_item_id = str(uuid.uuid4())
-        
-        # Add item to session cart
-        cart_items.append({
-            'cart_item_id': cart_item_id,
-            'item_code': item_code,
-            'rental_start_date': rental_start_date,
-            'rental_end_date': rental_end_date,
-            'function_date': function_date,
-            'added_at': frappe.utils.now()
-        })
-        
-        # Save to session
-        frappe.session['cart_items'] = cart_items
-        
-        return {
-            'success': True,
-            'message': 'Item added to cart successfully',
-            'cart_item_id': cart_item_id,
-            'cart_count': len(cart_items)
-        }
-        
-    except Exception as e:
-        frappe.log_error(f"Error adding to cart: {str(e)}")
-        return {'success': False, 'message': str(e)}
 
-@frappe.whitelist(allow_guest=True)
-def remove_from_cart(cart_item_id=None, cart_item_name=None):
-    """Remove item from session-based cart (supports legacy param cart_item_name)"""
-    try:
-        # Backward compatibility with older param name
-        _cart_item_id = cart_item_id or cart_item_name
-        if not _cart_item_id:
-            return {'success': False, 'message': 'Missing cart item id'}
 
-        # Get current cart from session
-        cart_items = frappe.session.get('cart_items', [])
-        
-        # Find and remove the item
-        cart_items = [item for item in cart_items if item.get('cart_item_id') != _cart_item_id]
-        
-        # Save updated cart to session
-        frappe.session['cart_items'] = cart_items
-        
-        return {
-            'success': True,
-            'message': 'Item removed from cart successfully',
-            'cart_count': len(cart_items)
-        }
-        
-    except Exception as e:
-        frappe.log_error(f"Error removing from cart: {str(e)}")
-        return {'success': False, 'message': str(e)}
 
-@frappe.whitelist(allow_guest=True)
-def create_booking_from_cart(customer_info, address_type, new_address=None, special_instructions=""):
-    """Create booking/sales invoice from session cart items"""
-    try:
-        # Get cart items from session
-        cart_items = frappe.session.get('cart_items', [])
-        
-        if not cart_items:
-            return {'success': False, 'message': 'Cart is empty'}
-            
-        # Get or create customer
-        customer_id = customer_info.get('customer_id')
-        if customer_id:
-            # Use existing customer
-            customer_doc = frappe.get_doc("Customer", customer_id)
-        else:
-            # Create new customer
-            customer_doc = frappe.get_doc({
-                "doctype": "Customer",
-                "customer_name": customer_info.get('name'),
-                "mobile_number": customer_info.get('mobile'),
-                "email_id": customer_info.get('email', ''),
-                "customer_group": "Individual",
-                "territory": "All Territories"
-            })
-            customer_doc.insert(ignore_permissions=True)
-            customer_id = customer_doc.name
-        
-        # Handle address
-        address_name = None
-        if address_type == 'new' and new_address:
-            # Create new address
-            address_doc = frappe.get_doc({
-                "doctype": "Address",
-                "address_title": customer_info.get('name'),
-                "address_line1": new_address.get('address_line1'),
-                "address_line2": new_address.get('address_line2'),
-                "city": new_address.get('city'),
-                "state": new_address.get('state'),
-                "pincode": new_address.get('pincode'),
-                "country": new_address.get('country', 'India'),
-                "address_type": "Billing",
-                "links": [{
-                    "link_doctype": "Customer",
-                    "link_name": customer_id
-                }]
-            })
-            address_doc.insert(ignore_permissions=True)
-            address_name = address_doc.name
-            
-            # Set as primary address if customer doesn't have one
-            if not customer_doc.customer_primary_address:
-                customer_doc.customer_primary_address = address_name
-                customer_doc.save(ignore_permissions=True)
-        else:
-            # Use existing address
-            address_name = customer_doc.customer_primary_address
-        
-        # Create Sales Invoice (Booking)
-        sales_invoice = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "customer": customer_id,
-            "customer_name": customer_doc.customer_name,
-            "customer_address": address_name,
-            "is_rental_booking": 1,
-            "booking_status": "Confirmed",
-            "remarks": special_instructions,
-            "due_date": frappe.utils.add_days(frappe.utils.nowdate(), 7),
-            "items": []
-        })
-        
-        # Add items from session cart
-        total_amount = 0
-        for cart_item in cart_items:
-            item_details = frappe.get_doc("Item", cart_item['item_code'])
-            rental_days = (frappe.utils.getdate(cart_item['rental_end_date']) - 
-                          frappe.utils.getdate(cart_item['rental_start_date'])).days + 1
-            line_total = item_details.rental_rate_per_day * rental_days
-            
-            sales_invoice.append("items", {
-                "item_code": cart_item['item_code'],
-                "item_name": item_details.item_name,
-                "description": item_details.description,
-                "qty": 1,
-                "rate": line_total,
-                "amount": line_total,
-                "rental_start_date": cart_item['rental_start_date'],
-                "rental_end_date": cart_item['rental_end_date'],
-                "function_date": cart_item.get('function_date')
-            })
-            total_amount += line_total
-        
-        # Save and submit the sales invoice
-        sales_invoice.insert(ignore_permissions=True)
-        sales_invoice.submit()
-        
-        # Clear the session cart
-        frappe.session['cart_items'] = []
-        
-        # Log the booking creation
-        frappe.log_error(f"Booking created successfully: {sales_invoice.name} for customer {customer_id}")
-        
-        return {
-            'success': True,
-            'message': 'Booking created successfully',
-            'booking_id': sales_invoice.name,
-            'total_amount': total_amount
-        }
-        
-    except Exception as e:
-        frappe.log_error(f"Error creating booking from cart: {str(e)}")
-        return {'success': False, 'message': str(e)}
 
-def get_portal_customer(user_email):
-    """Get customer linked to portal user"""
-    customer = frappe.db.get_value("Customer", {"email_id": user_email}, "name")
-    if not customer:
-        # Create customer if doesn't exist
-        customer_doc = frappe.get_doc({
-            "doctype": "Customer",
-            "customer_name": user_email.split('@')[0].title(),
-            "email_id": user_email,
-            "customer_group": "Individual",
-            "territory": "All Territories"
-        })
-        customer_doc.insert(ignore_permissions=True)
-        customer = customer_doc.name
-    return customer
-
-def get_or_create_cart(customer):
-    """Get existing cart or create new one"""
-    cart_name = frappe.db.get_value("Rental Cart", {"customer": customer, "status": "Active"}, "name")
-    
-    if cart_name:
-        return frappe.get_doc("Rental Cart", cart_name)
-    else:
-        cart = frappe.get_doc({
-            "doctype": "Rental Cart",
-            "customer": customer,
-            "status": "Active"
-        })
-        cart.insert(ignore_permissions=True)
-        return cart
-
-def get_customer_cart(customer):
-    """Get customer's active cart"""
-    cart_name = frappe.db.get_value("Rental Cart", {"customer": customer, "status": "Active"}, "name")
-    return frappe.get_doc("Rental Cart", cart_name) if cart_name else None
 
 # Customer Management APIs for Shopkeeper Interface
-
-@frappe.whitelist(allow_guest=True)
-def search_customers(query=""):
-    """Search customers by name, mobile, or email"""
-    try:
-        if not query:
-            return []
-            
-        query = f"%{query}%"
-        
-        customers = frappe.db.sql("""
-            SELECT 
-                name, customer_name, mobile_number, email_id, customer_group,
-                creation, modified,
-                (SELECT COUNT(*) FROM `tabSales Invoice` 
-                 WHERE customer = c.name AND is_rental_booking = 1 AND docstatus = 1) as booking_count,
-                (SELECT MAX(posting_date) FROM `tabSales Invoice` 
-                 WHERE customer = c.name AND is_rental_booking = 1 AND docstatus = 1) as last_booking_date
-            FROM `tabCustomer` c
-            WHERE (customer_name LIKE %s 
-                   OR mobile_number LIKE %s 
-                   OR email_id LIKE %s
-                   OR name LIKE %s)
-            AND disabled = 0
-            ORDER BY modified DESC
-            LIMIT 20
-        """, (query, query, query, query), as_dict=True)
-        
-        return customers
-        
-    except Exception as e:
-        frappe.log_error(f"Error searching customers: {str(e)}")
-        return []
-
-@frappe.whitelist(allow_guest=True)
-def create_customer(customer_name, mobile_number, email_id="", address_line1="", city="", state="", pincode=""):
-    """Create a new customer"""
-    try:
-        # Validate required fields
-        if not customer_name or not mobile_number:
-            return {'success': False, 'message': 'Customer name and mobile number are required'}
-        
-        # Check if customer with same mobile already exists
-        existing = frappe.db.get_value("Customer", {"mobile_number": mobile_number}, "name")
-        if existing:
-            return {'success': False, 'message': 'Customer with this mobile number already exists'}
-        
-        # Create customer with correct field names
-        customer_doc = frappe.get_doc({
-            "doctype": "Customer",
-            "customer_name": customer_name.strip(),
-            "mobile_number": mobile_number.strip(),  # ERPNext uses mobile_number
-            "email_id": email_id.strip() if email_id else "",
-            "customer_group": "Individual",
-            "territory": "All Territories"
-        })
-        
-        customer_doc.insert(ignore_permissions=True)
-        
-        # Create address if provided
-        if address_line1:
-            address_doc = frappe.get_doc({
-                "doctype": "Address",
-                "address_title": customer_name,
-                "address_line1": address_line1.strip(),
-                "city": city.strip() if city else "",
-                "state": state.strip() if state else "",
-                "pincode": pincode.strip() if pincode else "",
-                "country": "India",
-                "address_type": "Billing",
-                "is_primary_address": 1,
-                "links": [{
-                    "link_doctype": "Customer",
-                    "link_name": customer_doc.name
-                }]
-            })
-            address_doc.insert(ignore_permissions=True)
-            
-            # Update customer with primary address
-            customer_doc.customer_primary_address = address_doc.name
-            customer_doc.save(ignore_permissions=True)
-        
-        return {
-            'success': True, 
-            'message': 'Customer created successfully',
-            'customer': {
-                'name': customer_doc.name,
-                'customer_name': customer_doc.customer_name,
-                'mobile_number': customer_doc.mobile_number,
-                'email_id': customer_doc.email_id
-            }
-        }
-        
-    except Exception as e:
-        frappe.log_error(f"Error creating customer: {str(e)}")
-        return {'success': False, 'message': f'Error creating customer: {str(e)}'}
 
 @frappe.whitelist()
 def get_customer_details(customer_id):
@@ -787,14 +421,14 @@ def get_primary_item_image(item_code):
         frappe.log_error(f"Error getting primary image for item {item_code}: {str(e)}")
         return None
 
-# Customer-based cart management functions (replacing session-based cart)
+# Database-based cart management functions
 
 @frappe.whitelist()
 def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_date, function_date=None, quantity=1):
-    """Add item to customer-specific cart in database"""
+    """Add item to customer-specific cart using Rental Cart doctype"""
     try:
         # Validate customer exists
-        customer = frappe.get_doc("Customer", customer_id)
+        customer = frappe.db.get_value("Customer", customer_id, "name")
         if not customer:
             return {'success': False, 'message': 'Customer not found'}
             
@@ -803,42 +437,59 @@ def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_d
         if not availability['is_available']:
             return {'success': False, 'message': availability['message']}
             
-        # Check if item already exists in customer's cart for same dates
-        existing_cart_item = frappe.db.get_value(
-            "Rental Cart",
-            {
-                "customer": customer_id,
-                "item_code": item_code,
-                "rental_start_date": rental_start_date,
-                "rental_end_date": rental_end_date,
-                "docstatus": 0
-            }
-        )
+        # Get or create active cart for customer
+        cart_doc_name = frappe.db.get_value("Rental Cart", {
+            "customer": customer_id,
+            "status": "Active",
+            "docstatus": 0
+        })
         
-        if existing_cart_item:
-            # Update quantity if item already exists
-            cart_doc = frappe.get_doc("Rental Cart", existing_cart_item)
-            cart_doc.quantity = cint(cart_doc.quantity) + cint(quantity)
-            cart_doc.save()
+        if cart_doc_name:
+            cart_doc = frappe.get_doc("Rental Cart", cart_doc_name)
         else:
-            # Create new cart item
+            # Create new cart
             cart_doc = frappe.get_doc({
                 "doctype": "Rental Cart",
                 "customer": customer_id,
+                "status": "Active",
+                "created_date": frappe.utils.today()
+            })
+            cart_doc.insert(ignore_permissions=True)
+            
+        # Check if item already exists in cart for same dates
+        existing_item = None
+        for item in cart_doc.items:
+            if (item.item_code == item_code and 
+                str(item.rental_start_date) == str(rental_start_date) and 
+                str(item.rental_end_date) == str(rental_end_date)):
+                existing_item = item
+                break
+                
+        # Get item details
+        item_details = frappe.get_doc("Item", item_code)
+        rental_days = (getdate(rental_end_date) - getdate(rental_start_date)).days + 1
+        line_total = (item_details.rental_rate_per_day or 0) * rental_days
+        
+        if existing_item:
+            # Update existing item (if needed, this implementation doesn't support quantity updates)
+            return {'success': False, 'message': 'Item already in cart for these dates'}
+        else:
+            # Add new item to cart
+            cart_doc.append("items", {
                 "item_code": item_code,
-                "quantity": cint(quantity),
+                "item_name": item_details.item_name,
+                "service_item_code": item_details.rental_service_item,
+                "rental_rate_per_day": item_details.rental_rate_per_day,
+                "rental_days": rental_days,
+                "line_total": line_total,
                 "rental_start_date": rental_start_date,
                 "rental_end_date": rental_end_date,
-                "function_date": function_date,
-                "created_by": frappe.session.user
+                "function_date": function_date
             })
-            cart_doc.insert()
+            cart_doc.save(ignore_permissions=True)
             
         # Get updated cart count
-        cart_count = frappe.db.count("Rental Cart", {
-            "customer": customer_id,
-            "docstatus": 0
-        })
+        cart_count = len(cart_doc.items)
         
         return {
             'success': True,
@@ -852,45 +503,76 @@ def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_d
 
 @frappe.whitelist()
 def get_customer_cart_items(customer_id):
-    """Get customer-specific cart items from database"""
+    """Get customer-specific cart items from database using Rental Cart doctype"""
     try:
         if not customer_id:
             return {'items': [], 'total': 0, 'item_count': 0}
             
         # Validate customer exists
-        customer = frappe.get_doc("Customer", customer_id)
+        customer = frappe.db.get_value("Customer", customer_id, "name")
         if not customer:
             return {'items': [], 'total': 0, 'item_count': 0, 'error': 'Customer not found'}
             
-        cart_items = frappe.db.sql("""
-            SELECT 
-                rc.name as cart_item_id,
-                rc.item_code,
-                rc.quantity,
-                rc.rental_start_date,
-                rc.rental_end_date,
-                rc.function_date,
-                rc.creation,
-                m.item_name,
-                m.description,
-                m.rental_rate_per_day,
-                m.caution_deposit,
-                m.image,
-                DATEDIFF(rc.rental_end_date, rc.rental_start_date) + 1 as rental_days,
-                (DATEDIFF(rc.rental_end_date, rc.rental_start_date) + 1) * m.rental_rate_per_day * rc.quantity as item_total
-            FROM `tabRental Cart` rc
-            JOIN `tabItem` m ON rc.item_code = m.item_code
-            WHERE rc.customer = %s AND rc.docstatus = 0
-            ORDER BY rc.creation DESC
-        """, (customer_id,), as_dict=True)
+        # Get active cart for customer
+        cart_doc = frappe.db.get_value("Rental Cart", {
+            "customer": customer_id,
+            "status": "Active",
+            "docstatus": 0
+        })
         
-        total = sum(item.get('item_total', 0) for item in cart_items)
-        item_count = sum(item.get('quantity', 0) for item in cart_items)
+        if not cart_doc:
+            return {'items': [], 'total': 0, 'item_count': 0}
+            
+        # Get cart document with items
+        cart = frappe.get_doc("Rental Cart", cart_doc)
+        
+        processed_items = []
+        total_amount = 0
+        
+        for cart_item in cart.items:
+            try:
+                item_code = cart_item.item_code
+                # Resolve service vs main item for images
+                main_item_code = item_code[:-7] if item_code.endswith('-RENTAL') else item_code
+
+                item_details = frappe.get_doc("Item", item_code)
+
+                # Normalize dates to date objects for template strftime
+                start_date = getdate(cart_item.rental_start_date) if cart_item.rental_start_date else None
+                end_date = getdate(cart_item.rental_end_date) if cart_item.rental_end_date else None
+                function_date = getdate(cart_item.function_date) if cart_item.function_date else None
+
+                rental_days = cart_item.rental_days or 0
+                line_total = cart_item.line_total or 0
+
+                # Prefer primary image from main item (multi-image support), fallback to service item image
+                images = get_item_images(main_item_code)
+                primary_image = images[0] if images else getattr(item_details, 'image', None)
+                
+                processed_items.append({
+                    'cart_item_id': cart_item.name,  # Use child table row name for removal
+                    'item_code': item_code,
+                    'item_name': cart_item.item_name,
+                    'item_image': primary_image,
+                    'rental_rate': cart_item.rental_rate_per_day,
+                    'rental_start_date': start_date,
+                    'rental_end_date': end_date,
+                    'rental_days': rental_days,
+                    'total_amount': line_total,
+                    'function_date': function_date
+                })
+                
+                total_amount += line_total
+                
+            except Exception as e:
+                # Skip invalid items
+                frappe.log_error(f"Error processing cart item {cart_item.item_code}: {str(e)}")
+                continue
         
         return {
-            'items': cart_items,
-            'total': total,
-            'item_count': item_count
+            'items': processed_items,
+            'total': total_amount,
+            'item_count': len(processed_items)
         }
         
     except Exception as e:
@@ -899,30 +581,36 @@ def get_customer_cart_items(customer_id):
 
 @frappe.whitelist()
 def remove_from_customer_cart(cart_item_id, customer_id):
-    """Remove item from customer-specific cart"""
+    """Remove item from customer-specific cart using Rental Cart doctype"""
     try:
-        # Validate customer owns this cart item
-        cart_item = frappe.db.get_value(
-            "Rental Cart",
-            cart_item_id,
-            ["customer", "name"],
-            as_dict=True
-        )
-        
-        if not cart_item:
-            return {'success': False, 'message': 'Cart item not found'}
-            
-        if cart_item.customer != customer_id:
-            return {'success': False, 'message': 'Unauthorized: Cart item does not belong to this customer'}
-            
-        # Delete the cart item
-        frappe.delete_doc("Rental Cart", cart_item_id)
-        
-        # Get updated cart count
-        cart_count = frappe.db.count("Rental Cart", {
+        # Find the cart document that contains this item
+        cart_docs = frappe.get_all("Rental Cart", {
             "customer": customer_id,
+            "status": "Active",
             "docstatus": 0
         })
+        
+        if not cart_docs:
+            return {'success': False, 'message': 'Cart not found'}
+            
+        cart_doc = frappe.get_doc("Rental Cart", cart_docs[0].name)
+        
+        # Find and remove the specific cart item
+        item_found = False
+        for i, item in enumerate(cart_doc.items):
+            if item.name == cart_item_id:
+                cart_doc.remove(item)
+                item_found = True
+                break
+                
+        if not item_found:
+            return {'success': False, 'message': 'Cart item not found'}
+            
+        # Save the updated cart
+        cart_doc.save(ignore_permissions=True)
+        
+        # Get updated cart count
+        cart_count = len(cart_doc.items)
         
         return {
             'success': True,
@@ -936,18 +624,24 @@ def remove_from_customer_cart(cart_item_id, customer_id):
 
 @frappe.whitelist()
 def clear_customer_cart(customer_id):
-    """Clear all items from customer's cart"""
+    """Clear all items from customer's cart using Rental Cart doctype"""
     try:
-        # Get all cart items for customer
-        cart_items = frappe.get_all("Rental Cart", {
+        # Get active cart for customer
+        cart_docs = frappe.get_all("Rental Cart", {
             "customer": customer_id,
+            "status": "Active",
             "docstatus": 0
         })
         
-        # Delete all cart items
-        for item in cart_items:
-            frappe.delete_doc("Rental Cart", item.name)
+        if not cart_docs:
+            return {'success': True, 'message': 'Cart already empty'}
             
+        cart_doc = frappe.get_doc("Rental Cart", cart_docs[0].name)
+        
+        # Clear all items
+        cart_doc.items = []
+        cart_doc.save(ignore_permissions=True)
+        
         return {
             'success': True,
             'message': 'Cart cleared successfully'
@@ -959,7 +653,7 @@ def clear_customer_cart(customer_id):
 
 @frappe.whitelist()
 def create_customer_booking_from_cart(customer_id, address_type="Billing", new_address=None, special_instructions=""):
-    """Create booking/sales invoice from customer's cart items"""
+    """Create booking/sales invoice from customer's cart items using Rental Cart doctype"""
     try:
         # Validate customer exists
         customer = frappe.get_doc("Customer", customer_id)
@@ -1039,25 +733,28 @@ def create_customer_booking_from_cart(customer_id, address_type="Billing", new_a
         
         # Add cart items to invoice
         for cart_item in cart_items:
-            rental_days = (getdate(cart_item['rental_end_date']) - getdate(cart_item['rental_start_date'])).days + 1
-            rate = flt(cart_item['rental_rate_per_day'])
-            quantity = cint(cart_item['quantity'])
+            rental_days = cart_item['rental_days']
+            rate = flt(cart_item['rental_rate'])
             
             # Add rental service item
             sales_invoice.append("items", {
                 "item_code": cart_item['item_code'],
                 "item_name": cart_item['item_name'],
-                "description": cart_item['description'],
-                "qty": quantity,
+                "description": f"Rental for {rental_days} days",
+                "qty": 1,
                 "uom": "Nos",
-                "rate": rate,
+                "rate": cart_item['total_amount'],
                 "rental_start_date": cart_item['rental_start_date'],
                 "rental_end_date": cart_item['rental_end_date'],
                 "function_date": cart_item.get('function_date'),
                 "rental_days": rental_days
             })
             
-            total_caution_deposit += flt(cart_item.get('caution_deposit', 0)) * quantity
+            # Get caution deposit from main item
+            main_item_code = cart_item['item_code'][:-7] if cart_item['item_code'].endswith('-RENTAL') else cart_item['item_code']
+            main_item = frappe.get_doc("Item", main_item_code)
+            caution_deposit = flt(main_item.get('caution_deposit', 0))
+            total_caution_deposit += caution_deposit
         
         # Add caution deposit as separate item if applicable
         if total_caution_deposit > 0:
@@ -1159,5 +856,3 @@ def create_customer(customer_name, mobile_number=None, email_id=None, customer_g
     except Exception as e:
         frappe.log_error(f"Error creating customer: {str(e)}")
         return {'success': False, 'message': str(e)}
-
-# Legacy session-based functions (kept for backward compatibility)
