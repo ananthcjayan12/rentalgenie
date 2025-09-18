@@ -7,7 +7,18 @@ def get_context(context):
         # Get customer parameter (selected by shopkeeper)
         customer_id = frappe.form_dict.get('customer')
         
+        # Debug logging
+        frappe.log_error(f"Profile page - customer_id: {customer_id}, form_dict: {frappe.form_dict}")
+        
+        # TEMPORARY DEBUG - Remove after fixing
+        print(f"DEBUG: customer_id = '{customer_id}', type = {type(customer_id)}")
+        print(f"DEBUG: form_dict = {frappe.form_dict}")
+        
         if customer_id:
+            # Debug: Check if customer exists
+            customer_exists = frappe.db.exists("Customer", customer_id)
+            frappe.log_error(f"Customer {customer_id} exists: {customer_exists}")
+            
             # Show specific customer details (use db.get_value to avoid permission issues)
             customer = frappe.db.get_value(
                 "Customer",
@@ -15,6 +26,9 @@ def get_context(context):
                 ["name", "customer_name", "mobile_number", "email_id"],
                 as_dict=True,
             )
+            
+            frappe.log_error(f"Customer data retrieved: {customer}")
+            
             if not customer:
                 context.mode = 'search'
                 context.error_message = "Customer not found"
