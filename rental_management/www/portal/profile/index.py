@@ -7,17 +7,13 @@ def get_context(context):
         # Get customer parameter (selected by shopkeeper)
         customer_id = frappe.form_dict.get('customer')
         
-        # Debug logging
-        frappe.log_error(f"Profile page - customer_id: {customer_id}, form_dict: {frappe.form_dict}")
-        
         # TEMPORARY DEBUG - Remove after fixing
-        print(f"DEBUG: customer_id = '{customer_id}', type = {type(customer_id)}")
-        print(f"DEBUG: form_dict = {frappe.form_dict}")
+        print(f"DEBUG: customer_id = '{customer_id}'")
         
         if customer_id:
-            # Debug: Check if customer exists
+            # Check if customer exists
             customer_exists = frappe.db.exists("Customer", customer_id)
-            frappe.log_error(f"Customer {customer_id} exists: {customer_exists}")
+            print(f"DEBUG: Customer {customer_id} exists: {customer_exists}")
             
             # Show specific customer details (use db.get_value to avoid permission issues)
             customer = frappe.db.get_value(
@@ -27,14 +23,16 @@ def get_context(context):
                 as_dict=True,
             )
             
-            frappe.log_error(f"Customer data retrieved: {customer}")
+            print(f"DEBUG: Customer found: {customer is not None}")
             
             if not customer:
                 context.mode = 'search'
                 context.error_message = "Customer not found"
                 return context
+            
             context.customer = customer
             context.mode = 'view'
+            print(f"DEBUG: Set mode to 'view' for customer {customer['customer_name']}")
             
             # Get customer's addresses using Dynamic Link join
             addresses = frappe.db.sql(
@@ -135,7 +133,7 @@ def get_context(context):
         return context
         
     except Exception as e:
-        frappe.log_error(f"Error loading customer profile page: {str(e)}")
+        print(f"DEBUG: Error in profile page: {str(e)}")
         context.error_message = "Unable to load customer information. Please try again."
         context.mode = 'search'
         context.customer = None
