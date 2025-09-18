@@ -55,9 +55,7 @@ def get_context(context):
                 SELECT 
                     si.name, si.posting_date, si.total, si.booking_status,
                     si.customer_name, si.due_date,
-                    COUNT(sii.name) as item_count,
-                    MIN(sii.rental_start_date) as earliest_rental_date,
-                    MAX(sii.rental_end_date) as latest_rental_date
+                    COUNT(sii.name) as item_count
                 FROM `tabSales Invoice` si
                 LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
                 WHERE si.customer = %s 
