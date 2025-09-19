@@ -36,21 +36,22 @@ def get_context(context):
         context.booking = booking
         context.booking_items = booking.items
         
-        # Calculate rental summary
-        context.total_rental_days = sum(
-            (frappe.utils.getdate(item.rental_end_date) - 
-             frappe.utils.getdate(item.rental_start_date)).days + 1 
-            for item in booking.items
-        )
+        # Calculate rental summary - use booking-level dates
+        if hasattr(booking, 'rental_end_date') and hasattr(booking, 'rental_start_date') and booking.rental_end_date and booking.rental_start_date:
+            context.total_rental_days = (frappe.utils.getdate(booking.rental_end_date) - frappe.utils.getdate(booking.rental_start_date)).days + 1
+        elif hasattr(booking, 'rental_duration_days') and booking.rental_duration_days:
+            context.total_rental_days = booking.rental_duration_days
+        else:
+            context.total_rental_days = 1  # Default to 1 day
         
-        # Format dates for display
+        # Format dates for display - use booking-level dates for all items
         context.formatted_dates = []
         for item in booking.items:
             context.formatted_dates.append({
                 'item_name': item.item_name,
-                'function_date': formatdate(item.function_date) if item.function_date else 'Not set',
-                'rental_start': formatdate(item.rental_start_date) if item.rental_start_date else 'Not set',
-                'rental_end': formatdate(item.rental_end_date) if item.rental_end_date else 'Not set'
+                'function_date': formatdate(getattr(booking, 'function_date', None)) if getattr(booking, 'function_date', None) else 'Not set',
+                'rental_start': formatdate(getattr(booking, 'rental_start_date', None)) if getattr(booking, 'rental_start_date', None) else 'Not set',
+                'rental_end': formatdate(getattr(booking, 'rental_end_date', None)) if getattr(booking, 'rental_end_date', None) else 'Not set'
             })
         
         # Get customer address
