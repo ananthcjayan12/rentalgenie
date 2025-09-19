@@ -47,35 +47,49 @@ def get_dashboard_context(context):
     # Get dashboard statistics
     stats = {}
     
-    # Bookings awaiting advance collection
+    # Bookings awaiting advance collection (initial status)
     stats['pending_advance'] = frappe.db.count('Sales Invoice', {
         'is_rental_booking': 1,
-        'booking_status': 'Draft',
-        'docstatus': 1
+        'booking_status': '',  # Initial empty status
+        'docstatus': 0  # Draft invoices
     })
     
-    # Bookings awaiting delivery (advance collected, balance pending)
+    # Bookings awaiting delivery (advance collected, balance + caution pending)
     stats['pending_delivery'] = frappe.db.count('Sales Invoice', {
         'is_rental_booking': 1,
-        'booking_status': 'Advance Collected',
+        'booking_status': 'Confirmed',  # Advance collected, ready for delivery
         'docstatus': 1
     })
     
     # Bookings awaiting return (items delivered)
     stats['pending_return'] = frappe.db.count('Sales Invoice', {
         'is_rental_booking': 1,
-        'booking_status': 'Items Delivered',
+        'booking_status': 'Out for Rental',  # Items delivered, awaiting return
         'docstatus': 1
     })
     
     # Total active bookings
     stats['total_active'] = frappe.db.count('Sales Invoice', {
         'is_rental_booking': 1,
-        'booking_status': ['in', ['Draft', 'Advance Collected', 'Items Delivered']],
-        'docstatus': 1
+        'booking_status': ['in', ['', 'Confirmed', 'Out for Rental']],
+        'docstatus': ['in', [0, 1]]
     })
     
     context.dashboard_stats = stats
+    
+    # Get pending advance bookings (draft invoices awaiting advance collection)
+    pending_advance = frappe.db.sql("""
+        SELECT 
+            si.name, si.posting_date, si.total, si.customer_name, 
+            si.customer, si.function_date, si.rental_start_date
+        FROM `tabSales Invoice` si
+        WHERE si.is_rental_booking = 1
+        AND si.booking_status = ''
+        AND si.docstatus = 0
+        ORDER BY si.function_date ASC, si.creation ASC
+    """, as_dict=True)
+    
+    context.pending_advance = pending_advance
     
     # Get recent bookings (last 10)
     recent_bookings = frappe.db.sql("""
@@ -95,36 +109,33 @@ def get_dashboard_context(context):
     
     context.recent_bookings = recent_bookings
     
-    # Get pending deliveries (advance collected, balance pending)
+    # Get pending deliveries (advance collected, balance + caution pending)
     pending_deliveries = frappe.db.sql("""
         SELECT 
             si.name, si.posting_date, si.total, si.customer_name, 
-            si.customer, si.advance_amount, si.balance_amount,
-            si.caution_deposit_amount, MIN(sii.rental_start_date) as earliest_start
+            si.customer, si.advance_amount, 
+            (si.total - COALESCE(si.advance_amount, 0)) as balance_due,
+            si.caution_deposit_amount, si.function_date, si.rental_start_date
         FROM `tabSales Invoice` si
-        LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
         WHERE si.is_rental_booking = 1
-        AND si.booking_status = 'Advance Collected'
+        AND si.booking_status = 'Confirmed'
         AND si.docstatus = 1
-        GROUP BY si.name
-        ORDER BY earliest_start ASC
+        ORDER BY si.rental_start_date ASC, si.function_date ASC
     """, as_dict=True)
     
     context.pending_deliveries = pending_deliveries
     
-    # Get pending returns (items delivered)
+    # Get pending returns (items delivered, awaiting return)
     pending_returns = frappe.db.sql("""
         SELECT 
             si.name, si.posting_date, si.total, si.customer_name,
-            si.customer, si.caution_deposit_amount, 
-            MAX(sii.rental_end_date) as latest_end
+            si.customer, si.caution_deposit_collected, si.rental_end_date,
+            si.function_date
         FROM `tabSales Invoice` si
-        LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
         WHERE si.is_rental_booking = 1
-        AND si.booking_status = 'Items Delivered'
+        AND si.booking_status = 'Out for Rental'
         AND si.docstatus = 1
-        GROUP BY si.name
-        ORDER BY latest_end ASC
+        ORDER BY si.rental_end_date ASC, si.function_date ASC
     """, as_dict=True)
     
     context.pending_returns = pending_returns
