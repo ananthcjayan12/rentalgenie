@@ -642,21 +642,6 @@ body {
                         <p class="caution-note">*Caution deposit will be collected at delivery and refunded upon item return</p>
                     </div>
                     
-                    <div class="advance-payment-section">
-                        <label class="advance-label">Advance Amount (Optional)</label>
-                        <div class="advance-input-group">
-                            <span class="currency-symbol">₹</span>
-                            <input type="number" 
-                                   x-model="advanceAmount" 
-                                   class="advance-input"
-                                   placeholder="0"
-                                   min="0" 
-                                   :max="cartTotal"
-                                   step="10">
-                        </div>
-                        <p class="advance-note">Enter advance amount to collect now. Remaining balance: ₹<span x-text="remainingBalance"></span></p>
-                    </div>
-                    
                     <div class="special-instructions-section">
                         <label class="instructions-label">Special Instructions (Optional)</label>
                         <textarea x-model="specialInstructions" 
@@ -681,9 +666,10 @@ body {
                     <h3>Booking Created Successfully!</h3>
                     <div class="booking-details">
                         <p><strong>Booking ID:</strong> <span x-text="bookingId"></span></p>
-                        <p><strong>Advance Collected:</strong> ₹<span x-text="advanceCollected"></span></p>
-                        <p><strong>Remaining Balance:</strong> ₹<span x-text="remainingBalance"></span></p>
+                        <p><strong>Status:</strong> Draft - Awaiting Staff Processing</p>
+                        <p><strong>Total Amount:</strong> ₹<span x-text="remainingBalance"></span></p>
                         <p x-show="totalCautionDeposit > 0"><strong>Caution Deposit Due at Delivery:</strong> ₹<span x-text="totalCautionDeposit"></span></p>
+                        <p><small>ℹ️ Our staff will process advance collection and confirm your booking</small></p>
                     </div>
                     <div class="success-actions">
                         <button @click="viewBooking()" class="btn-primary">
@@ -818,25 +804,34 @@ function cartPage() {
                     // Store booking details for success display
                     this.bookingId = response.message.booking_id;
                     this.advanceCollected = response.message.advance_amount || 0;
+                    this.remainingBalance = response.message.pending_amount || 0;
                     
-                    // If advance amount was provided, confirm the booking
+                    // If advance was collected, confirm the booking automatically
                     if (this.advanceAmount > 0) {
-                        const confirmResponse = await frappe.call({
-                            method: 'rental_management.api.customer_portal.confirm_booking_with_advance',
-                            args: {
-                                booking_id: this.bookingId,
-                                advance_amount: this.advanceAmount,
-                                payment_mode: 'Cash'
+                        try {
+                            const confirmResponse = await frappe.call({
+                                method: 'rental_management.api.customer_portal.confirm_booking_with_advance',
+                                args: {
+                                    booking_id: this.bookingId,
+                                    advance_amount: this.advanceAmount,
+                                    payment_mode: 'Cash'
+                                }
+                            });
+                            
+                            if (confirmResponse.message.success) {
+                                this.showBookingSuccess = true;
+                            } else {
+                                this.alertMessage = confirmResponse.message.message || 'Failed to confirm booking';
+                                this.alertType = 'alert-error';
                             }
-                        });
-                        
-                        if (!confirmResponse.message.success) {
-                            throw new Error(confirmResponse.message.message);
+                        } catch (confirmError) {
+                            this.alertMessage = 'Error confirming booking: ' + confirmError.message;
+                            this.alertType = 'alert-error';
                         }
+                    } else {
+                        // No advance collected, booking stays in draft for staff to process
+                        this.showBookingSuccess = true;
                     }
-                    
-                    // Show success message
-                    this.showBookingSuccess = true;
                     
                 } else {
                     this.alertMessage = response.message.message || 'Failed to create booking';

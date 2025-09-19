@@ -153,6 +153,9 @@ def get_dashboard_context(context):
     
     context.pending_deliveries = pending_deliveries
     
+    print(f"DEBUG - pending_deliveries data: {pending_deliveries}")
+    print(f"DEBUG - context.pending_deliveries length: {len(pending_deliveries)}")
+    
     # Get pending returns (items delivered, awaiting return)
     pending_returns = frappe.db.sql("""
         SELECT 
