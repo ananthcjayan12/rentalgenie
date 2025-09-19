@@ -559,6 +559,15 @@ body {
              :class="'alert ' + alertType" 
              style="grid-column: 1 / -1; display: none;"></div>
 
+        <!-- Debug Info (temporary) -->
+        <div style="background: #f0f0f0; padding: 1rem; margin-bottom: 1rem; border-radius: 6px;">
+            <strong>Debug Info:</strong><br>
+            Customer ID: <span x-text="customerId || 'Not set'"></span><br>
+            Cart Items Count: <span x-text="cartItems.length"></span><br>
+            Cart Total: ₹<span x-text="cartTotal"></span><br>
+            Button Disabled: <span x-text="isProcessing || !customerId || cartItems.length === 0"></span>
+        </div>
+
         {% if cart_items %}
         <!-- Cart Items Section -->
         <div class="cart-items-section">
@@ -665,7 +674,7 @@ body {
                     </div>
                     
                     <button @click="confirmBooking()" 
-                            :disabled="isProcessing || cartItems.length === 0"
+                            :disabled="isProcessing || !customerId || cartItems.length === 0"
                             class="checkout-btn confirm-booking-btn">
                         <i class="fas fa-check-circle"></i>
                         <span x-show="!isProcessing">Confirm Booking</span>
@@ -704,9 +713,15 @@ body {
         <!-- Empty Cart -->
         <div class="empty-cart" style="grid-column: 1 / -1;">
             <i class="fas fa-shopping-cart"></i>
-            <h3>Your cart is empty</h3>
-            <p>Add some amazing rental items to get started!</p>
-            <a href="/portal/category" class="browse-btn">Browse Items</a>
+            {% if not customer_id %}
+                <h3>No customer selected</h3>
+                <p>Please select a customer to view their cart.</p>
+                <a href="/portal" class="browse-btn">Select Customer</a>
+            {% else %}
+                <h3>Cart is empty</h3>
+                <p>Add some amazing rental items to get started!</p>
+                <a href="/portal/category?customer={{ customer_id }}" class="browse-btn">Browse Items</a>
+            {% endif %}
         </div>
         {% endif %}
     </div>
@@ -759,7 +774,7 @@ function cartPage() {
         totalCautionDeposit: 0,
         
         // Cart data
-        cartItems: [],
+        cartItems: {{ cart_items|tojson if cart_items else [] }},
         cartTotal: {{ grand_total if grand_total else 0 }},
         
         get remainingBalance() {
@@ -769,6 +784,14 @@ function cartPage() {
         async init() {
             // Calculate total caution deposit
             this.calculateCautionDeposit();
+            
+            // Debug logging
+            console.log('Cart initialized:', {
+                customerId: this.customerId,
+                cartItems: this.cartItems,
+                cartTotal: this.cartTotal,
+                cartItemsLength: this.cartItems.length
+            });
         },
         
         calculateCautionDeposit() {
