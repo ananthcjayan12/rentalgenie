@@ -85,7 +85,7 @@ body {
     gap: 1rem;
 }
 
-.cart-icon, .user-icon {
+.cart-icon, .user-icon, .nav-icon {
     position: relative;
     padding: 0.5rem;
     color: var(--text-primary);
@@ -322,6 +322,9 @@ body {
             </div>
             
             <div class="header-actions">
+                <a href="/portal/staff" class="nav-icon" title="Staff Dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                </a>
                 <a href="/portal/cart" class="cart-icon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-badge" x-show="cartCount > 0" x-text="cartCount"></span>

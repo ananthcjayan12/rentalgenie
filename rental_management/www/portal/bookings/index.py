@@ -1,8 +1,67 @@
 import frappe
 from frappe.utils import formatdate, get_datetime
+from rental_management.api.customer_portal import get_customer_active_bookings, get_booking_payment_summary
 
 def get_context(context):
-    """Get context for bookings page"""
+    """Get context for bookings page - supports both customer portal and sales staff portal"""
+    
+    # Check if this is sales staff portal (customer parameter)
+    customer_id = frappe.form_dict.get('customer', '')
+    booking_id = frappe.form_dict.get('booking', '')
+    
+    if customer_id:
+        # Sales staff portal - manage customer bookings
+        return get_sales_staff_context(context, customer_id, booking_id)
+    else:
+        # Customer portal - original functionality
+        return get_customer_portal_context(context)
+
+def get_sales_staff_context(context, customer_id, booking_id):
+    """Get context for sales staff booking management"""
+    
+    context.customer_id = customer_id
+    context.booking_id = booking_id
+    context.customer = None
+    context.bookings = []
+    context.booking_summary = None
+    context.is_sales_staff = True
+    
+    try:
+        if customer_id:
+            # Get customer details
+            customer_data = frappe.db.get_value(
+                "Customer",
+                customer_id,
+                ["name", "customer_name", "mobile_number"],
+                as_dict=True
+            )
+            if customer_data:
+                context.customer = customer_data
+                
+                # Get customer's active bookings
+                bookings_result = get_customer_active_bookings(customer_id)
+                if bookings_result.get('success'):
+                    context.bookings = bookings_result.get('bookings', [])
+                    
+        if booking_id:
+            # Get detailed booking summary
+            summary_result = get_booking_payment_summary(booking_id)
+            if summary_result.get('success'):
+                context.booking_summary = summary_result.get('summary', {})
+                
+        # Page metadata
+        context.page_title = f"Booking Management - {context.customer.get('customer_name', '')} | Blush & Glow"
+        context.meta_description = "Manage rental bookings and payments"
+        
+    except Exception as e:
+        frappe.log_error(f"Error in sales staff booking context: {str(e)}")
+        context.error_message = "Error loading booking data"
+        
+    return context
+
+def get_customer_portal_context(context):
+    """Get context for customer portal bookings - original functionality"""
+    context.is_sales_staff = False
     
     try:
         # Check if user is logged in

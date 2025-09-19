@@ -186,10 +186,42 @@ const result = await frappe.call({
 5. **Customer Service**: Easy to track customer payment history and status
 6. **Financial Reporting**: Separate tracking of rental income vs. deposits
 
+## Frontend Implementation Status
+
+### ✅ **Cart Page Updates** (`/portal/cart`)
+**Replaced "Checkout" with "Confirm Booking" Flow**:
+
+1. **Booking Confirmation Form**:
+   - Shows total rental amount and required caution deposit
+   - Input field for advance amount (optional)
+   - Special instructions textarea
+   - "Confirm Booking" button (instead of "Proceed to Checkout")
+
+2. **Success Display**:
+   - Shows booking ID and payment summary
+   - Displays advance collected and remaining balance
+   - Options to view booking or create new booking
+
+3. **Payment Summary**:
+   - Total rental amount
+   - Caution deposit required (collected at delivery)
+   - Advance amount (collected now)
+   - Remaining balance (due at delivery)
+
+### 🔧 **Updated JavaScript Functions**:
+- `confirmBooking()` - Creates booking and collects advance
+- `viewBooking()` - Opens booking in ERPNext
+- `createNewBooking()` - Redirects to start new booking
+- Removed `proceedToCheckout()` function
+
+### 📋 **Backend Integration**:
+- Cart page now calculates total caution deposit from items
+- Uses new API functions for booking creation
+- Handles both draft booking creation and advance confirmation
+
 ## Next Steps
 
-1. **Frontend Implementation**: Update cart/checkout pages to use new booking flow
-2. **Staff Dashboard**: Create views for managing bookings at each stage
-3. **Custom Fields**: Add required fields to Sales Invoice doctype
-4. **Reports**: Create reports for advance collections, pending deliveries, etc.
-5. **Testing**: Test the complete flow end-to-end with real scenarios
+1. **Staff Dashboard**: Create views for managing bookings at each stage
+2. **Custom Fields**: Add required fields to Sales Invoice doctype  
+3. **Reports**: Create reports for advance collections, pending deliveries, etc.
+4. **Testing**: Test the complete flow end-to-end with real scenarios

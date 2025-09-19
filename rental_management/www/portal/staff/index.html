@@ -1,0 +1,872 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head_include %}
+<meta name="description" content="{{ meta_description }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<style>
+:root {
+    --primary-color: #7B2CBF;
+    --secondary-color: #FF6B6B;
+    --background: #F8F9FA;
+    --text-primary: #2C3E50;
+    --text-secondary: #7F8C8D;
+    --border-color: #E1E8ED;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --info-color: #3B82F6;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--background);
+    margin: 0;
+    padding: 0;
+}
+
+.staff-header {
+    background: linear-gradient(135deg, var(--primary-color), #9333EA);
+    color: white;
+    padding: 1.5rem 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-title h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.header-nav {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.nav-btn.active {
+    background: white;
+    color: var(--primary-color);
+}
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Dashboard Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--primary-color);
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-card.warning {
+    border-left-color: var(--warning-color);
+}
+
+.stat-card.success {
+    border-left-color: var(--success-color);
+}
+
+.stat-card.info {
+    border-left-color: var(--info-color);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Dashboard Content */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.dashboard-section {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.section-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+}
+
+.section-content {
+    padding: 1.5rem;
+}
+
+/* Booking Items */
+.booking-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.3s;
+}
+
+.booking-item:hover {
+    background-color: #F8F9FA;
+}
+
+.booking-item:last-child {
+    border-bottom: none;
+}
+
+.booking-info {
+    flex: 1;
+}
+
+.booking-id {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.booking-customer {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.booking-amount {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.booking-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #6B21A8;
+    color: white;
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    color: white;
+}
+
+.btn-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #D97706;
+    color: white;
+}
+
+.btn-info {
+    background: var(--info-color);
+    color: white;
+}
+
+.btn-info:hover {
+    background: #2563EB;
+    color: white;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-draft {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-advance-collected {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+.status-delivered {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.status-completed {
+    background: #F3E8FF;
+    color: #6B21A8;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Alert Messages */
+.alert {
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #10B981;
+}
+
+.alert-error {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #EF4444;
+}
+
+.alert-warning {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #F59E0B;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-nav {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .booking-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .booking-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div x-data="staffDashboard()">
+    <!-- Header -->
+    <div class="staff-header">
+        <div class="header-content">
+            <div class="header-title">
+                <i class="fas fa-tachometer-alt"></i>
+                <h1>Staff Dashboard</h1>
+            </div>
+            <div class="header-nav">
+                <a href="/portal/staff" class="nav-btn" :class="{ 'active': view === 'dashboard' }">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="/portal" class="nav-btn">
+                    <i class="fas fa-store"></i> Portal
+                </a>
+                <a href="/app" class="nav-btn">
+                    <i class="fas fa-cog"></i> System
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Alert Messages -->
+        <div x-show="alertMessage" x-text="alertMessage" :class="alertType" class="alert"></div>
+
+        {% if view == 'dashboard' %}
+        <!-- Dashboard View -->
+        <div class="stats-grid">
+            <div class="stat-card warning">
+                <div class="stat-value">{{ dashboard_stats.pending_advance or 0 }}</div>
+                <div class="stat-label">Pending Advance</div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-value">{{ dashboard_stats.pending_delivery or 0 }}</div>
+                <div class="stat-label">Pending Delivery</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-value">{{ dashboard_stats.pending_return or 0 }}</div>
+                <div class="stat-label">Pending Returns</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ dashboard_stats.total_active or 0 }}</div>
+                <div class="stat-label">Total Active</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Pending Deliveries -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <i class="fas fa-truck"></i> Pending Deliveries
+                </div>
+                <div class="section-content">
+                    {% if pending_deliveries %}
+                        {% for booking in pending_deliveries %}
+                        <div class="booking-item">
+                            <div class="booking-info">
+                                <div class="booking-id">#{{ booking.name }}</div>
+                                <div class="booking-customer">{{ booking.customer_name }}</div>
+                                <div class="booking-amount">
+                                    Balance: ₹{{ "%.2f"|format(booking.balance_amount or 0) }} | 
+                                    Caution: ₹{{ "%.2f"|format(booking.caution_deposit_amount or 0) }}
+                                </div>
+                            </div>
+                            <div class="booking-actions">
+                                <button @click="processDelivery('{{ booking.name }}')" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i> Deliver
+                                </button>
+                                <a href="/portal/staff?view=booking&booking={{ booking.name }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-truck"></i>
+                            <p>No pending deliveries</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pending Returns -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <i class="fas fa-undo"></i> Pending Returns
+                </div>
+                <div class="section-content">
+                    {% if pending_returns %}
+                        {% for booking in pending_returns %}
+                        <div class="booking-item">
+                            <div class="booking-info">
+                                <div class="booking-id">#{{ booking.name }}</div>
+                                <div class="booking-customer">{{ booking.customer_name }}</div>
+                                <div class="booking-amount">
+                                    Caution: ₹{{ "%.2f"|format(booking.caution_deposit_amount or 0) }}
+                                </div>
+                            </div>
+                            <div class="booking-actions">
+                                <button @click="processReturn('{{ booking.name }}')" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-undo"></i> Return
+                                </button>
+                                <a href="/portal/staff?view=booking&booking={{ booking.name }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-undo"></i>
+                            <p>No pending returns</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Bookings -->
+        <div class="dashboard-section" style="margin-top: 2rem;">
+            <div class="section-header">
+                <i class="fas fa-clock"></i> Recent Bookings
+            </div>
+            <div class="section-content">
+                {% if recent_bookings %}
+                    {% for booking in recent_bookings %}
+                    <div class="booking-item">
+                        <div class="booking-info">
+                            <div class="booking-id">#{{ booking.name }}</div>
+                            <div class="booking-customer">{{ booking.customer_name }}</div>
+                            <div class="booking-amount">
+                                Total: ₹{{ "%.2f"|format(booking.total) }} | 
+                                {{ booking.item_count }} items
+                            </div>
+                        </div>
+                        <div class="booking-actions">
+                            <span class="status-badge status-{{ booking.booking_status.lower().replace(' ', '-') }}">
+                                {{ booking.booking_status or 'Draft' }}
+                            </span>
+                            <a href="/portal/staff?view=booking&booking={{ booking.name }}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar"></i>
+                        <p>No recent bookings</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% elif view == 'booking' and booking_summary %}
+        <!-- Booking Detail View -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <i class="fas fa-file-invoice"></i> Booking #{{ booking_id }}
+                {% if customer %}
+                    - {{ customer.customer_name }}
+                {% endif %}
+            </div>
+            <div class="section-content">
+                <div class="booking-summary">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div>
+                            <strong>Status:</strong>
+                            <span class="status-badge status-{{ booking_summary.booking_status.lower().replace(' ', '-') }}">
+                                {{ booking_summary.booking_status }}
+                            </span>
+                        </div>
+                        <div><strong>Total Amount:</strong> ₹{{ "%.2f"|format(booking_summary.total_amount) }}</div>
+                        <div><strong>Advance Paid:</strong> ₹{{ "%.2f"|format(booking_summary.advance_amount or 0) }}</div>
+                        <div><strong>Balance Due:</strong> ₹{{ "%.2f"|format(booking_summary.balance_amount or 0) }}</div>
+                        <div><strong>Caution Deposit:</strong> ₹{{ "%.2f"|format(booking_summary.caution_deposit_amount or 0) }}</div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                        {% if booking_summary.booking_status == 'Advance Collected' %}
+                            <button @click="processDelivery('{{ booking_id }}')" class="btn btn-success">
+                                <i class="fas fa-truck"></i> Process Delivery
+                            </button>
+                        {% elif booking_summary.booking_status == 'Items Delivered' %}
+                            <button @click="processReturn('{{ booking_id }}')" class="btn btn-warning">
+                                <i class="fas fa-undo"></i> Process Return
+                            </button>
+                        {% endif %}
+                        <a href="/app/sales-invoice/{{ booking_id }}" target="_blank" class="btn btn-info">
+                            <i class="fas fa-external-link-alt"></i> View in System
+                        </a>
+                        <a href="/portal/staff" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+
+                    <!-- Items -->
+                    {% if booking_summary.items %}
+                    <h3>Items</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--background);">
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border-color);">Item</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid var(--border-color);">Quantity</th>
+                                    <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid var(--border-color);">Rate</th>
+                                    <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid var(--border-color);">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in booking_summary.items %}
+                                <tr>
+                                    <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">{{ item.item_name }}</td>
+                                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid var(--border-color);">{{ item.qty }}</td>
+                                    <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border-color);">₹{{ "%.2f"|format(item.rate) }}</td>
+                                    <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border-color);">₹{{ "%.2f"|format(item.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+    </div>
+
+    <!-- Delivery Modal -->
+    <div class="modal" x-show="showDeliveryModal" x-cloak>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Process Delivery</h3>
+                <button @click="showDeliveryModal = false" class="modal-close">&times;</button>
+            </div>
+            <form @submit.prevent="confirmDelivery()">
+                <div class="form-group">
+                    <label class="form-label">Balance Amount (₹)</label>
+                    <input type="number" step="0.01" x-model="deliveryForm.balanceAmount" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Caution Deposit (₹)</label>
+                    <input type="number" step="0.01" x-model="deliveryForm.cautionDeposit" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Mode</label>
+                    <select x-model="deliveryForm.paymentMode" class="form-control" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea x-model="deliveryForm.notes" class="form-control" rows="3"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" @click="showDeliveryModal = false" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" :disabled="isProcessing" class="btn btn-success">
+                        <span x-show="!isProcessing">Confirm Delivery</span>
+                        <span x-show="isProcessing">Processing...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Return Modal -->
+    <div class="modal" x-show="showReturnModal" x-cloak>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Process Return</h3>
+                <button @click="showReturnModal = false" class="modal-close">&times;</button>
+            </div>
+            <form @submit.prevent="confirmReturn()">
+                <div class="form-group">
+                    <label class="form-label">Caution Deposit Refund (₹)</label>
+                    <input type="number" step="0.01" x-model="returnForm.refundAmount" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Mode</label>
+                    <select x-model="returnForm.paymentMode" class="form-control" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Return Notes</label>
+                    <textarea x-model="returnForm.notes" class="form-control" rows="3" placeholder="Item condition, damages, etc."></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" @click="showReturnModal = false" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" :disabled="isProcessing" class="btn btn-warning">
+                        <span x-show="!isProcessing">Confirm Return</span>
+                        <span x-show="isProcessing">Processing...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function staffDashboard() {
+    return {
+        view: '{{ view }}',
+        alertMessage: '',
+        alertType: 'alert-success',
+        isProcessing: false,
+        
+        // Modals
+        showDeliveryModal: false,
+        showReturnModal: false,
+        currentBookingId: '',
+        
+        // Forms
+        deliveryForm: {
+            balanceAmount: 0,
+            cautionDeposit: 0,
+            paymentMode: 'Cash',
+            notes: ''
+        },
+        
+        returnForm: {
+            refundAmount: 0,
+            paymentMode: 'Cash',
+            notes: ''
+        },
+        
+        processDelivery(bookingId) {
+            this.currentBookingId = bookingId;
+            this.showDeliveryModal = true;
+            
+            // Pre-fill form with booking data if available
+            // This would typically come from the booking summary
+        },
+        
+        processReturn(bookingId) {
+            this.currentBookingId = bookingId;
+            this.showReturnModal = true;
+            
+            // Pre-fill form with booking data if available
+        },
+        
+        async confirmDelivery() {
+            if (this.isProcessing) return;
+            
+            this.isProcessing = true;
+            this.alertMessage = '';
+            
+            try {
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.collect_balance_and_caution_deposit',
+                    args: {
+                        booking_id: this.currentBookingId,
+                        balance_amount: this.deliveryForm.balanceAmount,
+                        caution_deposit_amount: this.deliveryForm.cautionDeposit,
+                        payment_mode: this.deliveryForm.paymentMode,
+                        notes: this.deliveryForm.notes
+                    }
+                });
+                
+                if (response.message.success) {
+                    this.alertMessage = '✅ Delivery processed successfully';
+                    this.alertType = 'alert-success';
+                    this.showDeliveryModal = false;
+                    
+                    // Refresh page after short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    this.alertMessage = response.message.message || 'Failed to process delivery';
+                    this.alertType = 'alert-error';
+                }
+                
+            } catch (error) {
+                this.alertMessage = 'Error processing delivery: ' + error.message;
+                this.alertType = 'alert-error';
+            } finally {
+                this.isProcessing = false;
+            }
+        },
+        
+        async confirmReturn() {
+            if (this.isProcessing) return;
+            
+            this.isProcessing = true;
+            this.alertMessage = '';
+            
+            try {
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.process_item_return_and_refund',
+                    args: {
+                        booking_id: this.currentBookingId,
+                        refund_amount: this.returnForm.refundAmount,
+                        payment_mode: this.returnForm.paymentMode,
+                        return_notes: this.returnForm.notes
+                    }
+                });
+                
+                if (response.message.success) {
+                    this.alertMessage = '✅ Return processed successfully';
+                    this.alertType = 'alert-success';
+                    this.showReturnModal = false;
+                    
+                    // Refresh page after short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    this.alertMessage = response.message.message || 'Failed to process return';
+                    this.alertType = 'alert-error';
+                }
+                
+            } catch (error) {
+                this.alertMessage = 'Error processing return: ' + error.message;
+                this.alertType = 'alert-error';
+            } finally {
+                this.isProcessing = false;
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

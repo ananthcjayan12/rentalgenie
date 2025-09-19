@@ -351,6 +351,108 @@ body {
     border: 1px solid #fecaca;
 }
 
+/* Booking Confirmation Styles */
+.booking-confirmation-section {
+    margin-top: 1.5rem;
+}
+
+.caution-deposit-info {
+    background: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.caution-note {
+    font-size: 0.85rem;
+    color: #92400E;
+    margin: 0.5rem 0 0 0;
+    font-style: italic;
+}
+
+.advance-payment-section {
+    margin-bottom: 1.5rem;
+}
+
+.advance-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.advance-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    z-index: 2;
+}
+
+.advance-input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 2rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.advance-input:focus {
+    border-color: var(--primary-color);
+}
+
+.advance-note {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0 0 0;
+}
+
+.special-instructions-section {
+    margin-bottom: 1.5rem;
+}
+
+.instructions-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.instructions-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+
+.instructions-input:focus {
+    border-color: var(--primary-color);
+}
+
+.confirm-booking-btn {
+    background: var(--success-color);
+}
+
+.confirm-booking-btn:hover:not(:disabled) {
+    background: #059669;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .cart-container {
@@ -527,19 +629,74 @@ body {
                 
                 <div class="summary-row">
                     <span class="summary-label summary-total">Total</span>
-                    <span class="summary-value summary-total">₹{{ "{:,.0f}".format(grand_total) }}</span>
+                    <span class="summary-value summary-total">₹<span x-text="cartTotal"></span></span>
                 </div>
                 
-                <button @click="proceedToCheckout()" 
-                        :disabled="isProcessing || {{ item_count }} === 0"
-                        class="checkout-btn">
-                    <i class="fas fa-lock"></i>
-                    <span x-show="!isProcessing">Proceed to Checkout</span>
-                    <span x-show="isProcessing">Processing...</span>
-                </button>
+                <!-- Booking Confirmation Form -->
+                <div class="booking-confirmation-section" x-show="!showBookingSuccess">
+                    <div class="caution-deposit-info" x-show="totalCautionDeposit > 0">
+                        <div class="summary-row">
+                            <span class="summary-label">Caution Deposit Required</span>
+                            <span class="summary-value">₹<span x-text="totalCautionDeposit"></span></span>
+                        </div>
+                        <p class="caution-note">*Caution deposit will be collected at delivery and refunded upon item return</p>
+                    </div>
+                    
+                    <div class="advance-payment-section">
+                        <label class="advance-label">Advance Amount (Optional)</label>
+                        <div class="advance-input-group">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" 
+                                   x-model="advanceAmount" 
+                                   class="advance-input"
+                                   placeholder="0"
+                                   min="0" 
+                                   :max="cartTotal"
+                                   step="10">
+                        </div>
+                        <p class="advance-note">Enter advance amount to collect now. Remaining balance: ₹<span x-text="remainingBalance"></span></p>
+                    </div>
+                    
+                    <div class="special-instructions-section">
+                        <label class="instructions-label">Special Instructions (Optional)</label>
+                        <textarea x-model="specialInstructions" 
+                                  class="instructions-input"
+                                  placeholder="Any special requirements or notes for this booking..."></textarea>
+                    </div>
+                    
+                    <button @click="confirmBooking()" 
+                            :disabled="isProcessing || cartItems.length === 0"
+                            class="checkout-btn confirm-booking-btn">
+                        <i class="fas fa-check-circle"></i>
+                        <span x-show="!isProcessing">Confirm Booking</span>
+                        <span x-show="isProcessing">Creating Booking...</span>
+                    </button>
+                </div>
                 
-                <div class="continue-shopping">
-                    <a href="/portal/category">← Continue Shopping</a>
+                <!-- Booking Success Message -->
+                <div class="booking-success" x-show="showBookingSuccess">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>Booking Created Successfully!</h3>
+                    <div class="booking-details">
+                        <p><strong>Booking ID:</strong> <span x-text="bookingId"></span></p>
+                        <p><strong>Advance Collected:</strong> ₹<span x-text="advanceCollected"></span></p>
+                        <p><strong>Remaining Balance:</strong> ₹<span x-text="remainingBalance"></span></p>
+                        <p x-show="totalCautionDeposit > 0"><strong>Caution Deposit Due at Delivery:</strong> ₹<span x-text="totalCautionDeposit"></span></p>
+                    </div>
+                    <div class="success-actions">
+                        <button @click="viewBooking()" class="btn-primary">
+                            <i class="fas fa-eye"></i> View Booking
+                        </button>
+                        <button @click="createNewBooking()" class="btn-outline">
+                            <i class="fas fa-plus"></i> New Booking
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="continue-shopping" x-show="!showBookingSuccess">
+                    <a href="/portal/category{% if customer_id %}?customer={{ customer_id }}{% endif %}">← Continue Shopping</a>
                 </div>
             </div>
         </div>
@@ -593,8 +750,102 @@ function cartPage() {
         isProcessing: false,
         customerId: cartPageData.customerId,
         
+        // Booking confirmation data
+        advanceAmount: 0,
+        specialInstructions: '',
+        showBookingSuccess: false,
+        bookingId: '',
+        advanceCollected: 0,
+        totalCautionDeposit: 0,
+        
+        // Cart data
+        cartItems: [],
+        cartTotal: {{ grand_total if grand_total else 0 }},
+        
+        get remainingBalance() {
+            return this.cartTotal - (this.advanceAmount || 0);
+        },
+        
         async init() {
-            // Any initialization if needed
+            // Calculate total caution deposit
+            this.calculateCautionDeposit();
+        },
+        
+        calculateCautionDeposit() {
+            // This would be calculated from cart items
+            // For now, we'll use a placeholder - should be passed from backend
+            this.totalCautionDeposit = {{ total_caution_deposit if total_caution_deposit else 0 }};
+        },
+        
+        async confirmBooking() {
+            if (this.isProcessing) return;
+            
+            if (!this.customerId) {
+                this.alertMessage = '❌ Please select a customer first';
+                this.alertType = 'alert-error';
+                return;
+            }
+            
+            this.isProcessing = true;
+            this.alertMessage = '';
+            
+            try {
+                // Create booking from cart
+                const response = await frappe.call({
+                    method: 'rental_management.api.customer_portal.create_customer_booking_from_cart',
+                    args: {
+                        customer_id: this.customerId,
+                        advance_amount: this.advanceAmount || 0,
+                        special_instructions: this.specialInstructions || ''
+                    }
+                });
+                
+                if (response.message.success) {
+                    // Store booking details for success display
+                    this.bookingId = response.message.booking_id;
+                    this.advanceCollected = response.message.advance_amount || 0;
+                    
+                    // If advance amount was provided, confirm the booking
+                    if (this.advanceAmount > 0) {
+                        const confirmResponse = await frappe.call({
+                            method: 'rental_management.api.customer_portal.confirm_booking_with_advance',
+                            args: {
+                                booking_id: this.bookingId,
+                                advance_amount: this.advanceAmount,
+                                payment_mode: 'Cash'
+                            }
+                        });
+                        
+                        if (!confirmResponse.message.success) {
+                            throw new Error(confirmResponse.message.message);
+                        }
+                    }
+                    
+                    // Show success message
+                    this.showBookingSuccess = true;
+                    
+                } else {
+                    this.alertMessage = response.message.message || 'Failed to create booking';
+                    this.alertType = 'alert-error';
+                }
+                
+            } catch (error) {
+                this.alertMessage = 'Error creating booking: ' + error.message;
+                this.alertType = 'alert-error';
+            } finally {
+                this.isProcessing = false;
+            }
+        },
+        
+        async viewBooking() {
+            if (this.bookingId) {
+                window.open(`/app/sales-invoice/${this.bookingId}`, '_blank');
+            }
+        },
+        
+        createNewBooking() {
+            // Redirect to home page to select customer and start new booking
+            window.location.href = '/portal';
         },
         
         async removeItem(cartItemId) {
@@ -621,7 +872,6 @@ function cartPage() {
                     // No customer selected - cannot remove from cart
                     this.alertMessage = '❌ Please select a customer first';
                     this.alertType = 'alert-danger';
-                    this.showAlert = true;
                     return;
                 }
                 
@@ -654,26 +904,6 @@ function cartPage() {
                 this.alertType = 'alert-error';
             } finally {
                 this.isRemoving = false;
-            }
-        },
-        
-        async proceedToCheckout() {
-            if (this.isProcessing) return;
-            
-            this.isProcessing = true;
-            
-            try {
-                // Redirect to checkout with customer context
-                if (this.customerId) {
-                    window.location.href = `/portal/checkout?customer=${encodeURIComponent(this.customerId)}`;
-                } else {
-                    window.location.href = '/portal/checkout';
-                }
-                
-            } catch (error) {
-                this.alertMessage = 'Error proceeding to checkout: ' + error.message;
-                this.alertType = 'alert-error';
-                this.isProcessing = false;
             }
         }
     }

@@ -36,6 +36,20 @@ def get_context(context):
         context.cart_total = cart_data.get('total', 0)
         context.item_count = cart_data.get('item_count', 0)
         
+        # Calculate caution deposit total
+        total_caution_deposit = 0
+        for item in context.cart_items:
+            if item.get('item_code'):
+                # Get main item code for caution deposit lookup
+                main_item_code = item['item_code'][:-7] if item['item_code'].endswith('-RENTAL') else item['item_code']
+                try:
+                    caution_deposit = frappe.db.get_value("Item", main_item_code, "caution_deposit") or 0
+                    total_caution_deposit += caution_deposit
+                except:
+                    pass
+        
+        context.total_caution_deposit = total_caution_deposit
+        
         # Calculate summary
         context.subtotal = sum(item.get('total_amount', 0) for item in context.cart_items)
         context.delivery_charge = 0  # Free delivery for now
