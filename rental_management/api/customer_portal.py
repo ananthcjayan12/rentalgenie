@@ -914,18 +914,19 @@ def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_depo
         total_rental = booking.total
         advance_paid = booking.advance_amount or 0
         expected_balance = total_rental - advance_paid
-        expected_caution = booking.caution_deposit_amount or 0
         
-        # Validate amounts
+        # Validate balance amount
         if abs(balance_amount - expected_balance) > 0.01:
             return {'success': False, 'message': f'Balance amount should be {expected_balance}'}
-        
-        if abs(caution_deposit_amount - expected_caution) > 0.01:
-            return {'success': False, 'message': f'Caution deposit should be {expected_caution}'}
         
         # Update booking status and amounts using db_set for submitted documents
         booking.db_set('balance_amount_collected', balance_amount)
         booking.db_set('caution_deposit_collected', caution_deposit_amount)
+        
+        # Update the caution deposit amount on the booking if it's being set/changed
+        if caution_deposit_amount != (booking.caution_deposit_amount or 0):
+            booking.db_set('caution_deposit_amount', caution_deposit_amount)
+        
         booking.db_set('booking_status', "Out for Rental")
         booking.db_set('actual_delivery_time', frappe.utils.now_datetime())
         

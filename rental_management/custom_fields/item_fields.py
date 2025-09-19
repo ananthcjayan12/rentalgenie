@@ -38,7 +38,17 @@ def create_item_custom_fields():
             "mandatory_depends_on": "is_rental_item",
             "insert_after": "is_rental_item"
         },
-        # Note: Caution deposit removed from item level - will be manually added at invoice level
+        {
+            "doctype": "Item",
+            "fieldname": "caution_deposit",
+            "label": "Caution Deposit Amount (₹)",
+            "fieldtype": "Currency",
+            "depends_on": "is_rental_item",
+            "default": 0,
+            "insert_after": "rental_rate_per_day",
+            "description": "Security deposit amount required for this item"
+        },
+        # Note: Caution deposit managed at item level for consistent pricing
         {
             "doctype": "Item", 
             "fieldname": "rental_item_type",
@@ -46,7 +56,7 @@ def create_item_custom_fields():
             "fieldtype": "Select",
             "options": "\nDress\nOrnament\nAccessory\nOther",
             "depends_on": "is_rental_item",
-            "insert_after": "rental_rate_per_day"
+            "insert_after": "caution_deposit"
         },
         {
             "doctype": "Item",
