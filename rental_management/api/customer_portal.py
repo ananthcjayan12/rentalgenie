@@ -677,8 +677,8 @@ def clear_customer_cart(customer_id):
         return {'success': False, 'message': str(e)}
 
 @frappe.whitelist()
-def create_customer_booking_from_cart(customer_id, address_type="Billing", new_address=None, special_instructions=""):
-    """Create booking/sales invoice from customer's cart items using Rental Cart doctype"""
+def create_customer_booking_from_cart(customer_id, advance_amount=0, special_instructions=""):
+    """Create booking/sales invoice from customer's cart items with advance payment collection"""
     try:
         # Validate customer exists
         customer = frappe.get_doc("Customer", customer_id)
@@ -705,42 +705,7 @@ def create_customer_booking_from_cart(customer_id, address_type="Billing", new_a
                     'message': f"Item {item['item_name']} is no longer available for the selected dates"
                 }
         
-        # Handle address
-        customer_address = None
-        if new_address:
-            # Create new address
-            address_doc = frappe.get_doc({
-                "doctype": "Address",
-                "address_title": new_address.get('address_title', f"{customer.customer_name} Address"),
-                "address_line1": new_address['address_line1'],
-                "address_line2": new_address.get('address_line2', ''),
-                "city": new_address['city'],
-                "state": new_address['state'],
-                "pincode": new_address['pincode'],
-                "country": new_address.get('country', 'India'),
-                "address_type": address_type,
-                "is_primary_address": new_address.get('is_primary', 0)
-            })
-            address_doc.insert()
-            
-            # Link address to customer
-            address_doc.append("links", {
-                "link_doctype": "Customer",
-                "link_name": customer_id
-            })
-            address_doc.save()
-            customer_address = address_doc.name
-        else:
-            # Use existing primary address
-            customer_address = frappe.db.get_value(
-                "Address",
-                {
-                    "address_type": address_type,
-                    "is_primary_address": 1
-                }
-            )
-        
-        # Create Sales Invoice (Booking)
+        # Create Sales Invoice (Booking) - Draft status initially
         sales_invoice = frappe.get_doc({
             "doctype": "Sales Invoice",
             "customer": customer_id,
@@ -750,16 +715,18 @@ def create_customer_booking_from_cart(customer_id, address_type="Billing", new_a
             "is_rental_booking": 1,
             "booking_status": "Draft",
             "special_instructions": special_instructions,
-            "customer_address": customer_address,
+            "advance_amount": flt(advance_amount),
             "items": []
         })
         
+        total_rental_amount = 0
         total_caution_deposit = 0
         
         # Add cart items to invoice
         for cart_item in cart_items:
             rental_days = cart_item['rental_days']
             rate = flt(cart_item['rental_rate'])
+            line_total = flt(cart_item['total_amount'])
             
             # Add rental service item
             sales_invoice.append("items", {
@@ -768,12 +735,14 @@ def create_customer_booking_from_cart(customer_id, address_type="Billing", new_a
                 "description": f"Rental for {rental_days} days",
                 "qty": 1,
                 "uom": "Nos",
-                "rate": cart_item['total_amount'],
+                "rate": line_total,
                 "rental_start_date": cart_item['rental_start_date'],
                 "rental_end_date": cart_item['rental_end_date'],
                 "function_date": cart_item.get('function_date'),
                 "rental_days": rental_days
             })
+            
+            total_rental_amount += line_total
             
             # Get caution deposit from main item
             main_item_code = cart_item['item_code'][:-7] if cart_item['item_code'].endswith('-RENTAL') else cart_item['item_code']
@@ -781,29 +750,27 @@ def create_customer_booking_from_cart(customer_id, address_type="Billing", new_a
             caution_deposit = flt(main_item.get('caution_deposit', 0))
             total_caution_deposit += caution_deposit
         
-        # Add caution deposit as separate item if applicable
-        if total_caution_deposit > 0:
-            sales_invoice.append("items", {
-                "item_code": "CAUTION-DEPOSIT",
-                "item_name": "Caution Deposit",
-                "description": "Refundable caution deposit for rental items",
-                "qty": 1,
-                "uom": "Nos",
-                "rate": total_caution_deposit,
-                "is_caution_deposit": 1
-            })
+        # Set caution deposit amount on the booking
+        sales_invoice.caution_deposit_amount = total_caution_deposit
         
-        # Insert and submit the sales invoice
+        # Calculate pending amount after advance
+        pending_amount = total_rental_amount - flt(advance_amount)
+        sales_invoice.pending_payment_amount = pending_amount
+        
+        # Insert the sales invoice (don't submit yet - keep as draft for advance collection)
         sales_invoice.insert()
-        sales_invoice.submit()
         
-        # Clear customer's cart after successful booking
+        # Clear customer's cart after successful booking creation
         clear_customer_cart(customer_id)
         
         return {
             'success': True,
             'message': 'Booking created successfully',
             'booking_id': sales_invoice.name,
+            'total_rental_amount': total_rental_amount,
+            'advance_amount': flt(advance_amount),
+            'pending_amount': pending_amount,
+            'caution_deposit_amount': total_caution_deposit,
             'booking_url': f"/app/sales-invoice/{sales_invoice.name}"
         }
         
@@ -880,4 +847,259 @@ def create_customer(customer_name, mobile_number=None, email_id=None, customer_g
         
     except Exception as e:
         frappe.log_error(f"Error creating customer: {str(e)}")
+        return {'success': False, 'message': str(e)}
+
+
+# 3-Stage Booking Management Functions
+
+@frappe.whitelist()
+def confirm_booking_with_advance(booking_id, advance_amount, payment_mode="Cash"):
+    """Stage 1: Confirm booking and collect advance payment"""
+    try:
+        advance_amount = flt(advance_amount)
+        
+        # Get the booking
+        booking = frappe.get_doc("Sales Invoice", booking_id)
+        if not booking.is_rental_booking:
+            return {'success': False, 'message': 'Not a rental booking'}
+        
+        if booking.booking_status != "Draft":
+            return {'success': False, 'message': 'Booking is not in draft status'}
+        
+        # Update booking with advance amount
+        booking.advance_amount = advance_amount
+        booking.booking_status = "Confirmed"
+        booking.save()
+        
+        # Submit the booking now that advance is collected
+        booking.submit()
+        
+        # Create advance payment journal entry (handled by booking automation)
+        
+        # Calculate remaining amounts
+        total_rental = booking.total
+        remaining_balance = total_rental - advance_amount
+        caution_deposit = booking.caution_deposit_amount or 0
+        
+        return {
+            'success': True,
+            'message': 'Booking confirmed with advance payment',
+            'booking_id': booking.name,
+            'advance_collected': advance_amount,
+            'remaining_balance': remaining_balance,
+            'caution_deposit_required': caution_deposit,
+            'total_due_at_delivery': remaining_balance + caution_deposit
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error confirming booking with advance: {str(e)}")
+        return {'success': False, 'message': str(e)}
+
+@frappe.whitelist()
+def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_deposit_amount, payment_mode="Cash"):
+    """Stage 2: Collect remaining balance + caution deposit at item delivery"""
+    try:
+        balance_amount = flt(balance_amount)
+        caution_deposit_amount = flt(caution_deposit_amount)
+        
+        # Get the booking
+        booking = frappe.get_doc("Sales Invoice", booking_id)
+        if not booking.is_rental_booking:
+            return {'success': False, 'message': 'Not a rental booking'}
+        
+        if booking.booking_status != "Confirmed":
+            return {'success': False, 'message': 'Booking must be confirmed first'}
+        
+        # Calculate expected amounts
+        total_rental = booking.total
+        advance_paid = booking.advance_amount or 0
+        expected_balance = total_rental - advance_paid
+        expected_caution = booking.caution_deposit_amount or 0
+        
+        # Validate amounts
+        if abs(balance_amount - expected_balance) > 0.01:
+            return {'success': False, 'message': f'Balance amount should be {expected_balance}'}
+        
+        if abs(caution_deposit_amount - expected_caution) > 0.01:
+            return {'success': False, 'message': f'Caution deposit should be {expected_caution}'}
+        
+        # Update booking status and amounts
+        booking.balance_amount_collected = balance_amount
+        booking.caution_deposit_collected = caution_deposit_amount
+        booking.booking_status = "Out for Rental"
+        booking.actual_delivery_time = frappe.utils.now_datetime()
+        booking.save()
+        
+        # Create payment entries for balance and caution deposit (handled by booking automation)
+        
+        return {
+            'success': True,
+            'message': 'Balance and caution deposit collected successfully',
+            'booking_id': booking.name,
+            'balance_collected': balance_amount,
+            'caution_deposit_collected': caution_deposit_amount,
+            'total_collected': balance_amount + caution_deposit_amount,
+            'status': 'Out for Rental'
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error collecting balance and caution deposit: {str(e)}")
+        return {'success': False, 'message': str(e)}
+
+@frappe.whitelist()
+def process_item_return_and_refund(booking_id, caution_deposit_refund, deduction_amount=0, deduction_reason="", payment_mode="Cash"):
+    """Stage 3: Process item return and caution deposit refund"""
+    try:
+        caution_deposit_refund = flt(caution_deposit_refund)
+        deduction_amount = flt(deduction_amount)
+        
+        # Get the booking
+        booking = frappe.get_doc("Sales Invoice", booking_id)
+        if not booking.is_rental_booking:
+            return {'success': False, 'message': 'Not a rental booking'}
+        
+        if booking.booking_status != "Out for Rental":
+            return {'success': False, 'message': 'Items must be out for rental to process return'}
+        
+        # Calculate refund amounts
+        caution_collected = booking.caution_deposit_collected or 0
+        max_refund = caution_collected - deduction_amount
+        
+        if caution_deposit_refund > max_refund:
+            return {'success': False, 'message': f'Refund cannot exceed {max_refund} (collected: {caution_collected} - deductions: {deduction_amount})'}
+        
+        # Update booking with return details
+        booking.caution_deposit_refunded = caution_deposit_refund
+        booking.caution_deposit_deduction = deduction_amount
+        booking.deduction_reason = deduction_reason
+        booking.booking_status = "Completed"
+        booking.actual_return_time = frappe.utils.now_datetime()
+        
+        if deduction_reason:
+            existing_notes = booking.return_notes or ""
+            booking.return_notes = f"{existing_notes}\nDeduction: {deduction_reason}".strip()
+        
+        booking.save()
+        
+        # Create refund journal entry (handled by booking automation)
+        
+        return {
+            'success': True,
+            'message': 'Item return processed and caution deposit refunded',
+            'booking_id': booking.name,
+            'caution_refunded': caution_deposit_refund,
+            'deduction_amount': deduction_amount,
+            'net_refund': caution_deposit_refund,
+            'status': 'Completed'
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error processing item return: {str(e)}")
+        return {'success': False, 'message': str(e)}
+
+@frappe.whitelist()
+def get_booking_payment_summary(booking_id):
+    """Get payment summary for a booking showing all 3 stages"""
+    try:
+        booking = frappe.get_doc("Sales Invoice", booking_id)
+        if not booking.is_rental_booking:
+            return {'success': False, 'message': 'Not a rental booking'}
+        
+        # Calculate amounts
+        total_rental = booking.total
+        advance_amount = booking.advance_amount or 0
+        balance_collected = booking.balance_amount_collected or 0
+        caution_collected = booking.caution_deposit_collected or 0
+        caution_refunded = booking.caution_deposit_refunded or 0
+        caution_deduction = booking.caution_deposit_deduction or 0
+        
+        # Calculate remaining amounts
+        remaining_balance = total_rental - advance_amount - balance_collected
+        remaining_caution_due = (booking.caution_deposit_amount or 0) - caution_collected
+        remaining_caution_refund = caution_collected - caution_refunded - caution_deduction
+        
+        payment_summary = {
+            'booking_id': booking.name,
+            'customer': booking.customer_name,
+            'booking_status': booking.booking_status,
+            'total_rental_amount': total_rental,
+            
+            # Stage 1: Advance
+            'advance_amount': advance_amount,
+            'advance_collected': advance_amount > 0,
+            
+            # Stage 2: Balance + Caution
+            'balance_amount_due': total_rental - advance_amount,
+            'balance_amount_collected': balance_collected,
+            'remaining_balance': remaining_balance,
+            'caution_deposit_due': booking.caution_deposit_amount or 0,
+            'caution_deposit_collected': caution_collected,
+            'remaining_caution_due': remaining_caution_due,
+            'total_due_at_delivery': remaining_balance + remaining_caution_due,
+            
+            # Stage 3: Return & Refund
+            'caution_deposit_refunded': caution_refunded,
+            'caution_deposit_deduction': caution_deduction,
+            'remaining_caution_refund': remaining_caution_refund,
+            'deduction_reason': booking.deduction_reason or "",
+            
+            # Timestamps
+            'booking_date': booking.posting_date,
+            'delivery_time': booking.actual_delivery_time,
+            'return_time': booking.actual_return_time,
+            
+            # Next actions
+            'can_collect_advance': booking.booking_status == "Draft",
+            'can_collect_balance': booking.booking_status == "Confirmed" and remaining_balance > 0,
+            'can_collect_caution': booking.booking_status == "Confirmed" and remaining_caution_due > 0,
+            'can_process_return': booking.booking_status == "Out for Rental",
+            'can_refund_caution': booking.booking_status in ["Out for Rental", "Completed"] and remaining_caution_refund > 0
+        }
+        
+        return {
+            'success': True,
+            'summary': payment_summary
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting booking payment summary: {str(e)}")
+        return {'success': False, 'message': str(e)}
+
+@frappe.whitelist()
+def get_customer_active_bookings(customer_id):
+    """Get all active bookings for a customer"""
+    try:
+        bookings = frappe.db.sql("""
+            SELECT 
+                si.name as booking_id,
+                si.posting_date,
+                si.customer_name,
+                si.total as rental_amount,
+                si.booking_status,
+                si.advance_amount,
+                si.caution_deposit_amount,
+                si.balance_amount_collected,
+                si.caution_deposit_collected,
+                si.caution_deposit_refunded,
+                si.actual_delivery_time,
+                si.actual_return_time,
+                COUNT(sii.name) as item_count,
+                GROUP_CONCAT(sii.item_name SEPARATOR ', ') as items
+            FROM `tabSales Invoice` si
+            LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+            WHERE si.customer = %s 
+            AND si.is_rental_booking = 1
+            AND si.docstatus = 1
+            AND si.booking_status NOT IN ('Cancelled', 'Completed')
+            GROUP BY si.name
+            ORDER BY si.posting_date DESC
+        """, (customer_id,), as_dict=True)
+        
+        return {
+            'success': True,
+            'bookings': bookings
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting customer active bookings: {str(e)}")
         return {'success': False, 'message': str(e)}

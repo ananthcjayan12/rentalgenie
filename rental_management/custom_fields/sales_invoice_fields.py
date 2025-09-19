@@ -67,9 +67,9 @@ def create_sales_invoice_custom_fields():
             "fieldname": "booking_status",
             "label": "Booking Status",
             "fieldtype": "Select",
-            "options": "\nConfirmed\nOut for Rental\nPartially Returned\nReturned\nCompleted\nCancelled\nExchanged",
+            "options": "\nDraft\nConfirmed\nOut for Rental\nPartially Returned\nReturned\nCompleted\nCancelled\nExchanged",
             "depends_on": "is_rental_booking",
-            "default": "Confirmed",
+            "default": "Draft",
             "insert_after": "rental_end_date"
         },
         {
@@ -99,9 +99,36 @@ def create_sales_invoice_custom_fields():
         },
         {
             "doctype": "Sales Invoice",
+            "fieldname": "pending_payment_amount",
+            "label": "Pending Payment Amount",
+            "fieldtype": "Currency",
+            "depends_on": "is_rental_booking",
+            "read_only": 1,
+            "insert_after": "advance_amount"
+        },
+        {
+            "doctype": "Sales Invoice",
             "fieldname": "column_break_rental_2",
             "fieldtype": "Column Break",
-            "insert_after": "advance_amount"
+            "insert_after": "pending_payment_amount"
+        },
+        {
+            "doctype": "Sales Invoice",
+            "fieldname": "balance_amount_collected",
+            "label": "Balance Amount Collected",
+            "fieldtype": "Currency",
+            "depends_on": "is_rental_booking",
+            "default": 0,
+            "insert_after": "column_break_rental_2"
+        },
+        {
+            "doctype": "Sales Invoice",
+            "fieldname": "caution_deposit_collected",
+            "label": "Caution Deposit Collected",
+            "fieldtype": "Currency",
+            "depends_on": "is_rental_booking",
+            "default": 0,
+            "insert_after": "balance_amount_collected"
         },
         {
             "doctype": "Sales Invoice",
@@ -110,7 +137,7 @@ def create_sales_invoice_custom_fields():
             "fieldtype": "Currency",
             "depends_on": "is_rental_booking",
             "read_only": 1,
-            "insert_after": "column_break_rental_2"
+            "insert_after": "caution_deposit_collected"
         },
         {
             "doctype": "Sales Invoice",
@@ -124,10 +151,27 @@ def create_sales_invoice_custom_fields():
         },
         {
             "doctype": "Sales Invoice",
+            "fieldname": "caution_deposit_deduction",
+            "label": "Caution Deposit Deduction",
+            "fieldtype": "Currency",
+            "depends_on": "is_rental_booking",
+            "default": 0,
+            "insert_after": "caution_deposit_refunded"
+        },
+        {
+            "doctype": "Sales Invoice",
+            "fieldname": "deduction_reason",
+            "label": "Deduction Reason",
+            "fieldtype": "Text",
+            "depends_on": "is_rental_booking",
+            "insert_after": "caution_deposit_deduction"
+        },
+        {
+            "doctype": "Sales Invoice",
             "fieldname": "exchange_booking_section",
             "label": "Exchange Booking Details",
             "fieldtype": "Section Break",
-            "insert_after": "caution_deposit_refunded",
+            "insert_after": "deduction_reason",
             "collapsible": 1,
             "depends_on": "is_rental_booking"
         },
@@ -192,6 +236,30 @@ def create_sales_invoice_custom_fields():
             "fieldtype": "Text",
             "depends_on": "is_rental_booking",
             "insert_after": "actual_return_time"
+        },
+        {
+            "doctype": "Sales Invoice",
+            "fieldname": "delivery_notes",
+            "label": "Delivery Notes",
+            "fieldtype": "Text",
+            "depends_on": "is_rental_booking",
+            "insert_after": "rental_notes"
+        },
+        {
+            "doctype": "Sales Invoice",
+            "fieldname": "return_notes",
+            "label": "Return Notes",
+            "fieldtype": "Text",
+            "depends_on": "is_rental_booking",
+            "insert_after": "delivery_notes"
+        },
+        {
+            "doctype": "Sales Invoice",
+            "fieldname": "special_instructions",
+            "label": "Special Instructions",
+            "fieldtype": "Text",
+            "depends_on": "is_rental_booking",
+            "insert_after": "return_notes"
         }
     ]
     
