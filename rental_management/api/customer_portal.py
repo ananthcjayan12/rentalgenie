@@ -923,12 +923,14 @@ def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_depo
         if abs(caution_deposit_amount - expected_caution) > 0.01:
             return {'success': False, 'message': f'Caution deposit should be {expected_caution}'}
         
-        # Update booking status and amounts
-        booking.balance_amount_collected = balance_amount
-        booking.caution_deposit_collected = caution_deposit_amount
-        booking.booking_status = "Out for Rental"
-        booking.actual_delivery_time = frappe.utils.now_datetime()
-        booking.save()
+        # Update booking status and amounts using db_set for submitted documents
+        booking.db_set('balance_amount_collected', balance_amount)
+        booking.db_set('caution_deposit_collected', caution_deposit_amount)
+        booking.db_set('booking_status', "Out for Rental")
+        booking.db_set('actual_delivery_time', frappe.utils.now_datetime())
+        
+        # Reload the document to get updated values
+        booking.reload()
         
         # Create payment entries for balance and caution deposit (handled by booking automation)
         
@@ -968,18 +970,20 @@ def process_item_return_and_refund(booking_id, caution_deposit_refund, deduction
         if caution_deposit_refund > max_refund:
             return {'success': False, 'message': f'Refund cannot exceed {max_refund} (collected: {caution_collected} - deductions: {deduction_amount})'}
         
-        # Update booking with return details
-        booking.caution_deposit_refunded = caution_deposit_refund
-        booking.caution_deposit_deduction = deduction_amount
-        booking.deduction_reason = deduction_reason
-        booking.booking_status = "Completed"
-        booking.actual_return_time = frappe.utils.now_datetime()
+        # Update booking with return details using db_set for submitted documents
+        booking.db_set('caution_deposit_refunded', caution_deposit_refund)
+        booking.db_set('caution_deposit_deduction', deduction_amount)
+        booking.db_set('deduction_reason', deduction_reason)
+        booking.db_set('booking_status', "Completed")
+        booking.db_set('actual_return_time', frappe.utils.now_datetime())
         
         if deduction_reason:
             existing_notes = booking.return_notes or ""
-            booking.return_notes = f"{existing_notes}\nDeduction: {deduction_reason}".strip()
+            new_notes = f"{existing_notes}\nDeduction: {deduction_reason}".strip()
+            booking.db_set('return_notes', new_notes)
         
-        booking.save()
+        # Reload the document to get updated values
+        booking.reload()
         
         # Create refund journal entry (handled by booking automation)
         

@@ -122,8 +122,6 @@ def get_dashboard_context(context):
         AND si.docstatus = 1
         ORDER BY si.rental_start_date ASC, si.function_date ASC
     """, as_dict=True)
-    print("going to check the pending deliveries list")
-    print(pending_deliveries)
     context.pending_deliveries = pending_deliveries
     
     # Get pending returns (items delivered, awaiting return)
