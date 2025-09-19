@@ -14,25 +14,24 @@ def get_context(context):
         booking = frappe.get_doc("Sales Invoice", booking_id)
         
         # Verify access to this booking 
-        # For sales staff portal, we don't need customer authentication
+        # For sales staff portal, we allow broader access
         if frappe.form_dict.get('customer_id'):
             # Sales staff accessing for specific customer
             customer_id = frappe.form_dict.get('customer_id')
             if booking.customer != customer_id:
                 frappe.throw("Unauthorized access to booking")
         elif frappe.session.user != 'Guest':
-            # Regular customer portal access
+            # Check if current user is linked to a customer
             customer_email = frappe.session.user
             customer = frappe.db.get_value("Customer", {"email_id": customer_email}, "name")
             
             print(f"Debug: customer_email={customer_email}, customer={customer}, booking.customer={booking.customer}")
             
-            if not customer:
-                frappe.throw("Customer not found for your email")
-                
-            if booking.customer != customer:
+            # If user has a customer record, verify they own this booking
+            if customer and booking.customer != customer:
                 frappe.throw("Unauthorized access to booking")
-        # For Guest users, allow access (sales staff use case)
+            # If no customer record, allow access (sales staff or admin user)
+        # For Guest users and users without customer records, allow access
             
         context.booking = booking
         context.booking_items = booking.items
