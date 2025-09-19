@@ -172,20 +172,30 @@ def get_customer_context(context, customer_id):
 def get_booking_context(context, booking_id):
     """Get detailed booking management"""
     
-    # Get detailed booking summary
-    summary_result = get_booking_payment_summary(booking_id)
-    if summary_result.get('success'):
-        context.booking_summary = summary_result.get('summary', {})
-        
-        # Get customer info from booking
-        if context.booking_summary.get('customer_id'):
-            customer_data = frappe.db.get_value(
-                "Customer",
-                context.booking_summary['customer_id'],
-                ["name", "customer_name", "mobile_number", "email_id"],
-                as_dict=True
-            )
-            context.customer = customer_data
+    try:
+        # Get detailed booking summary
+        summary_result = get_booking_payment_summary(booking_id)
+        if summary_result.get('success'):
+            context.booking_summary = summary_result.get('summary', {})
+            
+            # Get customer info from booking
+            if context.booking_summary.get('customer_id'):
+                customer_data = frappe.db.get_value(
+                    "Customer",
+                    context.booking_summary['customer_id'],
+                    ["name", "customer_name", "mobile_number", "email_id"],
+                    as_dict=True
+                )
+                context.customer = customer_data
+        else:
+            # If booking summary fails, set defaults
+            context.booking_summary = None
+            context.error_message = summary_result.get('message', 'Failed to load booking details')
+            
+    except Exception as e:
+        print(f"Error in get_booking_context: {str(e)}")
+        context.booking_summary = None
+        context.error_message = f"Error loading booking details: {str(e)}"
     
     # Page metadata
     context.page_title = f"Booking Management - {booking_id} | Blush & Glow"

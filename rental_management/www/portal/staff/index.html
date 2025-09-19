@@ -672,7 +672,7 @@ body {
                     </div>
 
                     <!-- Items -->
-                    {% if booking_summary.items %}
+                    {% if booking_summary.booking_items %}
                     <h3>Items</h3>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse;">
@@ -685,7 +685,7 @@ body {
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for item in booking_summary.items %}
+                                {% for item in booking_summary.booking_items %}
                                 <tr>
                                     <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">{{ item.item_name }}</td>
                                     <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid var(--border-color);">{{ item.qty }}</td>
@@ -700,7 +700,25 @@ body {
                 </div>
             </div>
         </div>
-
+        {% elif view == 'booking' %}
+        <!-- Booking Detail View - No summary found -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <i class="fas fa-exclamation-triangle"></i> Booking Not Found
+            </div>
+            <div class="section-content">
+                <div class="alert alert-warning">
+                    {% if error_message %}
+                        {{ error_message }}
+                    {% else %}
+                        Booking #{{ booking_id }} could not be loaded. It may not exist or you may not have permission to view it.
+                    {% endif %}
+                </div>
+                <a href="/portal/staff" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
         {% endif %}
     </div>
 

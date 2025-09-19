@@ -1023,9 +1023,9 @@ def get_booking_payment_summary(booking_id):
         remaining_caution_refund = caution_collected - caution_refunded - caution_deduction
         
         # Get booking items
-        items = []
+        booking_items = []
         for item in booking.items:
-            items.append({
+            booking_items.append({
                 'item_code': item.item_code,
                 'item_name': item.item_name or item.item_code,
                 'qty': item.qty,
@@ -1039,7 +1039,7 @@ def get_booking_payment_summary(booking_id):
             'customer_id': booking.customer,
             'booking_status': booking.booking_status,
             'total_rental_amount': total_rental,
-            'items': items,
+            'booking_items': booking_items,
             
             # Stage 1: Advance
             'advance_amount': advance_amount,
