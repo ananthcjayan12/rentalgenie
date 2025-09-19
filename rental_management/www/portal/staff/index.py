@@ -178,10 +178,10 @@ def get_booking_context(context, booking_id):
         context.booking_summary = summary_result.get('summary', {})
         
         # Get customer info from booking
-        if context.booking_summary.get('customer'):
+        if context.booking_summary.get('customer_id'):
             customer_data = frappe.db.get_value(
                 "Customer",
-                context.booking_summary['customer'],
+                context.booking_summary['customer_id'],
                 ["name", "customer_name", "mobile_number", "email_id"],
                 as_dict=True
             )

@@ -638,23 +638,27 @@ body {
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                         <div>
                             <strong>Status:</strong>
-                            <span class="status-badge status-{{ booking_summary.booking_status.lower().replace(' ', '-') }}">
-                                {{ booking_summary.booking_status }}
+                            <span class="status-badge status-{{ (booking_summary.booking_status or 'draft').lower().replace(' ', '-') }}">
+                                {{ booking_summary.booking_status or 'Draft' }}
                             </span>
                         </div>
-                        <div><strong>Total Amount:</strong> ₹{{ "%.2f"|format(booking_summary.total_amount) }}</div>
+                        <div><strong>Total Amount:</strong> ₹{{ "%.2f"|format(booking_summary.total_rental_amount) }}</div>
                         <div><strong>Advance Paid:</strong> ₹{{ "%.2f"|format(booking_summary.advance_amount or 0) }}</div>
-                        <div><strong>Balance Due:</strong> ₹{{ "%.2f"|format(booking_summary.balance_amount or 0) }}</div>
-                        <div><strong>Caution Deposit:</strong> ₹{{ "%.2f"|format(booking_summary.caution_deposit_amount or 0) }}</div>
+                        <div><strong>Balance Due:</strong> ₹{{ "%.2f"|format(booking_summary.remaining_balance or 0) }}</div>
+                        <div><strong>Caution Deposit:</strong> ₹{{ "%.2f"|format(booking_summary.caution_deposit_due or 0) }}</div>
                     </div>
 
                     <!-- Action Buttons -->
                     <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
-                        {% if booking_summary.booking_status == 'Advance Collected' %}
+                        {% if not booking_summary.booking_status or booking_summary.booking_status == '' %}
+                            <button @click="collectAdvance('{{ booking_id }}')" class="btn btn-primary">
+                                <i class="fas fa-money-check-alt"></i> Collect Advance
+                            </button>
+                        {% elif booking_summary.booking_status == 'Confirmed' %}
                             <button @click="processDelivery('{{ booking_id }}')" class="btn btn-success">
                                 <i class="fas fa-truck"></i> Process Delivery
                             </button>
-                        {% elif booking_summary.booking_status == 'Items Delivered' %}
+                        {% elif booking_summary.booking_status == 'Out for Rental' %}
                             <button @click="processReturn('{{ booking_id }}')" class="btn btn-warning">
                                 <i class="fas fa-undo"></i> Process Return
                             </button>
