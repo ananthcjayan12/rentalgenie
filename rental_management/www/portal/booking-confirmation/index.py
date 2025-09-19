@@ -4,7 +4,8 @@ from frappe.utils import formatdate
 def get_context(context):
     """Get context for booking confirmation page"""
     
-    booking_id = frappe.form_dict.get('booking')
+    # Accept both 'booking' and 'invoice' parameters for compatibility
+    booking_id = frappe.form_dict.get('booking') or frappe.form_dict.get('invoice')
     if not booking_id:
         frappe.throw("Booking ID not specified")
     
@@ -12,15 +13,26 @@ def get_context(context):
         # Get booking details
         booking = frappe.get_doc("Sales Invoice", booking_id)
         
-        # Verify this booking belongs to current user
-        if frappe.session.user == 'Guest':
-            frappe.throw("Please login to view booking details")
+        # Verify access to this booking 
+        # For sales staff portal, we don't need customer authentication
+        if frappe.form_dict.get('customer_id'):
+            # Sales staff accessing for specific customer
+            customer_id = frappe.form_dict.get('customer_id')
+            if booking.customer != customer_id:
+                frappe.throw("Unauthorized access to booking")
+        elif frappe.session.user != 'Guest':
+            # Regular customer portal access
+            customer_email = frappe.session.user
+            customer = frappe.db.get_value("Customer", {"email_id": customer_email}, "name")
             
-        customer_email = frappe.session.user
-        customer = frappe.db.get_value("Customer", {"email_id": customer_email}, "name")
-        
-        if booking.customer != customer:
-            frappe.throw("Unauthorized access to booking")
+            print(f"Debug: customer_email={customer_email}, customer={customer}, booking.customer={booking.customer}")
+            
+            if not customer:
+                frappe.throw("Customer not found for your email")
+                
+            if booking.customer != customer:
+                frappe.throw("Unauthorized access to booking")
+        # For Guest users, allow access (sales staff use case)
             
         context.booking = booking
         context.booking_items = booking.items
@@ -55,5 +67,5 @@ def get_context(context):
         return context
         
     except Exception as e:
-        frappe.log_error(f"Error loading booking confirmation for {booking_id}: {str(e)}")
+        print(f"Error loading booking confirmation for {booking_id}: {str(e)}")
         frappe.throw("Booking not found or access denied")

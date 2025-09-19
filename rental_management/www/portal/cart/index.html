@@ -853,7 +853,7 @@ function cartPage() {
         
         async viewBooking() {
             if (this.bookingId) {
-                window.open(`/app/sales-invoice/${this.bookingId}`, '_blank');
+                window.location.href = `/portal/booking-confirmation?invoice=${this.bookingId}`;
             }
         },
         
