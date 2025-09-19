@@ -692,6 +692,24 @@ body {
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
+        {% if customer_id %}
+        <a href="/portal?customer={{ customer_id }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/portal/category?customer={{ customer_id }}" class="nav-item">
+            <i class="fas fa-th-large"></i>
+            <span>Categories</span>
+        </a>
+        <a href="/portal/cart?customer={{ customer_id }}" class="nav-item">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+        </a>
+        <a href="/portal/profile?customer={{ customer_id }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+        {% else %}
         <a href="/portal" class="nav-item">
             <i class="fas fa-home"></i>
             <span>Home</span>
@@ -700,14 +718,15 @@ body {
             <i class="fas fa-th-large"></i>
             <span>Categories</span>
         </a>
-        <a href="/portal/bookings" class="nav-item">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Booking</span>
+        <a href="/portal/cart" class="nav-item">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
         </a>
         <a href="/portal/profile" class="nav-item">
             <i class="fas fa-user"></i>
-            <span>My Account</span>
+            <span>Profile</span>
         </a>
+        {% endif %}
     </nav>
 </div>
 

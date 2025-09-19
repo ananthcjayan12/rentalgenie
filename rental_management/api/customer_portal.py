@@ -465,8 +465,24 @@ def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_d
                 existing_item = item
                 break
                 
-        # Get item details
-        item_details = frappe.get_doc("Item", item_code)
+        # Get item details - always get the main item for rental rate
+        if item_code.endswith('-RENTAL'):
+            # If service item code is passed, get the main item for rate
+            main_item_code = item_code[:-7]
+            main_item = frappe.get_doc("Item", main_item_code)
+            service_item = frappe.get_doc("Item", item_code)
+            item_details = service_item  # For name and other details
+        else:
+            # If main item code is passed, use it directly for rate
+            main_item_code = item_code
+            main_item = frappe.get_doc("Item", main_item_code)
+            item_details = main_item
+        
+        # Get rental rate from main item only (rental rates are not on service items)
+        rental_rate = main_item.rental_rate_per_day or 0
+        
+        if rental_rate <= 0:
+            return {'success': False, 'message': f'Rental rate not configured for item {main_item.item_name}. Please contact administrator.'}
         
         # For function bookings, charge only 1 day regardless of rental period
         if function_date:
@@ -474,10 +490,10 @@ def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_d
         else:
             rental_days = (getdate(rental_end_date) - getdate(rental_start_date)).days + 1
             
-        line_total = (item_details.rental_rate_per_day or 0) * rental_days
+        line_total = rental_rate * rental_days
         
         # Debug logging
-        print(f"DEBUG Cart: item={item_code}, function_date={function_date}, rental_days={rental_days}, rate={item_details.rental_rate_per_day}, total={line_total}")
+        print(f"DEBUG Cart: item={item_code}, main_item={main_item_code}, function_date={function_date}, rental_days={rental_days}, rate={rental_rate}, total={line_total}")
         
         if existing_item:
             # Update existing item (if needed, this implementation doesn't support quantity updates)
@@ -487,8 +503,8 @@ def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_d
             cart_doc.append("items", {
                 "item_code": item_code,
                 "item_name": item_details.item_name,
-                "service_item_code": item_details.rental_service_item,
-                "rental_rate_per_day": item_details.rental_rate_per_day,
+                "service_item_code": getattr(main_item, 'rental_service_item', None),
+                "rental_rate_per_day": rental_rate,
                 "rental_days": rental_days,
                 "line_total": line_total,
                 "rental_start_date": rental_start_date,
