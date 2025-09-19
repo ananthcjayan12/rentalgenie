@@ -37,9 +37,6 @@ def get_context(context):
         cart_items = cart_data.get('items', [])
         serialized_cart_items = []
         
-        # Debug: Log cart items structure
-        frappe.log_error(f"Cart items for customer {customer_id}: {cart_items}", "Cart Debug")
-        
         for item in cart_items:
             # Create a copy of the item with serialized dates
             serialized_item = {}
@@ -57,7 +54,8 @@ def get_context(context):
                             else:
                                 serialized_item[key] = str(value)
                         except Exception as e:
-                            frappe.log_error(f"Date serialization error for {key}: {e}", "Cart Date Error")
+                            # Use print for debugging instead of log_error to avoid character limits
+                            print(f"Date serialization error for {key}: {e}")
                             serialized_item[key] = None
                     else:
                         serialized_item[key] = None
@@ -77,6 +75,10 @@ def get_context(context):
         context.cart_items_json = serialized_cart_items  # Serialized items for JSON
         context.cart_total = cart_data.get('total', 0)
         context.item_count = cart_data.get('item_count', 0)
+        
+        # Debug: Simple print for cart items count
+        print(f"Cart loaded for customer {customer_id}: {len(cart_items)} items, total: {context.cart_total}")
+        
         # Calculate caution deposit total
         total_caution_deposit = 0
         for item in context.cart_items:
@@ -107,8 +109,10 @@ def get_context(context):
         return context
         
     except Exception as e:
-        frappe.log_error(f"Error loading cart page: {str(e)}")
+        # Use print for debugging instead of log_error to avoid character limits
+        print(f"Error loading cart page: {str(e)}")
         context.cart_items = []
+        context.cart_items_json = []
         context.cart_total = 0
         context.item_count = 0
         context.error_message = "Unable to load cart. Please try again later."
