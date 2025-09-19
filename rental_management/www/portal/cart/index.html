@@ -773,8 +773,8 @@ function cartPage() {
         advanceCollected: 0,
         totalCautionDeposit: 0,
         
-        // Cart data
-        cartItems: {{ cart_items|tojson if cart_items else [] }},
+        // Cart data - using safer fallback for potential JSON issues
+        cartItems: {% if cart_items_json %}{{ cart_items_json|tojson }}{% else %}[]{% endif %},
         cartTotal: {{ grand_total if grand_total else 0 }},
         
         get remainingBalance() {

@@ -1,4 +1,5 @@
 import frappe
+from frappe.utils import formatdate, get_datetime
 from rental_management.api.customer_portal import get_customer_cart_items
 
 def get_context(context):
@@ -32,10 +33,50 @@ def get_context(context):
             context.error_message = "Please select a customer to view cart"
             cart_data = {'items': [], 'total': 0, 'item_count': 0}
             
-        context.cart_items = cart_data.get('items', [])
+        # Process cart items and serialize dates for JSON
+        cart_items = cart_data.get('items', [])
+        serialized_cart_items = []
+        
+        # Debug: Log cart items structure
+        frappe.log_error(f"Cart items for customer {customer_id}: {cart_items}", "Cart Debug")
+        
+        for item in cart_items:
+            # Create a copy of the item with serialized dates
+            serialized_item = {}
+            
+            # Copy all non-date fields
+            for key, value in item.items():
+                if key in ['function_date', 'rental_start_date', 'rental_end_date']:
+                    # Convert date objects to strings for JSON serialization
+                    if value:
+                        try:
+                            if hasattr(value, 'strftime'):
+                                serialized_item[key] = value.strftime('%Y-%m-%d')
+                            elif hasattr(value, 'isoformat'):
+                                serialized_item[key] = value.isoformat()
+                            else:
+                                serialized_item[key] = str(value)
+                        except Exception as e:
+                            frappe.log_error(f"Date serialization error for {key}: {e}", "Cart Date Error")
+                            serialized_item[key] = None
+                    else:
+                        serialized_item[key] = None
+                else:
+                    # Copy other fields as-is, but ensure they're JSON serializable
+                    try:
+                        import json
+                        json.dumps(value)  # Test if value is JSON serializable
+                        serialized_item[key] = value
+                    except (TypeError, ValueError):
+                        # Convert non-serializable values to strings
+                        serialized_item[key] = str(value) if value is not None else None
+                        
+            serialized_cart_items.append(serialized_item)
+            
+        context.cart_items = cart_items  # Original items for template display
+        context.cart_items_json = serialized_cart_items  # Serialized items for JSON
         context.cart_total = cart_data.get('total', 0)
         context.item_count = cart_data.get('item_count', 0)
-        
         # Calculate caution deposit total
         total_caution_deposit = 0
         for item in context.cart_items:
