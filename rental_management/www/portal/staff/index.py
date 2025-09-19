@@ -96,7 +96,7 @@ def get_dashboard_context(context):
         SELECT 
             si.name, si.posting_date, si.total, si.booking_status,
             si.customer_name, si.customer, si.advance_amount,
-            si.balance_amount, si.caution_deposit_amount,
+            si.balance_amount_collected, si.caution_deposit_amount,
             COUNT(sii.name) as item_count
         FROM `tabSales Invoice` si
         LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
@@ -122,8 +122,8 @@ def get_dashboard_context(context):
         AND si.docstatus = 1
         ORDER BY si.rental_start_date ASC, si.function_date ASC
     """, as_dict=True)
-    frappe.log_error("going to check the pending deliveries list")
-    frappe.log_error(pending_deliveries)
+    print("going to check the pending deliveries list")
+    print(pending_deliveries)
     context.pending_deliveries = pending_deliveries
     
     # Get pending returns (items delivered, awaiting return)
