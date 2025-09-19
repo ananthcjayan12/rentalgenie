@@ -44,37 +44,15 @@ def get_context(context):
 def get_dashboard_context(context):
     """Get dashboard overview with stats and recent activity"""
     
-    # Debug: Check what booking statuses actually exist
-    debug_statuses = frappe.db.sql("""
-        SELECT booking_status, docstatus, COUNT(*) as count
-        FROM `tabSales Invoice` 
-        WHERE is_rental_booking = 1
-        GROUP BY booking_status, docstatus
-        ORDER BY count DESC
-    """, as_dict=True)
-    
-    print(f"DEBUG - Existing booking statuses: {debug_statuses}")
-    
     # Get dashboard statistics
     stats = {}
     
-    # Bookings awaiting advance collection (initial status - empty or NULL)
-    stats['pending_advance'] = frappe.db.sql("""
-        SELECT COUNT(*) as count
-        FROM `tabSales Invoice` 
-        WHERE is_rental_booking = 1
-        AND (booking_status = '' OR booking_status IS NULL)
-        AND docstatus = 0
-    """)[0][0]
-    
-    print(f"DEBUG - pending_advance count: {stats['pending_advance']}")
-    
-    # Also check how many draft rental bookings exist total
-    total_draft = frappe.db.count('Sales Invoice', {
+    # Bookings awaiting advance collection (initial status)
+    stats['pending_advance'] = frappe.db.count('Sales Invoice', {
         'is_rental_booking': 1,
-        'docstatus': 0
+        'booking_status': '',  # Initial empty status
+        'docstatus': 0  # Draft invoices
     })
-    print(f"DEBUG - total draft rental bookings: {total_draft}")
     
     # Bookings awaiting delivery (advance collected, balance + caution pending)
     stats['pending_delivery'] = frappe.db.count('Sales Invoice', {
@@ -83,8 +61,6 @@ def get_dashboard_context(context):
         'docstatus': 1
     })
     
-    print(f"DEBUG - pending_delivery count: {stats['pending_delivery']}")
-    
     # Bookings awaiting return (items delivered)
     stats['pending_return'] = frappe.db.count('Sales Invoice', {
         'is_rental_booking': 1,
@@ -92,16 +68,12 @@ def get_dashboard_context(context):
         'docstatus': 1
     })
     
-    print(f"DEBUG - pending_return count: {stats['pending_return']}")
-    
     # Total active bookings
     stats['total_active'] = frappe.db.count('Sales Invoice', {
         'is_rental_booking': 1,
         'booking_status': ['in', ['', 'Confirmed', 'Out for Rental']],
         'docstatus': ['in', [0, 1]]
     })
-    
-    print(f"DEBUG - total_active count: {stats['total_active']}")
     
     context.dashboard_stats = stats
     
@@ -152,9 +124,6 @@ def get_dashboard_context(context):
     """, as_dict=True)
     
     context.pending_deliveries = pending_deliveries
-    
-    print(f"DEBUG - pending_deliveries data: {pending_deliveries}")
-    print(f"DEBUG - context.pending_deliveries length: {len(pending_deliveries)}")
     
     # Get pending returns (items delivered, awaiting return)
     pending_returns = frappe.db.sql("""
