@@ -76,9 +76,6 @@ def get_context(context):
         context.cart_total = cart_data.get('total', 0)
         context.item_count = cart_data.get('item_count', 0)
         
-        # Debug: Simple print for cart items count
-        print(f"Cart loaded for customer {customer_id}: {len(cart_items)} items, total: {context.cart_total}")
-        
         # Calculate caution deposit total
         total_caution_deposit = 0
         for item in context.cart_items:

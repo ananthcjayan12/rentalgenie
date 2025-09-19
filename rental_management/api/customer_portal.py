@@ -713,7 +713,7 @@ def create_customer_booking_from_cart(customer_id, advance_amount=0, special_ins
             "posting_date": frappe.utils.today(),
             "due_date": frappe.utils.add_days(frappe.utils.today(), 7),
             "is_rental_booking": 1,
-            "booking_status": "Draft",
+            "booking_status": "",  # Start with empty status, will be set to "Confirmed" after advance collection
             "special_instructions": special_instructions,
             "advance_amount": flt(advance_amount),
             "items": []
@@ -775,7 +775,7 @@ def create_customer_booking_from_cart(customer_id, advance_amount=0, special_ins
         }
         
     except Exception as e:
-        frappe.log_error(f"Error creating customer booking: {str(e)}")
+        print(f"Error creating customer booking: {str(e)}")
         return {'success': False, 'message': str(e)}
 
 @frappe.whitelist()
@@ -863,8 +863,8 @@ def confirm_booking_with_advance(booking_id, advance_amount, payment_mode="Cash"
         if not booking.is_rental_booking:
             return {'success': False, 'message': 'Not a rental booking'}
         
-        if booking.booking_status != "Draft":
-            return {'success': False, 'message': 'Booking is not in draft status'}
+        if booking.booking_status not in ("", None):
+            return {'success': False, 'message': f'Booking is not in initial status (current: {booking.booking_status})'}
         
         # Update booking with advance amount
         booking.advance_amount = advance_amount
@@ -1049,7 +1049,7 @@ def get_booking_payment_summary(booking_id):
             'return_time': booking.actual_return_time,
             
             # Next actions
-            'can_collect_advance': booking.booking_status == "Draft",
+            'can_collect_advance': booking.booking_status in ("", None),
             'can_collect_balance': booking.booking_status == "Confirmed" and remaining_balance > 0,
             'can_collect_caution': booking.booking_status == "Confirmed" and remaining_caution_due > 0,
             'can_process_return': booking.booking_status == "Out for Rental",

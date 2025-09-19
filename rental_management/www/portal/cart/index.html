@@ -559,15 +559,6 @@ body {
              :class="'alert ' + alertType" 
              style="grid-column: 1 / -1; display: none;"></div>
 
-        <!-- Debug Info (temporary) -->
-        <div style="background: #f0f0f0; padding: 1rem; margin-bottom: 1rem; border-radius: 6px;">
-            <strong>Debug Info:</strong><br>
-            Customer ID: <span x-text="customerId || 'Not set'"></span><br>
-            Cart Items Count: <span x-text="cartItems.length"></span><br>
-            Cart Total: ₹<span x-text="cartTotal"></span><br>
-            Button Disabled: <span x-text="isProcessing || !customerId || cartItems.length === 0"></span>
-        </div>
-
         {% if cart_items %}
         <!-- Cart Items Section -->
         <div class="cart-items-section">
