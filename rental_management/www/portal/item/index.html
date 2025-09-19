@@ -821,16 +821,9 @@ function itemDetailApp() {
                 const startDate = new Date(functionDate);
                 startDate.setDate(startDate.getDate() - 2);
                 
-                // Calculate rental days
-                const timeDiff = returnDate.getTime() - startDate.getTime();
-                this.rentalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
-                
-                if (this.rentalDays > 0) {
-                    this.totalAmount = this.rentalDays * this.item.rental_rate_per_day;
-                } else {
-                    this.rentalDays = 0;
-                    this.totalAmount = 0;
-                }
+                // For function bookings, charge only 1 day regardless of rental period
+                this.rentalDays = 1;
+                this.totalAmount = this.rentalDays * this.item.rental_rate_per_day;
                 
                 // Reset availability when dates change
                 this.isAvailable = null;

@@ -29,17 +29,24 @@ def get_context(context):
         context.delivery_charge = 0  # Free delivery
         context.grand_total = context.subtotal + context.delivery_charge
         
-        # Get customer details if available
-        customer_email = frappe.session.user
-        customer = frappe.db.get_value("Customer", {"email_id": customer_email}, 
-                                     ["name", "customer_name", "mobile_number", "customer_primary_address"], 
-                                     as_dict=True)
+        # Get customer details for prefilling checkout form
+        customer_data = frappe.db.get_value(
+            "Customer", 
+            customer_id, 
+            ["name", "customer_name", "mobile_number", "email_id", "customer_primary_address"], 
+            as_dict=True
+        )
         
-        context.customer = customer or {}
+        if not customer_data:
+            context.error_message = "Customer not found"
+            return
+            
+        context.customer = customer_data
+        context.customer_id = customer_id
         
         # Get customer address if exists
-        if customer and customer.get('customer_primary_address'):
-            address = frappe.get_doc("Address", customer.customer_primary_address)
+        if customer_data.get('customer_primary_address'):
+            address = frappe.get_doc("Address", customer_data.customer_primary_address)
             context.address = address
         else:
             context.address = None

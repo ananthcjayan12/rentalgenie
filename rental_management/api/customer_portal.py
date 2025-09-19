@@ -467,8 +467,17 @@ def add_to_customer_cart(item_code, customer_id, rental_start_date, rental_end_d
                 
         # Get item details
         item_details = frappe.get_doc("Item", item_code)
-        rental_days = (getdate(rental_end_date) - getdate(rental_start_date)).days + 1
+        
+        # For function bookings, charge only 1 day regardless of rental period
+        if function_date:
+            rental_days = 1
+        else:
+            rental_days = (getdate(rental_end_date) - getdate(rental_start_date)).days + 1
+            
         line_total = (item_details.rental_rate_per_day or 0) * rental_days
+        
+        # Debug logging
+        print(f"DEBUG Cart: item={item_code}, function_date={function_date}, rental_days={rental_days}, rate={item_details.rental_rate_per_day}, total={line_total}")
         
         if existing_item:
             # Update existing item (if needed, this implementation doesn't support quantity updates)
