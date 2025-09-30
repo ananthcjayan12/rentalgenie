@@ -10,7 +10,15 @@ def create_advance_revenue_journal_entry(booking_id, advance_amount, company=Non
         
         if advance_amount <= 0:
             return None
-            
+        
+        # Get the Sales Invoice to get customer details
+        sales_invoice = frappe.get_doc("Sales Invoice", booking_id)
+        customer_id = sales_invoice.customer
+        
+        # Since we want direct cash to revenue (not through customer receivable),
+        # we cannot reference the Sales Invoice as ERPNext validates party matching.
+        # We'll create a simple journal entry with a descriptive remark for audit trail.
+        
         journal_entry = frappe.get_doc({
             "doctype": "Journal Entry",
             "voucher_type": "Journal Entry",
@@ -19,18 +27,14 @@ def create_advance_revenue_journal_entry(booking_id, advance_amount, company=Non
             "accounts": [
                 {
                     "account": accounts["cash_account"],
-                    "debit_in_account_currency": advance_amount,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": booking_id
+                    "debit_in_account_currency": advance_amount
                 },
                 {
                     "account": accounts["rental_revenue"],
-                    "credit_in_account_currency": advance_amount,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": booking_id
+                    "credit_in_account_currency": advance_amount
                 }
             ],
-            "user_remark": f"Advance payment for rental booking {booking_id}",
+            "user_remark": f"Advance payment for rental booking {booking_id} from customer {customer_id}",
             "cheque_no": f"ADV-{booking_id}",
             "cheque_date": today()
         })
@@ -38,10 +42,12 @@ def create_advance_revenue_journal_entry(booking_id, advance_amount, company=Non
         journal_entry.insert()
         journal_entry.submit()
         print(f"✅ Created advance revenue entry: {journal_entry.name}")
+        
         return journal_entry.name
         
     except Exception as e:
         print(f"❌ Error creating advance journal entry: {str(e)}")
+        print(f"❌ Full error details: {frappe.get_traceback()}")
         frappe.log_error(f"Advance journal entry error for {booking_id}: {str(e)}")
         return None
 
@@ -100,15 +106,11 @@ def create_caution_deposit_journal_entry(booking_id, caution_amount, company=Non
             "accounts": [
                 {
                     "account": accounts["cash_account"],
-                    "debit_in_account_currency": caution_amount,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": booking_id
+                    "debit_in_account_currency": caution_amount
                 },
                 {
                     "account": accounts["caution_deposit_payable"],
-                    "credit_in_account_currency": caution_amount,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": booking_id
+                    "credit_in_account_currency": caution_amount
                 }
             ],
             "user_remark": f"Caution deposit collected for booking {booking_id}",
@@ -137,9 +139,7 @@ def create_owner_commission_journal_entry(booking_id, commission_amount, owner_i
             
         credit_account = {
             "account": accounts["owner_commission_payable"],
-            "credit_in_account_currency": commission_amount,
-            "reference_type": "Sales Invoice",
-            "reference_name": booking_id
+            "credit_in_account_currency": commission_amount
         }
         
         # Add party details if owner_id is provided
@@ -160,9 +160,7 @@ def create_owner_commission_journal_entry(booking_id, commission_amount, owner_i
             "accounts": [
                 {
                     "account": accounts["owner_commission_expense"],
-                    "debit_in_account_currency": commission_amount,
-                    "reference_type": "Sales Invoice",
-                    "reference_name": booking_id
+                    "debit_in_account_currency": commission_amount
                 },
                 credit_account
             ],
@@ -192,12 +190,16 @@ def create_caution_refund_journal_entry(booking_id, refund_amount, deduction_amo
         if total_caution <= 0:
             return None
             
+        # Get customer details for party reference in liability account
+        sales_invoice = frappe.get_doc("Sales Invoice", booking_id)
+        customer_id = sales_invoice.customer
+        
         journal_accounts = [
             {
                 "account": accounts["caution_deposit_payable"],
-                "debit_in_account_currency": total_caution,
-                "reference_type": "Sales Invoice",
-                "reference_name": booking_id
+                "party_type": "Customer",
+                "party": customer_id,
+                "debit_in_account_currency": total_caution
             }
         ]
         
@@ -205,18 +207,14 @@ def create_caution_refund_journal_entry(booking_id, refund_amount, deduction_amo
         if refund_amount > 0:
             journal_accounts.append({
                 "account": accounts["cash_account"],
-                "credit_in_account_currency": refund_amount,
-                "reference_type": "Sales Invoice",
-                "reference_name": booking_id
+                "credit_in_account_currency": refund_amount
             })
         
         # Add damage deduction income if any
         if deduction_amount > 0:
             journal_accounts.append({
                 "account": accounts["damage_deduction_income"],
-                "credit_in_account_currency": deduction_amount,
-                "reference_type": "Sales Invoice",
-                "reference_name": booking_id
+                "credit_in_account_currency": deduction_amount
             })
         
         journal_entry = frappe.get_doc({
