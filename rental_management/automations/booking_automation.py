@@ -27,7 +27,7 @@ def get_owner_commission_account(owner_name, company=None):
 		owner = frappe.get_doc("Third Party Owner", owner_name)
 		return owner.get_commission_account(company)
 	except Exception as e:
-		frappe.log_error(f"Error getting commission account for owner {owner_name}: {str(e)}")
+		print(f"Error getting commission account for owner {owner_name}: {str(e)}")
 		return None
 
 
@@ -521,9 +521,7 @@ def create_owner_commission_liabilities(doc):
                         {
                             "account": owner_commission_account,
                             "debit_in_account_currency": 0,
-                            "credit_in_account_currency": flt(amount),
-                            "party_type": "Third Party Owner",
-                            "party": owner_name
+                            "credit_in_account_currency": flt(amount)
                         }
                     ]
                 })
