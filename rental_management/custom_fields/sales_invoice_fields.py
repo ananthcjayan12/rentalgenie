@@ -99,12 +99,22 @@ def create_sales_invoice_custom_fields():
         },
         {
             "doctype": "Sales Invoice",
+            "fieldname": "advance_payment_entry",
+            "label": "Advance Payment Entry",
+            "fieldtype": "Link",
+            "options": "Payment Entry",
+            "depends_on": "is_rental_booking",
+            "read_only": 1,
+            "insert_after": "advance_amount"
+        },
+        {
+            "doctype": "Sales Invoice",
             "fieldname": "pending_payment_amount",
             "label": "Pending Payment Amount",
             "fieldtype": "Currency",
             "depends_on": "is_rental_booking",
             "read_only": 1,
-            "insert_after": "advance_amount"
+            "insert_after": "advance_payment_entry"
         },
         {
             "doctype": "Sales Invoice",

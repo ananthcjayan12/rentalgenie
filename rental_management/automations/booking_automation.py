@@ -134,8 +134,10 @@ def on_submit_sales_invoice(doc, method):
         update_item_rental_status(doc, "Booked")
         
         # Create advance payment entry if amount is specified
-        if doc.advance_amount:
-            create_advance_payment_entry(doc)
+        # NOTE: Advance payment is now handled in confirm_booking_with_advance() API function
+        # to ensure proper Payment Entry allocation against the Sales Invoice
+        # if doc.advance_amount:
+        #     create_advance_payment_entry(doc)
         
         # Create caution deposit entry if amount is specified
         if doc.caution_deposit_amount:

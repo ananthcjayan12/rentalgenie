@@ -874,7 +874,12 @@ def confirm_booking_with_advance(booking_id, advance_amount, payment_mode="Cash"
         # Submit the booking now that advance is collected
         booking.submit()
         
-        # Create advance payment journal entry (handled by booking automation)
+        # Create Payment Entry for advance (proper allocation against invoice)
+        payment_entry = create_advance_payment_entry(booking, advance_amount, payment_mode)
+        
+        # Link the payment entry to the booking
+        if payment_entry:
+            booking.db_set('advance_payment_entry', payment_entry.name)
         
         # Calculate remaining amounts
         total_rental = booking.total
@@ -888,11 +893,12 @@ def confirm_booking_with_advance(booking_id, advance_amount, payment_mode="Cash"
             'advance_collected': advance_amount,
             'remaining_balance': remaining_balance,
             'caution_deposit_required': caution_deposit,
-            'total_due_at_delivery': remaining_balance + caution_deposit
+            'total_due_at_delivery': remaining_balance + caution_deposit,
+            'payment_entry': payment_entry.name if payment_entry else None
         }
         
     except Exception as e:
-        frappe.log_error(f"Error confirming booking with advance: {str(e)}")
+        print(f"Error confirming booking with advance: {str(e)}")
         return {'success': False, 'message': str(e)}
 
 @frappe.whitelist()
@@ -1121,3 +1127,72 @@ def get_customer_active_bookings(customer_id):
     except Exception as e:
         frappe.log_error(f"Error getting customer active bookings: {str(e)}")
         return {'success': False, 'message': str(e)}
+
+# Helper function for advance payment entry creation
+
+def create_advance_payment_entry(booking, advance_amount, payment_mode="Cash"):
+    """Create Payment Entry for advance payment with proper allocation against Sales Invoice"""
+    try:
+        # Get cash account based on payment mode
+        if payment_mode == "Cash":
+            cash_account = frappe.get_value("Company", booking.company, "default_cash_account")
+            if not cash_account:
+                cash_account = frappe.db.get_value("Account", {
+                    "account_type": "Cash", 
+                    "company": booking.company
+                }, "name")
+        else:
+            # For bank payments, get default bank account
+            cash_account = frappe.get_value("Company", booking.company, "default_bank_account")
+            if not cash_account:
+                cash_account = frappe.db.get_value("Account", {
+                    "account_type": "Bank", 
+                    "company": booking.company
+                }, "name")
+        
+        if not cash_account:
+            frappe.throw("No cash/bank account found for payment processing")
+        
+        # Create Payment Entry
+        payment_entry = frappe.get_doc({
+            "doctype": "Payment Entry",
+            "payment_type": "Receive",
+            "party_type": "Customer", 
+            "party": booking.customer,
+            "party_name": booking.customer_name,
+            "company": booking.company,
+            "posting_date": frappe.utils.today(),
+            "paid_amount": advance_amount,
+            "received_amount": advance_amount,
+            "target_exchange_rate": 1,
+            "source_exchange_rate": 1,
+            "paid_to": cash_account,
+            "paid_to_account_currency": frappe.get_value("Account", cash_account, "account_currency"),
+            "mode_of_payment": payment_mode,
+            "reference_no": f"ADV-{booking.name}",
+            "reference_date": frappe.utils.today(),
+            "remarks": f"Advance payment for booking {booking.name}"
+        })
+        
+        # Add reference to the Sales Invoice for allocation
+        payment_entry.append("references", {
+            "reference_doctype": "Sales Invoice",
+            "reference_name": booking.name,
+            "total_amount": booking.grand_total,
+            "outstanding_amount": booking.outstanding_amount,
+            "allocated_amount": advance_amount
+        })
+        
+        # Insert and submit payment entry
+        payment_entry.insert(ignore_permissions=True)
+        payment_entry.submit()
+        
+        print(f"✅ Advance Payment Entry {payment_entry.name} created and submitted successfully")
+        
+        return payment_entry
+        
+    except Exception as e:
+        print(f"Error creating advance payment entry: {str(e)}")
+        # Log error but don't fail the booking
+        frappe.log_error(f"Error creating advance payment entry for {booking.name}: {str(e)}")
+        return None
