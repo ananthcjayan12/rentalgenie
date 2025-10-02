@@ -952,7 +952,10 @@ def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_depo
                 frappe.log_error(f"✅ Caution deposit entry created: {caution_je}")
                 
         except Exception as e:
-            frappe.log_error(f"Error creating delivery accounting entries: {str(e)}")
+            # Use print instead of frappe.log_error to avoid nested error issues
+            print(f"Error creating delivery accounting entries: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {'success': False, 'message': f'Accounting error: {str(e)}'}
         
         # Create owner commission liability entries for third-party items (now at delivery stage)
@@ -980,7 +983,9 @@ def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_depo
         }
         
     except Exception as e:
-        frappe.log_error(f"Error collecting balance and caution deposit: {str(e)}")
+        print(f"Error collecting balance and caution deposit: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {'success': False, 'message': str(e)}
 
 @frappe.whitelist()
@@ -1289,7 +1294,7 @@ def create_delivery_balance_payment(booking, balance_amount, payment_mode="Cash"
         return payment_entry.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating balance payment entry: {str(e)}")
+        print(f"Error creating balance payment entry: {str(e)}")
         raise
 
 def create_caution_deposit_entry(booking, caution_amount, payment_mode="Cash"):
@@ -1316,9 +1321,9 @@ def create_caution_deposit_entry(booking, caution_amount, payment_mode="Cash"):
             # Create the liability account
             parent_account = f"Current Liabilities - {company_abbr}"
             if not frappe.db.exists("Account", parent_account):
-                # Find any current liability account
+                # Find any liability group account
                 parent_account = frappe.get_value("Account", 
-                    {"company": company, "account_type": "Payable", "is_group": 1}, 
+                    {"company": company, "is_group": 1, "account_name": ("like", "%liabilit%")}, 
                     "name")
             
             caution_account = frappe.get_doc({
@@ -1326,8 +1331,8 @@ def create_caution_deposit_entry(booking, caution_amount, payment_mode="Cash"):
                 "account_name": "Customer Caution Deposits",
                 "parent_account": parent_account,
                 "company": company,
-                "account_type": "Payable",
                 "is_group": 0
+                # No specific account_type - general liability account
             })
             caution_account.insert(ignore_permissions=True)
             caution_liability_account = caution_account.name
@@ -1338,7 +1343,7 @@ def create_caution_deposit_entry(booking, caution_amount, payment_mode="Cash"):
             "voucher_type": "Journal Entry",
             "posting_date": frappe.utils.nowdate(),
             "company": company,
-            "user_remark": f"Caution deposit collected for booking {booking.name}",
+            "user_remark": f"Caution deposit collected for booking {booking.name} - Customer: {booking.customer}",
             "accounts": [
                 {
                     "account": cash_account,
@@ -1348,9 +1353,8 @@ def create_caution_deposit_entry(booking, caution_amount, payment_mode="Cash"):
                 {
                     "account": caution_liability_account,
                     "debit_in_account_currency": 0,
-                    "credit_in_account_currency": caution_amount,
-                    "party_type": "Customer",
-                    "party": booking.customer
+                    "credit_in_account_currency": caution_amount
+                    # No party_type for liability accounts - customer info in remark instead
                 }
             ]
         })
@@ -1361,7 +1365,7 @@ def create_caution_deposit_entry(booking, caution_amount, payment_mode="Cash"):
         return journal_entry.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating caution deposit entry: {str(e)}")
+        print(f"Error creating caution deposit entry: {str(e)}")
         raise
 
 def create_caution_refund_entry(booking, refund_amount, payment_mode="Cash"):
@@ -1393,14 +1397,13 @@ def create_caution_refund_entry(booking, refund_amount, payment_mode="Cash"):
             "voucher_type": "Journal Entry", 
             "posting_date": frappe.utils.nowdate(),
             "company": company,
-            "user_remark": f"Caution deposit refund for booking {booking.name}",
+            "user_remark": f"Caution deposit refund for booking {booking.name} - Customer: {booking.customer}",
             "accounts": [
                 {
                     "account": caution_liability_account,
                     "debit_in_account_currency": refund_amount,
-                    "credit_in_account_currency": 0,
-                    "party_type": "Customer",
-                    "party": booking.customer
+                    "credit_in_account_currency": 0
+                    # No party_type for liability accounts - customer info in remark
                 },
                 {
                     "account": cash_account,
@@ -1416,7 +1419,7 @@ def create_caution_refund_entry(booking, refund_amount, payment_mode="Cash"):
         return journal_entry.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating caution refund entry: {str(e)}")
+        print(f"Error creating caution refund entry: {str(e)}")
         raise
 
 def create_caution_deduction_entry(booking, deduction_amount, reason):
@@ -1457,14 +1460,13 @@ def create_caution_deduction_entry(booking, deduction_amount, reason):
             "voucher_type": "Journal Entry",
             "posting_date": frappe.utils.nowdate(),
             "company": company,
-            "user_remark": f"Caution deposit deduction for booking {booking.name}: {reason}",
+            "user_remark": f"Caution deposit deduction for booking {booking.name} - Customer: {booking.customer} - Reason: {reason}",
             "accounts": [
                 {
                     "account": caution_liability_account,
                     "debit_in_account_currency": deduction_amount,
-                    "credit_in_account_currency": 0,
-                    "party_type": "Customer", 
-                    "party": booking.customer
+                    "credit_in_account_currency": 0
+                    # No party_type for liability accounts - customer info in remark
                 },
                 {
                     "account": deduction_income_account,
@@ -1480,5 +1482,5 @@ def create_caution_deduction_entry(booking, deduction_amount, reason):
         return journal_entry.name
         
     except Exception as e:
-        frappe.log_error(f"Error creating caution deduction entry: {str(e)}")
+        print(f"Error creating caution deduction entry: {str(e)}")
         raise
