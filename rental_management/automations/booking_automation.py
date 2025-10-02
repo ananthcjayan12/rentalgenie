@@ -499,11 +499,19 @@ def create_owner_commission_liabilities(doc):
                     print(f"[DEBUG] Skipping zero/negative commission for {owner_name}: {amount}")
                     continue
 
-                # Get the owner's dedicated commission account
+                # Get the owner's dedicated commission account and supplier link
                 owner_commission_account = get_owner_commission_account(owner_name, company)
                 
                 if not owner_commission_account:
                     print(f"[ERROR] No commission account found for owner {owner_name}")
+                    continue
+
+                # Get the supplier link from Third Party Owner for party details
+                owner_doc = frappe.get_doc("Third Party Owner", owner_name)
+                supplier_link = owner_doc.supplier_link
+                
+                if not supplier_link:
+                    print(f"[ERROR] No supplier link found for owner {owner_name}")
                     continue
 
                 je = frappe.get_doc({
@@ -521,7 +529,9 @@ def create_owner_commission_liabilities(doc):
                         {
                             "account": owner_commission_account,
                             "debit_in_account_currency": 0,
-                            "credit_in_account_currency": flt(amount)
+                            "credit_in_account_currency": flt(amount),
+                            "party_type": "Supplier",
+                            "party": supplier_link
                         }
                     ]
                 })
