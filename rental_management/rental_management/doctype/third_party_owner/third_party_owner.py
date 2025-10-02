@@ -43,7 +43,7 @@ class ThirdPartyOwner(Document):
 				company = companies[0].name
 		
 		if not company:
-			frappe.log_error("No company found for commission account creation")
+			print("No company found for commission account creation")
 			return
 		
 		company_abbr = frappe.get_cached_value("Company", company, "abbr")
@@ -78,17 +78,17 @@ class ThirdPartyOwner(Document):
 				if parent_accounts:
 					parent_account = parent_accounts[0].name
 				else:
-					frappe.log_error(f"No suitable parent account found for commission account")
+					print("No suitable parent account found for commission account")
 					return
 		
 		try:
-			# Create commission account with Third Party Owner account type
+			# Create commission account with Payable account type (valid ERPNext account type)
 			account = frappe.get_doc({
 				"doctype": "Account",
 				"account_name": f"Commission Payable - {self.owner_name}",
 				"parent_account": parent_account,
 				"company": company,
-				"account_type": "Third Party Owner",
+				"account_type": "Payable",
 				"is_group": 0
 			})
 			account.insert(ignore_permissions=True)
@@ -100,7 +100,7 @@ class ThirdPartyOwner(Document):
 			return account.name
 			
 		except Exception as e:
-			frappe.log_error(f"Error creating commission account: {str(e)}")
+			print(f"Error creating commission account: {str(e)}")
 			return None
 	
 	def get_commission_account(self, company=None):
