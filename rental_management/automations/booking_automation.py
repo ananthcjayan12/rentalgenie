@@ -21,6 +21,16 @@ def validate_sales_invoice(doc, method):
         if doc.is_exchange_booking:
             validate_exchange_booking(doc)
 
+def get_owner_commission_account(owner_name, company=None):
+	"""Get commission account for an owner"""
+	try:
+		owner = frappe.get_doc("Third Party Owner", owner_name)
+		return owner.get_commission_account(company)
+	except Exception as e:
+		frappe.log_error(f"Error getting commission account for owner {owner_name}: {str(e)}")
+		return None
+
+
 def calculate_rental_dates(doc):
     """Calculate rental start and end dates based on function date"""
     if doc.function_date and doc.rental_duration_days:
@@ -490,7 +500,6 @@ def create_owner_commission_liabilities(doc):
                     continue
 
                 # Get the owner's dedicated commission account
-                from rental_management.doctype.third_party_owner.third_party_owner import get_owner_commission_account
                 owner_commission_account = get_owner_commission_account(owner_name, company)
                 
                 if not owner_commission_account:

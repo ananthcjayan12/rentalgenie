@@ -55,30 +55,40 @@ class ThirdPartyOwner(Document):
 			self.save()
 			return account_name
 		
-		# Find parent account (Current Liabilities)
+		# Find parent account (Current Liabilities for Third Party Owner accounts)
 		parent_account = f"Current Liabilities - {company_abbr}"
 		if not frappe.db.exists("Account", parent_account):
-			# Try to find any Current Liabilities account
+			# Try to find any Current Liabilities group account
 			parent_accounts = frappe.get_all("Account", 
 				filters={
 					"company": company,
 					"is_group": 1,
-					"account_type": "Payable"
+					"root_type": "Liability"
 				}, limit=1)
 			if parent_accounts:
 				parent_account = parent_accounts[0].name
 			else:
-				frappe.log_error(f"No suitable parent account found for commission account")
-				return
+				# Fallback: try to find any group account under Liabilities
+				parent_accounts = frappe.get_all("Account",
+					filters={
+						"company": company,
+						"is_group": 1,
+						"account_name": ["like", "%Liabilit%"]
+					}, limit=1)
+				if parent_accounts:
+					parent_account = parent_accounts[0].name
+				else:
+					frappe.log_error(f"No suitable parent account found for commission account")
+					return
 		
 		try:
-			# Create commission account
+			# Create commission account with Third Party Owner account type
 			account = frappe.get_doc({
 				"doctype": "Account",
 				"account_name": f"Commission Payable - {self.owner_name}",
 				"parent_account": parent_account,
 				"company": company,
-				"account_type": "Payable",
+				"account_type": "Third Party Owner",
 				"is_group": 0
 			})
 			account.insert(ignore_permissions=True)
