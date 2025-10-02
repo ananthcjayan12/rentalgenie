@@ -144,11 +144,13 @@ def on_submit_sales_invoice(doc, method):
             create_caution_deposit_entry(doc)
         
         # Create owner commission liability entries for third-party items
-        try:
-            create_owner_commission_liabilities(doc)
-        except Exception as e:
-            # Log but do not block booking submission
-            frappe.log_error(f"Error creating owner commission entries for {doc.name}: {str(e)}")
+        # NOTE: Commission creation moved to delivery stage (collect_balance_and_caution_deposit)
+        # Commission liability should only be created when items are actually delivered
+        # try:
+        #     create_owner_commission_liabilities(doc)
+        # except Exception as e:
+        #     # Log but do not block booking submission
+        #     frappe.log_error(f"Error creating owner commission entries for {doc.name}: {str(e)}")
         
         # Update customer statistics
         update_customer_stats(doc)
@@ -394,24 +396,24 @@ def create_owner_commission_liabilities(doc):
                     continue
 
                 is_third = bool(item_doc.get("is_third_party_item"))
-                supplier = item_doc.get("third_party_supplier")
+                third_party_owner = item_doc.get("third_party_owner")
                 commission_pct = flt(item_doc.get("owner_commission_percent") or 0)
                 line_amount = flt(item.amount or 0)
 
-                frappe.log_error(f"[DEBUG] Line {idx} - item: {item.item_code}, resolved_item: {item_doc.name}, is_third: {is_third}, supplier: {supplier}, commission_pct: {commission_pct}, line_amount: {line_amount}")
+                frappe.log_error(f"[DEBUG] Line {idx} - item: {item.item_code}, resolved_item: {item_doc.name}, is_third: {is_third}, owner: {third_party_owner}, commission_pct: {commission_pct}, line_amount: {line_amount}")
 
-                if is_third and supplier and commission_pct and line_amount:
+                if is_third and third_party_owner and commission_pct and line_amount:
                     comm_amount = (line_amount * commission_pct) / 100.0
-                    supplier_commissions[supplier] = supplier_commissions.get(supplier, 0.0) + comm_amount
-                    frappe.log_error(f"[DEBUG] Accumulated commission for {supplier}: {supplier_commissions[supplier]}")
+                    supplier_commissions[third_party_owner] = supplier_commissions.get(third_party_owner, 0.0) + comm_amount
+                    frappe.log_error(f"[DEBUG] Accumulated commission for {third_party_owner}: {supplier_commissions[third_party_owner]}")
 
             except Exception as e:
                 frappe.log_error(f"[DEBUG] Error processing line {idx} on {doc.name}: {str(e)}\n{frappe.get_traceback()}")
 
-        frappe.log_error(f"[DEBUG] supplier_commissions computed: {supplier_commissions}")
+        frappe.log_error(f"[DEBUG] owner_commissions computed: {supplier_commissions}")
 
         if not supplier_commissions:
-            frappe.log_error(f"[DEBUG] No supplier commissions to process for {doc.name}")
+            frappe.log_error(f"[DEBUG] No owner commissions to process for {doc.name}")
             return
 
         company_abbr = frappe.get_value("Company", company, "abbr")
@@ -477,11 +479,20 @@ def create_owner_commission_liabilities(doc):
 
         frappe.log_error(f"[DEBUG] Using payable_account: {payable_account}, commission_expense_account: {commission_expense_account}")
 
-        # For each supplier create a Journal Entry to book the liability
-        for supplier, amount in supplier_commissions.items():
+        # For each third party owner create a Journal Entry to book the liability
+        commissions_created = False
+        for owner_name, amount in supplier_commissions.items():
             try:
                 if flt(amount) <= 0:
-                    frappe.log_error(f"[DEBUG] Skipping zero/negative commission for {supplier}: {amount}")
+                    frappe.log_error(f"[DEBUG] Skipping zero/negative commission for {owner_name}: {amount}")
+                    continue
+
+                # Get the owner's dedicated commission account
+                from rental_management.doctype.third_party_owner.third_party_owner import get_owner_commission_account
+                owner_commission_account = get_owner_commission_account(owner_name, company)
+                
+                if not owner_commission_account:
+                    frappe.log_error(f"[ERROR] No commission account found for owner {owner_name}")
                     continue
 
                 je = frappe.get_doc({
@@ -489,7 +500,7 @@ def create_owner_commission_liabilities(doc):
                     "voucher_type": "Journal Entry",
                     "posting_date": doc.posting_date or frappe.utils.nowdate(),
                     "company": company,
-                    "user_remark": f"Owner commission for booking {doc.name} - Supplier {supplier}",
+                    "user_remark": f"Owner commission for booking {doc.name} - Owner {owner_name}",
                     "accounts": [
                         {
                             "account": commission_expense_account,
@@ -497,25 +508,34 @@ def create_owner_commission_liabilities(doc):
                             "credit_in_account_currency": 0
                         },
                         {
-                            "account": payable_account,
+                            "account": owner_commission_account,
                             "debit_in_account_currency": 0,
                             "credit_in_account_currency": flt(amount),
-                            "party_type": "Supplier",
-                            "party": supplier
+                            "party_type": "Third Party Owner",
+                            "party": owner_name
                         }
                     ]
                 })
 
-                frappe.log_error(f"[DEBUG] Inserting JE for supplier {supplier} amount {amount}")
+                frappe.log_error(f"[DEBUG] Inserting JE for owner {owner_name} amount {amount}")
                 je.insert(ignore_permissions=True)
                 frappe.log_error(f"[DEBUG] JE inserted: {je.name}")
                 try:
                     je.submit()
                     frappe.log_error(f"[DEBUG] JE submitted: {je.name}")
+                    commissions_created = True
                 except Exception as sub_e:
                     frappe.log_error(f"[ERROR] JE submit failed for {je.name}: {str(sub_e)}\n{frappe.get_traceback()}")
             except Exception as e:
-                frappe.log_error(f"[ERROR] Failed to create owner commission JE for booking {doc.name}, supplier {supplier}: {str(e)}\n{frappe.get_traceback()}")
+                frappe.log_error(f"[ERROR] Failed to create owner commission JE for booking {doc.name}, owner {owner_name}: {str(e)}\n{frappe.get_traceback()}")
+        
+        # Mark commission as created on the booking if any commissions were successfully created
+        if commissions_created:
+            try:
+                doc.db_set('owner_commission_created', 1)
+                frappe.log_error(f"[DEBUG] Set owner_commission_created flag for booking {doc.name}")
+            except Exception as e:
+                frappe.log_error(f"[ERROR] Failed to set owner_commission_created flag for {doc.name}: {str(e)}")
 
     except Exception as e:
         frappe.log_error(f"[FATAL] create_owner_commission_liabilities failed for {getattr(doc,'name',None)}: {str(e)}\n{frappe.get_traceback()}")

@@ -228,22 +228,137 @@
 - Cash account reflects advance collection
 
 ### Phase 2: Commission Timing
-- [ ] **Status**: Not Started
-- [ ] **Assigned**: TBD  
-- [ ] **Due Date**: TBD
-- [ ] **Dependencies**: Phase 1
+- [x] **Status**: Completed ✅
+- [x] **Assigned**: AI Assistant
+- [x] **Due Date**: Today
+- [x] **Dependencies**: Phase 1 ✅
+
+**Changes Made**:
+1. ✅ Disabled commission creation in `on_submit_sales_invoice()` (invoice submission stage)
+2. ✅ Added commission creation to `collect_balance_and_caution_deposit()` (delivery stage)
+3. ✅ Added `owner_commission_created` flag to prevent duplication
+4. ✅ Modified commission function to set flag when commissions are created
+5. ✅ Added duplication check in delivery API
+6. ✅ Created test script for validation
+
+**Expected Results**:
+- Owner commission liability now created only at delivery stage (not at advance)
+- Commission timing matches business flow (pay commission when items are delivered)
+- No duplicate commission entries
 
 ### Phase 3: Third Party Owner System
-- [ ] **Status**: Not Started
-- [ ] **Assigned**: TBD
-- [ ] **Due Date**: TBD
-- [ ] **Dependencies**: Phase 2
+- [x] **Status**: Completed ✅
+- [x] **Assigned**: AI Assistant
+- [x] **Due Date**: Today
+- [x] **Dependencies**: Phase 2 ✅
+
+**Target**: Implement proper Third Party Owner party type and accounting
+- ✅ Created Third Party Owner doctype with simplified fields
+- ✅ Updated Item fields to link to Third Party Owner (not Supplier)
+- ✅ Added auto-creation logic: Third Party Owner from Supplier
+- ✅ Removed unnecessary validations from Third Party Owner
+- ✅ Updated commission logic to use Third Party Owner party type
+- ✅ Created dedicated commission payable accounts per owner
+- ✅ Registered Third Party Owner as party type in ERPNext
+- ✅ Updated booking automation to use new owner structure
+
+**Changes Made**:
+1. **Third Party Owner Doctype**:
+   - Simplified field structure (removed complex validations)
+   - Added `supplier_link` field to track original supplier
+   - Added `commission_account` field for dedicated payable account
+   - Auto-generates owner code and commission account on creation
+
+2. **Item Fields Updated**:
+   - `third_party_owner` (Link to Third Party Owner)
+   - `owner_supplier_source` (Link to original Supplier for auto-creation)
+   - Removed `third_party_supplier` field
+
+3. **Auto-Creation Logic**:
+   - When supplier is selected, Third Party Owner is auto-created
+   - Copies relevant data (name, email, phone, address)
+   - Creates dedicated commission payable account
+
+4. **Commission Integration**:
+   - Updated booking automation to use Third Party Owner
+   - Uses dedicated commission accounts per owner
+   - Party type "Third Party Owner" in Journal Entries
+
+**Files Updated**:
+- `rental_management/doctype/third_party_owner/third_party_owner.json`
+- `rental_management/doctype/third_party_owner/third_party_owner.py` 
+- `rental_management/custom_fields/item_fields.py`
+- `rental_management/automations/booking_automation.py`
+- `rental_management/hooks.py`
+- `update_item_fields_for_third_party_owner.py` (migration script)
+
+**Testing Required**:
+- Test Third Party Owner creation from Supplier
+- Verify commission account auto-creation
+- Test commission Journal Entry with new party type
+- Validate balance sheet shows correct owner liabilities
 
 ### Phase 4: Delivery Accounting
-- [ ] **Status**: Not Started
-- [ ] **Assigned**: TBD
-- [ ] **Due Date**: TBD
-- [ ] **Dependencies**: Phase 3
+- [x] **Status**: Completed ✅
+- [x] **Assigned**: AI Assistant
+- [x] **Due Date**: Today
+- [x] **Dependencies**: Phase 3 ✅
+
+**Target**: Fix delivery-stage accounting (Payment Entry for balance, Journal Entry for caution, AR to zero)
+- ✅ Implemented Payment Entry for balance collection with AR allocation
+- ✅ Created Journal Entry for caution deposit as customer liability
+- ✅ Added accounting for caution deposit refunds and deductions  
+- ✅ Ensured AR balance reduces to zero after full payment
+- ✅ Cash account reflects all collections (balance + caution)
+- ✅ Proper liability management for customer caution deposits
+
+**Changes Made**:
+1. **Balance Payment Processing**:
+   - `create_delivery_balance_payment()`: Creates Payment Entry for balance amount
+   - Allocates payment against Sales Invoice to reduce AR
+   - Uses appropriate cash/bank account based on payment mode
+   - Links payment to original invoice for proper allocation
+
+2. **Caution Deposit Management**:
+   - `create_caution_deposit_entry()`: Creates Journal Entry for caution deposit
+   - Dr. Cash, Cr. Customer Caution Deposits (liability account)
+   - Auto-creates caution deposit liability account if needed
+   - Properly tracks customer-wise caution deposit liabilities
+
+3. **Return Stage Accounting**:
+   - `create_caution_refund_entry()`: Handles caution deposit refunds
+   - `create_caution_deduction_entry()`: Converts deductions to income
+   - Dr. Caution Liability, Cr. Cash (for refunds)
+   - Dr. Caution Liability, Cr. Deduction Income (for forfeitures)
+
+4. **Account Structure**:
+   - Auto-creates "Customer Caution Deposits" liability account
+   - Auto-creates "Caution Deposit Forfeit Income" account
+   - Proper account hierarchy under Current Liabilities/Income
+
+**Accounting Flow**:
+```
+Stage 1 (Advance): 
+Dr. Cash ₹2,000, Cr. AR ₹2,000 (Payment Entry with allocation)
+
+Stage 2 (Delivery):
+Balance: Dr. Cash ₹8,000, Cr. AR ₹8,000 (Payment Entry) → AR = 0
+Caution: Dr. Cash ₹4,000, Cr. Caution Liability ₹4,000 (Journal Entry)
+
+Stage 3 (Return):
+Refund: Dr. Caution Liability ₹3,500, Cr. Cash ₹3,500
+Deduction: Dr. Caution Liability ₹500, Cr. Deduction Income ₹500
+```
+
+**Files Updated**:
+- `rental_management/api/customer_portal.py` - Added accounting functions
+- `test_phase4_delivery_accounting.py` - Comprehensive test script
+
+**Testing Required**:
+- Test complete 3-stage accounting flow
+- Verify AR goes to zero after balance payment  
+- Validate caution deposit liability tracking
+- Test refund and deduction accounting
 
 ### Phase 5: Account Setup
 - [ ] **Status**: Not Started

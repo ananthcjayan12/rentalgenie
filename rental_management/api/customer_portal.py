@@ -939,7 +939,35 @@ def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_depo
         # Reload the document to get updated values
         booking.reload()
         
-        # Create payment entries for balance and caution deposit (handled by booking automation)
+        # Create proper accounting entries for delivery stage
+        try:
+            # Create Payment Entry for balance amount (reduces AR to zero)
+            if balance_amount > 0:
+                balance_payment = create_delivery_balance_payment(booking, balance_amount, payment_mode)
+                frappe.log_error(f"✅ Balance payment entry created: {balance_payment}")
+            
+            # Create Journal Entry for caution deposit (liability)
+            if caution_deposit_amount > 0:
+                caution_je = create_caution_deposit_entry(booking, caution_deposit_amount, payment_mode)
+                frappe.log_error(f"✅ Caution deposit entry created: {caution_je}")
+                
+        except Exception as e:
+            frappe.log_error(f"Error creating delivery accounting entries: {str(e)}")
+            return {'success': False, 'message': f'Accounting error: {str(e)}'}
+        
+        # Create owner commission liability entries for third-party items (now at delivery stage)
+        try:
+            # Only create commissions if not already created
+            if not booking.get('owner_commission_created'):
+                from rental_management.automations.booking_automation import create_owner_commission_liabilities
+                create_owner_commission_liabilities(booking)
+                print(f"✅ Owner commission entries created at delivery for booking {booking.name}")
+            else:
+                print(f"ℹ️ Owner commission entries already exist for booking {booking.name}")
+        except Exception as e:
+            # Log error but don't fail the delivery process
+            print(f"Warning: Could not create owner commission entries: {str(e)}")
+            frappe.log_error(f"Error creating owner commission entries at delivery for {booking.name}: {str(e)}")
         
         return {
             'success': True,
@@ -992,7 +1020,19 @@ def process_item_return_and_refund(booking_id, caution_deposit_refund, deduction
         # Reload the document to get updated values
         booking.reload()
         
-        # Create refund journal entry (handled by booking automation)
+        # Create refund accounting entries
+        try:
+            if caution_deposit_refund > 0:
+                refund_je = create_caution_refund_entry(booking, caution_deposit_refund, payment_mode)
+                frappe.log_error(f"✅ Caution refund entry created: {refund_je}")
+            
+            if deduction_amount > 0:
+                deduction_je = create_caution_deduction_entry(booking, deduction_amount, deduction_reason)
+                frappe.log_error(f"✅ Caution deduction entry created: {deduction_je}")
+                
+        except Exception as e:
+            frappe.log_error(f"Error creating return accounting entries: {str(e)}")
+            return {'success': False, 'message': f'Accounting error: {str(e)}'}
         
         return {
             'success': True,
@@ -1196,3 +1236,249 @@ def create_advance_payment_entry(booking, advance_amount, payment_mode="Cash"):
         # Log error but don't fail the booking
         frappe.log_error(f"Error creating advance payment entry for {booking.name}: {str(e)}")
         return None
+
+def create_delivery_balance_payment(booking, balance_amount, payment_mode="Cash"):
+    """Create Payment Entry for balance amount to reduce AR to zero"""
+    try:
+        # Find the appropriate cash/bank account
+        company = booking.company
+        
+        # Get mode of payment account
+        if payment_mode == "Cash":
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Cash", "company": company, "is_group": 0}, 
+                "name")
+            if not cash_account:
+                # Create default cash account if not found
+                cash_account = f"Cash - {frappe.get_cached_value('Company', company, 'abbr')}"
+        else:
+            # For bank payments, get default bank account
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Bank", "company": company, "is_group": 0}, 
+                "name")
+        
+        if not cash_account:
+            frappe.throw("No suitable cash/bank account found for payment")
+        
+        # Create Payment Entry
+        payment_entry = frappe.get_doc({
+            "doctype": "Payment Entry",
+            "payment_type": "Receive",
+            "party_type": "Customer",
+            "party": booking.customer,
+            "company": company,
+            "posting_date": frappe.utils.nowdate(),
+            "paid_from": frappe.get_cached_value("Customer", booking.customer, "default_receivable_account") or 
+                        frappe.get_value("Account", {"account_type": "Receivable", "company": company}, "name"),
+            "paid_to": cash_account,
+            "paid_amount": balance_amount,
+            "received_amount": balance_amount,
+            "reference_no": f"Balance-{booking.name}",
+            "reference_date": frappe.utils.nowdate(),
+            "remarks": f"Balance payment for rental booking {booking.name}",
+            "references": [{
+                "reference_doctype": "Sales Invoice",
+                "reference_name": booking.name,
+                "allocated_amount": balance_amount
+            }]
+        })
+        
+        payment_entry.insert(ignore_permissions=True)
+        payment_entry.submit()
+        
+        return payment_entry.name
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating balance payment entry: {str(e)}")
+        raise
+
+def create_caution_deposit_entry(booking, caution_amount, payment_mode="Cash"):
+    """Create Journal Entry for caution deposit as liability"""
+    try:
+        company = booking.company
+        company_abbr = frappe.get_cached_value("Company", company, "abbr")
+        
+        # Get cash account
+        if payment_mode == "Cash":
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Cash", "company": company, "is_group": 0}, 
+                "name")
+            if not cash_account:
+                cash_account = f"Cash - {company_abbr}"
+        else:
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Bank", "company": company, "is_group": 0}, 
+                "name")
+        
+        # Get or create caution deposit liability account
+        caution_liability_account = f"Customer Caution Deposits - {company_abbr}"
+        if not frappe.db.exists("Account", caution_liability_account):
+            # Create the liability account
+            parent_account = f"Current Liabilities - {company_abbr}"
+            if not frappe.db.exists("Account", parent_account):
+                # Find any current liability account
+                parent_account = frappe.get_value("Account", 
+                    {"company": company, "account_type": "Payable", "is_group": 1}, 
+                    "name")
+            
+            caution_account = frappe.get_doc({
+                "doctype": "Account",
+                "account_name": "Customer Caution Deposits",
+                "parent_account": parent_account,
+                "company": company,
+                "account_type": "Payable",
+                "is_group": 0
+            })
+            caution_account.insert(ignore_permissions=True)
+            caution_liability_account = caution_account.name
+        
+        # Create Journal Entry
+        journal_entry = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry",
+            "posting_date": frappe.utils.nowdate(),
+            "company": company,
+            "user_remark": f"Caution deposit collected for booking {booking.name}",
+            "accounts": [
+                {
+                    "account": cash_account,
+                    "debit_in_account_currency": caution_amount,
+                    "credit_in_account_currency": 0
+                },
+                {
+                    "account": caution_liability_account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": caution_amount,
+                    "party_type": "Customer",
+                    "party": booking.customer
+                }
+            ]
+        })
+        
+        journal_entry.insert(ignore_permissions=True)
+        journal_entry.submit()
+        
+        return journal_entry.name
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating caution deposit entry: {str(e)}")
+        raise
+
+def create_caution_refund_entry(booking, refund_amount, payment_mode="Cash"):
+    """Create Journal Entry for caution deposit refund"""
+    try:
+        company = booking.company
+        company_abbr = frappe.get_cached_value("Company", company, "abbr")
+        
+        # Get cash account
+        if payment_mode == "Cash":
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Cash", "company": company, "is_group": 0}, 
+                "name")
+            if not cash_account:
+                cash_account = f"Cash - {company_abbr}"
+        else:
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Bank", "company": company, "is_group": 0}, 
+                "name")
+        
+        # Get caution deposit liability account
+        caution_liability_account = f"Customer Caution Deposits - {company_abbr}"
+        if not frappe.db.exists("Account", caution_liability_account):
+            frappe.throw(f"Caution deposit liability account not found: {caution_liability_account}")
+        
+        # Create Journal Entry for refund
+        journal_entry = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry", 
+            "posting_date": frappe.utils.nowdate(),
+            "company": company,
+            "user_remark": f"Caution deposit refund for booking {booking.name}",
+            "accounts": [
+                {
+                    "account": caution_liability_account,
+                    "debit_in_account_currency": refund_amount,
+                    "credit_in_account_currency": 0,
+                    "party_type": "Customer",
+                    "party": booking.customer
+                },
+                {
+                    "account": cash_account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": refund_amount
+                }
+            ]
+        })
+        
+        journal_entry.insert(ignore_permissions=True)
+        journal_entry.submit()
+        
+        return journal_entry.name
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating caution refund entry: {str(e)}")
+        raise
+
+def create_caution_deduction_entry(booking, deduction_amount, reason):
+    """Create Journal Entry for caution deposit deduction (convert liability to income)"""
+    try:
+        company = booking.company
+        company_abbr = frappe.get_cached_value("Company", company, "abbr")
+        
+        # Get caution deposit liability account
+        caution_liability_account = f"Customer Caution Deposits - {company_abbr}"
+        if not frappe.db.exists("Account", caution_liability_account):
+            frappe.throw(f"Caution deposit liability account not found: {caution_liability_account}")
+        
+        # Get or create deduction income account
+        deduction_income_account = f"Caution Deposit Forfeit Income - {company_abbr}"
+        if not frappe.db.exists("Account", deduction_income_account):
+            # Create the income account
+            parent_account = f"Direct Income - {company_abbr}"
+            if not frappe.db.exists("Account", parent_account):
+                parent_account = frappe.get_value("Account", 
+                    {"company": company, "account_type": "Income", "is_group": 1}, 
+                    "name")
+            
+            income_account = frappe.get_doc({
+                "doctype": "Account",
+                "account_name": "Caution Deposit Forfeit Income",
+                "parent_account": parent_account,
+                "company": company,
+                "account_type": "Income",
+                "is_group": 0
+            })
+            income_account.insert(ignore_permissions=True)
+            deduction_income_account = income_account.name
+        
+        # Create Journal Entry for deduction
+        journal_entry = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry",
+            "posting_date": frappe.utils.nowdate(),
+            "company": company,
+            "user_remark": f"Caution deposit deduction for booking {booking.name}: {reason}",
+            "accounts": [
+                {
+                    "account": caution_liability_account,
+                    "debit_in_account_currency": deduction_amount,
+                    "credit_in_account_currency": 0,
+                    "party_type": "Customer", 
+                    "party": booking.customer
+                },
+                {
+                    "account": deduction_income_account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": deduction_amount
+                }
+            ]
+        })
+        
+        journal_entry.insert(ignore_permissions=True)
+        journal_entry.submit()
+        
+        return journal_entry.name
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating caution deduction entry: {str(e)}")
+        raise

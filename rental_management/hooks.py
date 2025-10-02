@@ -154,6 +154,17 @@ doc_events = {
 	}
 }
 
+# Accounting Configuration
+# ------------------------
+# Add Third Party Owner as a party type for accounting entries
+accounting_dimension_doctypes = ["Third Party Owner"]
+
+# Third Party Owner as a party type
+party_account_types = ["Third Party Owner"]
+
+# Add Third Party Owner to party types for Journal Entry
+get_party_account = "rental_management.utils.get_third_party_owner_account"
+
 # Scheduled Tasks
 # ---------------
 
