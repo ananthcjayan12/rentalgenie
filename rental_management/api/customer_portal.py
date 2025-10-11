@@ -231,7 +231,18 @@ def check_item_availability(item_code, start_date, end_date):
         start_date = getdate(start_date)
         end_date = getdate(end_date)
         
-        # Check for conflicting bookings
+        # Handle both main item codes and service item codes
+        # Bookings always use service item codes (with -RENTAL suffix)
+        if item_code.endswith('-RENTAL'):
+            service_item_code = item_code
+        else:
+            service_item_code = item_code + '-RENTAL'
+        
+        # Verify the service item exists
+        if not frappe.db.exists("Item", service_item_code):
+            return {'is_available': False, 'message': f'Service item {service_item_code} not found'}
+        
+        # Check for conflicting bookings using the service item code
         conflicting_bookings = frappe.db.sql("""
             SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date
             FROM `tabSales Invoice` si
@@ -245,19 +256,28 @@ def check_item_availability(item_code, start_date, end_date):
                 (si.rental_start_date <= %s AND si.rental_end_date >= %s) OR
                 (si.rental_start_date >= %s AND si.rental_end_date <= %s)
             )
-        """, (item_code, start_date, start_date, end_date, end_date, start_date, end_date))
+        """, (service_item_code, start_date, start_date, end_date, end_date, start_date, end_date))
         
         is_available = len(conflicting_bookings) == 0
+        
+        # Debug logging
+        print(f"DEBUG Availability: item_code={item_code}, service_item_code={service_item_code}, start_date={start_date}, end_date={end_date}, conflicts={len(conflicting_bookings)}, available={is_available}")
+        
+        if conflicting_bookings:
+            booking_details = [f"Booking {b[0]} for customer {b[1]} ({b[2]} to {b[3]})" for b in conflicting_bookings]
+            message = f'Item is already booked for selected dates. Conflicting bookings: {"; ".join(booking_details)}'
+        else:
+            message = 'Available'
         
         return {
             'is_available': is_available,
             'conflicting_bookings': conflicting_bookings,
-            'message': 'Available' if is_available else 'Item is already booked for selected dates'
+            'message': message
         }
         
     except Exception as e:
-        frappe.log_error(f"Error checking availability for {item_code}: {str(e)}")
-        return {'is_available': False, 'message': 'Error checking availability'}
+        print(f"Error checking availability for {item_code}: {str(e)}")
+        return {'is_available': False, 'message': f'Error checking availability: {str(e)}'}
 
 
 

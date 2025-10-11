@@ -432,6 +432,21 @@ body {
     border: 1px solid #F59E0B;
 }
 
+.customer-selection-alert .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.customer-selection-alert .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
 .loading {
     opacity: 0.6;
     pointer-events: none;
@@ -620,51 +635,70 @@ body {
 
                 <!-- Booking Section -->
                 <div class="booking-section">
-                    <h3 class="section-title">Select Rental Dates</h3>
-                    
-                    <!-- Alert Messages -->
-                    <div x-show="alertMessage" :class="alertType" class="alert" x-text="alertMessage"></div>
-                    
-                    <!-- Date Inputs -->
-                    <div class="date-inputs">
-                        <div class="date-group">
-                            <label class="date-label">Function Date</label>
-                            <input type="date" class="date-input" x-model="functionDate" 
-                                   @change="updateRentalDates()" :min="minDate">
-                        </div>
-                        <div class="date-group">
-                            <label class="date-label">Return Date</label>
-                            <input type="date" class="date-input" x-model="returnDate" 
-                                   @change="calculateTotal()" :min="minReturnDate">
+                    <!-- Customer Selection Alert (shown when no customer is selected) -->
+                    <div x-show="!customerId" class="customer-selection-alert">
+                        <div class="alert alert-warning">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Please select a customer to continue with booking</span>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <a href="/portal/staff" class="btn btn-primary" style="background: var(--warning-color); border-color: var(--warning-color);">
+                                    <i class="fas fa-users" style="margin-right: 0.5rem;"></i>
+                                    Select Customer
+                                </a>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Rental Summary -->
-                    <div class="rental-summary" x-show="rentalDays > 0">
-                        <div class="summary-row">
-                            <span>Rental Period:</span>
-                            <span x-text="rentalDays + ' days'"></span>
+                    <!-- Normal booking flow (shown when customer is selected) -->
+                    <div x-show="customerId">
+                        <h3 class="section-title">Select Rental Dates</h3>
+                        
+                        <!-- Alert Messages -->
+                        <div x-show="alertMessage" :class="alertType" class="alert" x-text="alertMessage"></div>
+                        
+                        <!-- Date Inputs -->
+                        <div class="date-inputs">
+                            <div class="date-group">
+                                <label class="date-label">Function Date</label>
+                                <input type="date" class="date-input" x-model="functionDate" 
+                                       @change="updateRentalDates()" :min="minDate">
+                            </div>
+                            <div class="date-group">
+                                <label class="date-label">Return Date</label>
+                                <input type="date" class="date-input" x-model="returnDate" 
+                                       @change="calculateTotal()" :min="minReturnDate">
+                            </div>
                         </div>
-                        <div class="summary-row">
-                            <span>Rate per day:</span>
-                            <span>₹{{ item.rental_rate_per_day }}</span>
-                        </div>
-                        <div class="summary-row summary-total">
-                            <span>Total Amount:</span>
-                            <span x-text="'₹' + totalAmount"></span>
-                        </div>
-                    </div>
 
-                    <!-- Action Buttons -->
-                    <div class="action-buttons">
-                        <button class="btn btn-outline" @click="checkAvailability()" 
-                                :disabled="!canCheckAvailability" :class="{'loading': isChecking}">
-                            <span x-text="isChecking ? 'Checking...' : 'Check Availability'"></span>
-                        </button>
-                        <button class="btn btn-primary" @click="addToCart()" 
-                                :disabled="!canAddToCart" :class="{'loading': isAdding}">
-                            <span x-text="isAdding ? 'Adding...' : 'Add to Cart'"></span>
-                        </button>
+                        <!-- Rental Summary -->
+                        <div class="rental-summary" x-show="rentalDays > 0">
+                            <div class="summary-row">
+                                <span>Rental Period:</span>
+                                <span x-text="rentalDays + ' days'"></span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Rate per day:</span>
+                                <span>₹{{ item.rental_rate_per_day }}</span>
+                            </div>
+                            <div class="summary-row summary-total">
+                                <span>Total Amount:</span>
+                                <span x-text="'₹' + totalAmount"></span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn btn-outline" @click="checkAvailability()" 
+                                    :disabled="!canCheckAvailability" :class="{'loading': isChecking}">
+                                <span x-text="isChecking ? 'Checking...' : 'Check Availability'"></span>
+                            </button>
+                            <button class="btn btn-primary" @click="addToCart()" 
+                                    :disabled="!canAddToCart" :class="{'loading': isAdding}">
+                                <span x-text="isAdding ? 'Adding...' : 'Add to Cart'"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -780,7 +814,7 @@ function itemDetailApp() {
         },
         
         get canAddToCart() {
-            return this.canCheckAvailability && this.isAvailable === true;
+            return this.customerId && this.canCheckAvailability && this.isAvailable === true;
         },
         
         init() {
@@ -890,6 +924,13 @@ function itemDetailApp() {
         },
         
         async addToCart() {
+            // First check if customer is selected
+            if (!this.customerId) {
+                this.alertMessage = '⚠️ Please select a customer before adding items to cart. Go back to portal home to select a customer.';
+                this.alertType = 'alert-warning';
+                return;
+            }
+            
             if (!this.canAddToCart) return;
             
             this.isAdding = true;
@@ -899,25 +940,16 @@ function itemDetailApp() {
                 const startDate = new Date(functionDate);
                 startDate.setDate(startDate.getDate() - 2);
                 
-                // Use customer-based or session-based cart API based on context
-                let apiMethod, apiArgs;
-                
-                if (this.customerId) {
-                    // Customer-based cart for sales staff portal
-                    apiMethod = 'rental_management.api.customer_portal.add_to_customer_cart';
-                    apiArgs = {
-                        item_code: this.item.item_code,
-                        customer_id: this.customerId,
-                        rental_start_date: startDate.toISOString().split('T')[0],
-                        rental_end_date: this.returnDate,
-                        function_date: this.functionDate,
-                        quantity: 1
-                    };
-                } else {
-                    // No customer selected - cannot add to cart
-                    this.showMessage('Please select a customer first', 'error');
-                    return;
-                }
+                // Use customer-based cart API for sales staff portal
+                const apiMethod = 'rental_management.api.customer_portal.add_to_customer_cart';
+                const apiArgs = {
+                    item_code: this.item.item_code,
+                    customer_id: this.customerId,
+                    rental_start_date: startDate.toISOString().split('T')[0],
+                    rental_end_date: this.returnDate,
+                    function_date: this.functionDate,
+                    quantity: 1
+                };
                 
                 const response = await frappe.call({
                     method: apiMethod,
@@ -931,11 +963,7 @@ function itemDetailApp() {
                     
                     // Redirect to cart after 2 seconds
                     setTimeout(() => {
-                        if (this.customerId) {
-                            window.location.href = `/portal/cart?customer=${encodeURIComponent(this.customerId)}`;
-                        } else {
-                            window.location.href = '/portal/cart';
-                        }
+                        window.location.href = `/portal/cart?customer=${encodeURIComponent(this.customerId)}`;
                     }, 2000);
                 } else {
                     this.alertMessage = response.message.message;
