@@ -643,7 +643,7 @@ body {
                                 <span>Please select a customer to continue with booking</span>
                             </div>
                             <div style="margin-top: 1rem;">
-                                <a href="/portal/staff" class="btn btn-primary" style="background: var(--warning-color); border-color: var(--warning-color);">
+                                <a href="/portal/profile" class="btn btn-primary" style="background: var(--warning-color); border-color: var(--warning-color);">
                                     <i class="fas fa-users" style="margin-right: 0.5rem;"></i>
                                     Select Customer
                                 </a>
@@ -895,6 +895,14 @@ function itemDetailApp() {
                 const startDate = new Date(functionDate);
                 startDate.setDate(startDate.getDate() - 2);
                 
+                // Debug logging
+                console.log('Frontend Availability Check:', {
+                    item_code: this.item.item_code,
+                    start_date: startDate.toISOString().split('T')[0],
+                    end_date: this.returnDate,
+                    function_date: this.functionDate
+                });
+                
                 const response = await frappe.call({
                     method: 'rental_management.api.customer_portal.check_item_availability',
                     args: {
@@ -903,6 +911,8 @@ function itemDetailApp() {
                         end_date: this.returnDate
                     }
                 });
+                
+                console.log('Availability Response:', response.message);
                 
                 this.isAvailable = response.message.is_available;
                 
@@ -915,6 +925,7 @@ function itemDetailApp() {
                 }
                 
             } catch (error) {
+                console.error('Availability check error:', error);
                 this.alertMessage = 'Error checking availability: ' + error.message;
                 this.alertType = 'alert-error';
                 this.isAvailable = false;

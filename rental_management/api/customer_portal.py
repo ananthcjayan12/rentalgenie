@@ -243,31 +243,39 @@ def check_item_availability(item_code, start_date, end_date):
             return {'is_available': False, 'message': f'Service item {service_item_code} not found'}
         
         # Check for conflicting bookings using the service item code
+        # Fixed overlap logic: two ranges overlap if start1 <= end2 AND start2 <= end1
         conflicting_bookings = frappe.db.sql("""
-            SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date
+            SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date, si.booking_status
             FROM `tabSales Invoice` si
             JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
             WHERE sii.item_code = %s
             AND si.is_rental_booking = 1
             AND si.docstatus = 1
             AND si.booking_status NOT IN ('Cancelled', 'Completed', 'Exchanged')
-            AND (
-                (si.rental_start_date <= %s AND si.rental_end_date >= %s) OR
-                (si.rental_start_date <= %s AND si.rental_end_date >= %s) OR
-                (si.rental_start_date >= %s AND si.rental_end_date <= %s)
-            )
-        """, (service_item_code, start_date, start_date, end_date, end_date, start_date, end_date))
+            AND si.rental_start_date <= %s
+            AND si.rental_end_date >= %s
+        """, (service_item_code, end_date, start_date))
         
         is_available = len(conflicting_bookings) == 0
         
-        # Debug logging
-        print(f"DEBUG Availability: item_code={item_code}, service_item_code={service_item_code}, start_date={start_date}, end_date={end_date}, conflicts={len(conflicting_bookings)}, available={is_available}")
+        # Enhanced debug logging
+        print(f"DEBUG Availability Check:")
+        print(f"  - Input item_code: {item_code}")
+        print(f"  - Service item_code: {service_item_code}")
+        print(f"  - Date range: {start_date} to {end_date}")
+        print(f"  - Found conflicts: {len(conflicting_bookings)}")
         
         if conflicting_bookings:
+            print(f"  - Conflict details:")
+            for b in conflicting_bookings:
+                print(f"    * Booking {b[0]} for customer {b[1]} ({b[2]} to {b[3]})")
             booking_details = [f"Booking {b[0]} for customer {b[1]} ({b[2]} to {b[3]})" for b in conflicting_bookings]
             message = f'Item is already booked for selected dates. Conflicting bookings: {"; ".join(booking_details)}'
         else:
+            print(f"  - No conflicts found - item is available")
             message = 'Available'
+        
+        print(f"  - Final result: available={is_available}")
         
         return {
             'is_available': is_available,
