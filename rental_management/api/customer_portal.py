@@ -244,6 +244,7 @@ def check_item_availability(item_code, start_date, end_date):
         
         # Check for conflicting bookings using the service item code
         # Fixed overlap logic: two ranges overlap if start1 <= end2 AND start2 <= end1
+        # Use Sales Invoice level dates (si.rental_start_date/rental_end_date) instead of Item level dates
         conflicting_bookings = frappe.db.sql("""
             SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date, si.booking_status
             FROM `tabSales Invoice` si
@@ -252,6 +253,8 @@ def check_item_availability(item_code, start_date, end_date):
             AND si.is_rental_booking = 1
             AND si.docstatus = 1
             AND si.booking_status NOT IN ('Cancelled', 'Completed', 'Exchanged')
+            AND si.rental_start_date IS NOT NULL
+            AND si.rental_end_date IS NOT NULL
             AND si.rental_start_date <= %s
             AND si.rental_end_date >= %s
         """, (service_item_code, end_date, start_date))
@@ -733,6 +736,18 @@ def create_customer_booking_from_cart(customer_id, advance_amount=0, special_ins
                     'message': f"Item {item['item_name']} is no longer available for the selected dates"
                 }
         
+        # Get function date and calculate rental duration from first cart item
+        # (assuming all items have same function date for a single booking)
+        first_item = cart_items[0]
+        function_date = first_item.get('function_date')
+        rental_start_date = first_item.get('rental_start_date') 
+        rental_end_date = first_item.get('rental_end_date')
+        
+        # Calculate rental duration in days
+        rental_duration_days = 0
+        if rental_start_date and rental_end_date:
+            rental_duration_days = (getdate(rental_end_date) - getdate(rental_start_date)).days + 1
+        
         # Create Sales Invoice (Booking) - Draft status initially
         sales_invoice = frappe.get_doc({
             "doctype": "Sales Invoice",
@@ -744,6 +759,10 @@ def create_customer_booking_from_cart(customer_id, advance_amount=0, special_ins
             "booking_status": "",  # Start with empty status, will be set to "Confirmed" after advance collection
             "special_instructions": special_instructions,
             "advance_amount": flt(advance_amount),
+            "function_date": function_date,
+            "rental_start_date": rental_start_date,
+            "rental_end_date": rental_end_date,
+            "rental_duration_days": rental_duration_days,
             "items": []
         })
         
