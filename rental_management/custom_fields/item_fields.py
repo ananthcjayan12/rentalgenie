@@ -137,7 +137,7 @@ def create_item_custom_fields():
             "fieldtype": "Section Break",
             "depends_on": "is_rental_item",
             "collapsible": 1,
-            "insert_after": "third_party_supplier"
+            "insert_after": "owner_supplier_source"
         },
         {
             "doctype": "Item",
