@@ -35,6 +35,31 @@ def auto_create_supplier_for_item(item_doc):
         frappe.log_error(f"Error creating supplier for item {item_doc.name}: {str(e)}")
         return None
 
+def auto_create_third_party_owner_from_supplier(supplier_name):
+    """Auto-create Third Party Owner from supplier details"""
+    try:
+        # Generate owner name based on supplier name
+        owner_name = f"Owner - {supplier_name}"
+        
+        # Check if owner already exists
+        if frappe.db.exists("Third Party Owner", owner_name):
+            return owner_name
+        
+        # Create new third party owner
+        owner = frappe.get_doc({
+            "doctype": "Third Party Owner",
+            "owner_name": owner_name,
+            "supplier_link": supplier_name
+        })
+        owner.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        return owner.name
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating third party owner for supplier {supplier_name}: {str(e)}")
+        return None
+
 def before_item_save(doc, method):
     """Validate and set defaults for rental items"""
     if doc.is_rental_item:
@@ -94,6 +119,12 @@ def before_item_save(doc, method):
                 supplier_name = auto_create_supplier_for_item(doc)
                 if supplier_name:
                     doc.owner_supplier_source = supplier_name
+            
+            # Auto-create Third Party Owner from supplier if not already set
+            if doc.owner_supplier_source and not doc.third_party_owner:
+                third_party_owner_name = auto_create_third_party_owner_from_supplier(doc.owner_supplier_source)
+                if third_party_owner_name:
+                    doc.third_party_owner = third_party_owner_name
         
         # Clear supplier if not a third-party item
         if not doc.is_third_party_item:
