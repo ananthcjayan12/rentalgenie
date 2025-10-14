@@ -7,6 +7,10 @@ def auto_create_supplier_for_item(item_doc):
     if not item_doc.is_third_party_item:
         return None
     
+    # If supplier is already set, no need to create again
+    if item_doc.owner_supplier_source and frappe.db.exists("Supplier", item_doc.owner_supplier_source):
+        return item_doc.owner_supplier_source
+    
     try:
         # Generate supplier name based on item code and name
         supplier_name = f"Owner-{item_doc.item_code}"
@@ -86,14 +90,14 @@ def before_item_save(doc, method):
                 frappe.throw(_("Purchase Cost is mandatory for third-party items to create proper accounting entries"))
                 
             # Auto-create/assign supplier if not already set
-            if not doc.third_party_supplier:
+            if not doc.owner_supplier_source:
                 supplier_name = auto_create_supplier_for_item(doc)
                 if supplier_name:
-                    doc.third_party_supplier = supplier_name
+                    doc.owner_supplier_source = supplier_name
         
         # Clear supplier if not a third-party item
         if not doc.is_third_party_item:
-            doc.third_party_supplier = ""
+            doc.owner_supplier_source = ""
             doc.owner_commission_percent = 0
             doc.purchase_cost = 0
         
@@ -115,7 +119,7 @@ def before_item_save(doc, method):
         # doc.approval_status = ""  # Do not clear for service items so status persists
         doc.is_third_party_item = 0
         doc.owner_commission_percent = 0
-        doc.third_party_supplier = ""
+        doc.owner_supplier_source = ""
 
 def after_item_insert(doc, method):
     """Perform post-creation tasks for rental items"""
@@ -183,14 +187,14 @@ def handle_third_party_supplier(item_doc):
         return
     
     # If supplier is already set, no need to create again
-    if item_doc.third_party_supplier and frappe.db.exists("Supplier", item_doc.third_party_supplier):
+    if item_doc.owner_supplier_source and frappe.db.exists("Supplier", item_doc.owner_supplier_source):
         return
     
     # Create supplier if not already done
     supplier_name = auto_create_supplier_for_item(item_doc)
-    if supplier_name and supplier_name != item_doc.third_party_supplier:
+    if supplier_name and supplier_name != item_doc.owner_supplier_source:
         # Update the item document with the supplier reference
-        frappe.db.set_value("Item", item_doc.name, "third_party_supplier", supplier_name)
+        frappe.db.set_value("Item", item_doc.name, "owner_supplier_source", supplier_name)
         frappe.db.commit()
 
 def create_initial_stock_entry(item_doc):
@@ -237,7 +241,7 @@ def create_third_party_purchase_documents(item_doc):
         frappe.throw("Purchase Cost is mandatory for third-party items to create proper accounting entries")
     
     # Ensure supplier exists
-    if not item_doc.third_party_supplier:
+    if not item_doc.owner_supplier_source:
         frappe.throw("Third Party Supplier is required for creating purchase documents")
     
     # Get cost center
@@ -248,7 +252,7 @@ def create_third_party_purchase_documents(item_doc):
     # 1. Create Purchase Receipt first
     purchase_receipt = frappe.get_doc({
         "doctype": "Purchase Receipt",
-        "supplier": item_doc.third_party_supplier,
+        "supplier": item_doc.owner_supplier_source,
         "company": company,
         "posting_date": item_doc.purchase_date or frappe.utils.today(),
         "title": f"Third Party Item Receipt - {item_doc.item_name}",
@@ -270,7 +274,7 @@ def create_third_party_purchase_documents(item_doc):
     # 2. Create Purchase Invoice (with is_paid = 0 to show liability)
     purchase_invoice = frappe.get_doc({
         "doctype": "Purchase Invoice",
-        "supplier": item_doc.third_party_supplier,
+        "supplier": item_doc.owner_supplier_source,
         "company": company,
         "posting_date": item_doc.purchase_date or frappe.utils.today(),
         "due_date": frappe.utils.add_days(frappe.utils.today(), 30),  # 30 days credit
