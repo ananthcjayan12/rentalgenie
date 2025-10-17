@@ -694,28 +694,7 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <a href="/portal" class="nav-item">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </a>
-        <a href="/portal/category" class="nav-item">
-            <i class="fas fa-th-large"></i>
-            <span>Browse</span>
-        </a>
-        <a href="/portal/cart" class="nav-item active">
-            <i class="fas fa-shopping-cart"></i>
-            <span>Cart</span>
-        </a>
-        <a href="/portal/bookings" class="nav-item">
-            <i class="fas fa-calendar-check"></i>
-            <span>Bookings</span>
-        </a>
-        <a href="/portal/profile" class="nav-item">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
-        </a>
-    </div>
+    {% include "templates/includes/bottom_nav.html" %}
 </div>
 
 <script>
@@ -726,6 +705,7 @@ const cartPageData = {
 
 function cartPage() {
     return {
+        currentPage: 'cart',
         alertMessage: '',
         alertType: '',
         isRemoving: false,

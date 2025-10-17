@@ -8,26 +8,10 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-<style>
-:root {
-    --primary-color: #7B2CBF;
-    --secondary-color: #FF6B6B;
-    --background: #F8F9FA;
-    --text-primary: #2C3E50;
-    --text-secondary: #7F8C8D;
-    --border-color: #E1E8ED;
-    --success-color: #10B981;
-    --warning-color: #F59E0B;
-    --danger-color: #EF4444;
-    --info-color: #3B82F6;
-}
+{% include "templates/includes/portal_styles.html" %}
 
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: var(--background);
-    margin: 0;
-    padding: 0;
-}
+<style>
+/* Staff-specific styles */
 
 .staff-header {
     background: linear-gradient(135deg, var(--primary-color), #9333EA);
@@ -846,11 +830,15 @@ body {
             </form>
         </div>
     </div>
+
+    <!-- Bottom Navigation -->
+    {% include "templates/includes/bottom_nav.html" %}
 </div>
 
 <script>
 function staffDashboard() {
     return {
+        currentPage: 'bookings',
         view: '{{ view }}',
         alertMessage: '',
         alertType: 'alert-success',
