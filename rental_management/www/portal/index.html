@@ -146,52 +146,6 @@ body {
     object-fit: cover;
 }
 
-.banner-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2));
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: white;
-    padding: 2rem;
-}
-
-.banner-title {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-}
-
-.banner-subtitle {
-    font-size: 1.25rem;
-    margin-bottom: 2rem;
-    opacity: 0.95;
-    max-width: 600px;
-}
-
-.banner-cta {
-    background: var(--primary-color);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s;
-}
-
-.banner-cta:hover {
-    background: #6B21A8;
-    transform: translateY(-2px);
-    color: white;
-}
-
 .banner-dots {
     position: absolute;
     bottom: 1rem;
@@ -404,8 +358,6 @@ body {
     .search-container { order: 3; flex-basis: 100%; margin: 0; }
     
     .banner-carousel { height: 250px; }
-    .banner-title { font-size: 1.8rem; }
-    .banner-subtitle { font-size: 1rem; }
     .banner-nav { width: 40px; height: 40px; font-size: 1rem; }
     
     .categories-container { 
@@ -460,17 +412,6 @@ body {
                     {% for banner in banners %}
                     <div class="banner-slide">
                         <img src="{{ banner.image }}" alt="{{ banner.title or 'Banner' }}" class="banner-image">
-                        <div class="banner-overlay">
-                            {% if banner.title %}
-                            <h2 class="banner-title">{{ banner.title }}</h2>
-                            {% endif %}
-                            {% if banner.subtitle %}
-                            <p class="banner-subtitle">{{ banner.subtitle }}</p>
-                            {% endif %}
-                            {% if banner.button_text and banner.button_link %}
-                            <a href="{{ banner.button_link }}" class="banner-cta">{{ banner.button_text }}</a>
-                            {% endif %}
-                        </div>
                     </div>
                     {% endfor %}
                 </div>
