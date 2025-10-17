@@ -10,13 +10,9 @@ def get_context(context):
     # Get categories for the main navigation (using new portal categories)
     context.categories = get_portal_categories()
     
-    # Get trending/featured items for home page (sorted by trending)
-    trending_items = get_rental_items(filters={'is_trending': True}, sort_by='trending', limit=6)
-    context.trending_items = trending_items.get('items', [])
-    
-    # Get discounted items
-    discount_items = get_rental_items(limit=8)
-    context.discount_items = discount_items.get('items', [])
+    # Get random items for trending section (2-4 items)
+    random_items = get_rental_items(sort_by='random', limit=4)
+    context.trending_items = random_items.get('items', [])
     
     # Page metadata
     context.page_title = "Blush & Glow - Premium Rental Collection"

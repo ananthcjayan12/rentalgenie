@@ -267,60 +267,73 @@ body {
 
 .trending-section {
     padding: 3rem 0;
-    background: white;
+    background: linear-gradient(135deg, #6B46C1, #8B5CF6);
+    color: white;
 }
 
-/* New horizontal carousel for trending */
+.trending-section .section-title {
+    color: white;
+    margin-bottom: 3rem;
+}
+
+/* Updated trending carousel to match the design */
 .trending-carousel {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 0 2rem;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .trending-card {
-    scroll-snap-align: start;
     background: white;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    transition: transform 0.3s ease;
-    flex: 0 0 280px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    color: #333;
 }
 
-.trending-card:hover { transform: translateY(-2px); }
+.trending-card:hover { 
+    transform: translateY(-8px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+}
 
-.trending-image { width: 100%; height: 200px; object-fit: cover; }
+.trending-image { 
+    width: 100%; 
+    height: 250px; 
+    object-fit: cover; 
+}
 
-.trending-info { padding: 1rem; }
+.trending-info { 
+    padding: 1.5rem;
+    text-align: center;
+}
 
-.trending-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+.trending-title { 
+    font-size: 1.1rem; 
+    font-weight: 600; 
+    color: #333;
+    margin-bottom: 0.5rem;
+}
 
-.trending-price { color: var(--primary-color); font-weight: 700; }
+.trending-price { 
+    color: var(--primary-color); 
+    font-weight: 700;
+    font-size: 1.1rem;
+}
 
 .availability-badge {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(16, 185, 129, 0.9);
-    color: #fff;
-    padding: 0.25rem 0.5rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-}
-
-.discount-badge {
-    position: absolute;
     top: 1rem;
     left: 1rem;
-    background: #10B981;
-    color: white;
+    background: rgba(16, 185, 129, 0.9);
+    color: #fff;
     padding: 0.25rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
@@ -368,7 +381,15 @@ body {
     .category-image-wrapper { width: 80px; height: 80px; }
     .category-name { font-size: 0.9rem; }
     
-    .trending-card { flex-basis: 75%; }
+    .trending-carousel { 
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 0 1rem;
+    }
+    .trending-image { height: 200px; }
+    .trending-info { padding: 1rem; }
+    .offer-price { font-size: 1.2rem; }
+    
     body { padding-bottom: 80px; }
 }
 </style>
@@ -456,10 +477,7 @@ body {
         <h2 class="section-title">Trending Items</h2>
         <div class="trending-carousel">
             {% for item in trending_items %}
-            <div class="trending-card" @click="checkAvailability('{{ item.item_code }}')" style="position: relative;">
-                {% if item.discount_percent > 0 %}
-                <div class="discount-badge">{{ item.discount_percent }}% off</div>
-                {% endif %}
+            <div class="trending-card" @click="checkAvailability('{{ item.item_code }}')">
                 <img src="{{ item.image or '/assets/rental_management/images/placeholder.jpg' }}" 
                      alt="{{ item.item_name }}" class="trending-image">
                 <div class="availability-badge">{{ 'Available' if item.is_available else 'Booked' }}</div>

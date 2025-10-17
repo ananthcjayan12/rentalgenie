@@ -214,6 +214,8 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
             order_clause = "m.modified DESC"
         elif sort_by == "trending" or trending_mode:
             order_clause = "m.total_rental_count DESC, m.modified DESC"
+        elif sort_by == "random":
+            order_clause = "RAND()"
         else:
             order_clause = "m.total_rental_count DESC, m.modified DESC"
         
