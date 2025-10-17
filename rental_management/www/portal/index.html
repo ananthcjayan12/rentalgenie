@@ -108,33 +108,146 @@ body {
     justify-content: center;
 }
 
-.hero-section {
-    background: linear-gradient(135deg, var(--primary-color), #9D4EDD);
-    color: white;
-    padding: 3rem 0;
+/* Banner Section */
+.banner-section {
+    margin-top: 0;
+}
+
+.banner-carousel {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+}
+
+.banner-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.banner-slides {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
+}
+
+.banner-slide {
+    flex: 0 0 100%;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.banner-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.banner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align: center;
+    color: white;
+    padding: 2rem;
 }
 
-.hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 1rem;
-}
-
-.hero-title {
-    font-size: 2.5rem;
+.banner-title {
+    font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
-.hero-subtitle {
+.banner-subtitle {
     font-size: 1.25rem;
-    opacity: 0.9;
     margin-bottom: 2rem;
+    opacity: 0.95;
+    max-width: 600px;
 }
 
+.banner-cta {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.banner-cta:hover {
+    background: #6B21A8;
+    transform: translateY(-2px);
+    color: white;
+}
+
+.banner-dots {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.banner-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.banner-dot.active {
+    background: white;
+}
+
+.banner-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    z-index: 10;
+}
+
+.banner-nav:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.banner-nav.prev {
+    left: 1rem;
+}
+
+.banner-nav.next {
+    right: 1rem;
+}
+
+/* Categories Section */
 .categories-section {
     padding: 3rem 0;
+    background: white;
 }
 
 .section-title {
@@ -145,66 +258,57 @@ body {
     color: var(--text-primary);
 }
 
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+.categories-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
+    flex-wrap: wrap;
 }
 
-.category-card {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     cursor: pointer;
-    position: relative;
+    transition: transform 0.3s ease;
+    text-decoration: none;
+    color: inherit;
 }
 
-.category-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+.category-item:hover {
+    transform: translateY(-5px);
+}
+
+.category-image-wrapper {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.category-item:hover .category-image-wrapper {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
 
 .category-image {
     width: 100%;
-    height: 200px;
+    height: 100%;
     object-fit: cover;
 }
 
-/* Category icon overlay */
-.category-icon {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.category-info {
-    padding: 1.5rem;
-    text-align: center;
-}
-
 .category-name {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.category-count {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+    text-align: center;
+    margin: 0;
 }
 
 .trending-section {
@@ -298,8 +402,20 @@ body {
 @media (max-width: 768px) {
     .header-content { flex-wrap: wrap; gap: 1rem; }
     .search-container { order: 3; flex-basis: 100%; margin: 0; }
-    .hero-title { font-size: 1.8rem; }
-    .categories-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    
+    .banner-carousel { height: 250px; }
+    .banner-title { font-size: 1.8rem; }
+    .banner-subtitle { font-size: 1rem; }
+    .banner-nav { width: 40px; height: 40px; font-size: 1rem; }
+    
+    .categories-container { 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 1rem; 
+        display: grid;
+    }
+    .category-image-wrapper { width: 80px; height: 80px; }
+    .category-name { font-size: 0.9rem; }
+    
     .trending-card { flex-basis: 75%; }
     body { padding-bottom: 80px; }
 }
@@ -336,28 +452,59 @@ body {
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">Premium Rental Collection</h1>
-            <p class="hero-subtitle">Rent designer wear for your special occasions</p>
+    <!-- Banner Section -->
+    <section class="banner-section">
+        <div class="banner-carousel" x-data="bannerCarousel()">
+            <div class="banner-container">
+                <div class="banner-slides" :style="`transform: translateX(-${currentSlide * 100}%)`">
+                    {% for banner in banners %}
+                    <div class="banner-slide">
+                        <img src="{{ banner.image }}" alt="{{ banner.title or 'Banner' }}" class="banner-image">
+                        <div class="banner-overlay">
+                            {% if banner.title %}
+                            <h2 class="banner-title">{{ banner.title }}</h2>
+                            {% endif %}
+                            {% if banner.subtitle %}
+                            <p class="banner-subtitle">{{ banner.subtitle }}</p>
+                            {% endif %}
+                            {% if banner.button_text and banner.button_link %}
+                            <a href="{{ banner.button_link }}" class="banner-cta">{{ banner.button_text }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Banner Navigation Dots -->
+                <div class="banner-dots">
+                    {% for banner in banners %}
+                    <button class="banner-dot" :class="{ 'active': currentSlide === {{ loop.index0 }} }" 
+                            @click="goToSlide({{ loop.index0 }})"></button>
+                    {% endfor %}
+                </div>
+                
+                <!-- Banner Navigation Arrows -->
+                <button class="banner-nav prev" @click="prevSlide()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="banner-nav next" @click="nextSlide()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
     </section>
 
     <!-- Categories Section -->
     <section class="categories-section">
         <h2 class="section-title">Shop by Category</h2>
-        <div class="categories-grid">
+        <div class="categories-container">
             {% for category in categories %}
-            <div class="category-card" @click="goToCategory('{{ category.name }}')">
-                <img src="{{ category.image or '/assets/rental_management/images/placeholder.jpg' }}" 
-                     alt="{{ category.label }}" class="category-image">
-                <!-- Icon overlay -->
-                <div class="category-icon"><i class="fas {{ category.icon or 'fa-tag' }}"></i></div>
-                <div class="category-info">
-                    <h3 class="category-name">{{ category.label }}</h3>
-                    <p class="category-count">{{ category.item_count }} items</p>
+            <div class="category-item" @click="goToCategory('{{ category.name }}')">
+                <div class="category-image-wrapper">
+                    <img src="{{ category.image or '/assets/rental_management/images/placeholder.jpg' }}" 
+                         alt="{{ category.label }}" class="category-image">
                 </div>
+                <h3 class="category-name">{{ category.label }}</h3>
             </div>
             {% endfor %}
         </div>
@@ -459,6 +606,52 @@ function portalApp() {
                 window.location.href = `/portal/item?item=${encodeURIComponent(itemCode)}`;
             } catch (error) {
                 alert('Error adding to cart: ' + error.message);
+            }
+        }
+    }
+}
+
+function bannerCarousel() {
+    return {
+        currentSlide: 0,
+        totalSlides: 0,
+        autoSlideInterval: null,
+        
+        init() {
+            // Calculate total slides from DOM
+            this.totalSlides = document.querySelectorAll('.banner-slide').length;
+            if (this.totalSlides > 1) {
+                this.startAutoSlide();
+            }
+        },
+        
+        nextSlide() {
+            if (this.totalSlides <= 1) return;
+            this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+            this.resetAutoSlide();
+        },
+        
+        prevSlide() {
+            if (this.totalSlides <= 1) return;
+            this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+            this.resetAutoSlide();
+        },
+        
+        goToSlide(index) {
+            this.currentSlide = index;
+            this.resetAutoSlide();
+        },
+        
+        startAutoSlide() {
+            this.autoSlideInterval = setInterval(() => {
+                this.nextSlide();
+            }, 5000);
+        },
+        
+        resetAutoSlide() {
+            if (this.autoSlideInterval) {
+                clearInterval(this.autoSlideInterval);
+                this.startAutoSlide();
             }
         }
     }
