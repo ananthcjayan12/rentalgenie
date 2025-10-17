@@ -1,11 +1,14 @@
 import frappe
-from rental_management.api.customer_portal import get_rental_categories, get_rental_items
+from rental_management.api.customer_portal import get_portal_categories, get_rental_items, get_portal_banners
 
 def get_context(context):
     """Get context for portal home page"""
     
+    # Get banners for home page carousel
+    context.banners = get_portal_banners()
+    
     # Get categories for the main navigation
-    context.categories = get_rental_categories()
+    context.categories = get_portal_categories()
     
     # Get trending/featured items for home page (sorted by trending)
     trending_items = get_rental_items(filters={'is_trending': True}, sort_by='trending', limit=6)
