@@ -33,7 +33,7 @@ body {
     padding: 0 1rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 2rem;
 }
 
 .logo {
@@ -45,8 +45,7 @@ body {
 
 .search-container {
     flex: 1;
-    max-width: 400px;
-    margin: 0 2rem;
+    max-width: 500px;
     position: relative;
 }
 
@@ -70,35 +69,6 @@ body {
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-secondary);
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.cart-icon, .user-icon, .nav-icon {
-    position: relative;
-    padding: 0.5rem;
-    color: var(--text-primary);
-    text-decoration: none;
-    font-size: 1.25rem;
-}
-
-.cart-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: var(--secondary-color);
-    color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 /* Bottom Navigation Styles */
