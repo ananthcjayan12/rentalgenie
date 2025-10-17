@@ -422,11 +422,22 @@
 }
 
 .confirm-booking-btn {
-    background: var(--success-color);
+    background: #10b981 !important;
+    color: white !important;
+    border: 2px solid #10b981 !important;
 }
 
 .confirm-booking-btn:hover:not(:disabled) {
-    background: #059669;
+    background: #059669 !important;
+    border-color: #059669 !important;
+    transform: translateY(-1px);
+}
+
+.confirm-booking-btn:disabled {
+    background: #9ca3af !important;
+    color: #6b7280 !important;
+    border-color: #9ca3af !important;
+    cursor: not-allowed;
 }
 
 /* Responsive Design */
