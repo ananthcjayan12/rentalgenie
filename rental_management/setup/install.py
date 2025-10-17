@@ -1,5 +1,6 @@
 import frappe
 from rental_management.custom_fields.item_fields import create_item_custom_fields
+from rental_management.custom_fields.item_group_fields import create_item_group_custom_fields, update_existing_item_groups
 from rental_management.custom_fields.customer_fields import create_customer_custom_fields
 from rental_management.custom_fields.sales_invoice_fields import create_sales_invoice_custom_fields
 
@@ -9,11 +10,18 @@ def after_install():
     
     # Create custom fields
     create_item_custom_fields()
+    create_item_group_custom_fields()  # Portal category fields
     create_customer_custom_fields()
     create_sales_invoice_custom_fields()
     
     # Create default item groups if they don't exist
     create_rental_item_groups()
+    
+    # Update existing item groups for portal display
+    update_existing_item_groups()
+    
+    # Create Portal Banner DocType and sample data
+    setup_portal_banners()
     
     # Setup default accounts template
     setup_rental_accounts()
@@ -22,14 +30,71 @@ def after_install():
     create_rental_warehouses()
     
     print("Rental Management setup completed!")
+    print("\n📋 Next Steps:")
+    print("1. Go to Portal Banner list to upload banner images: /app/portal-banner")
+    print("2. Go to Item Group list to configure category images: /app/item-group")
+    print("3. Your portal is now ready for image uploads!")
+
+def setup_portal_banners():
+    """Create Portal Banner DocType and sample banner"""
+    try:
+        # Install Portal Banner DocType (should be automatically loaded from JSON)
+        if not frappe.db.exists("DocType", "Portal Banner"):
+            print("Portal Banner DocType not found - will be loaded from JSON file")
+        
+        # Create sample banner
+        if not frappe.db.exists("Portal Banner", "Welcome Banner"):
+            banner = frappe.get_doc({
+                "doctype": "Portal Banner",
+                "title": "Welcome Banner",
+                "subtitle": "Rent premium designer wear for your special occasions",
+                "button_text": "Shop Now",
+                "button_link": "/portal/category",
+                "is_active": 1,
+                "display_order": 1
+            })
+            banner.insert(ignore_permissions=True)
+            print("✅ Sample banner created! Add an image to complete setup")
+    except Exception as e:
+        print(f"❌ Error setting up portal banners: {e}")
+        frappe.log_error(f"Portal banner setup error: {str(e)}")
 
 def create_rental_item_groups():
-    """Create rental-specific item groups"""
+    """Create rental-specific item groups with portal settings"""
     item_groups = [
-        {"item_group_name": "Rental Items", "parent_item_group": "All Item Groups"},
-        {"item_group_name": "Dresses", "parent_item_group": "Rental Items"},
-        {"item_group_name": "Ornaments", "parent_item_group": "Rental Items"},
-        {"item_group_name": "Accessories", "parent_item_group": "Rental Items"}
+        {
+            "item_group_name": "Rental Items", 
+            "parent_item_group": "All Item Groups",
+            "is_group": 1,
+            "show_in_portal": 0  # Parent group, don't show in portal
+        },
+        {
+            "item_group_name": "Dresses", 
+            "parent_item_group": "Rental Items",
+            "is_group": 0,
+            "show_in_portal": 1,
+            "portal_display_order": 1,
+            "portal_icon": "fa-person-dress",
+            "portal_description": "Designer dresses for special occasions"
+        },
+        {
+            "item_group_name": "Ornaments", 
+            "parent_item_group": "Rental Items",
+            "is_group": 0,
+            "show_in_portal": 1,
+            "portal_display_order": 2,
+            "portal_icon": "fa-gem",
+            "portal_description": "Premium jewelry and ornaments"
+        },
+        {
+            "item_group_name": "Accessories", 
+            "parent_item_group": "Rental Items",
+            "is_group": 0,
+            "show_in_portal": 1,
+            "portal_display_order": 3,
+            "portal_icon": "fa-star",
+            "portal_description": "Bags, shoes and accessories"
+        }
     ]
     
     for group in item_groups:
@@ -38,9 +103,23 @@ def create_rental_item_groups():
                 "doctype": "Item Group",
                 "item_group_name": group["item_group_name"],
                 "parent_item_group": group["parent_item_group"],
-                "is_group": 1 if group["item_group_name"] == "Rental Items" else 0
+                "is_group": group["is_group"],
+                "show_in_portal": group["show_in_portal"],
+                "portal_display_order": group.get("portal_display_order", 1),
+                "portal_icon": group.get("portal_icon", "fa-tag"),
+                "portal_description": group.get("portal_description", "")
             })
             item_group.insert()
+            print(f"✅ Created item group: {group['item_group_name']}")
+        else:
+            # Update existing item group with portal settings
+            frappe.db.set_value("Item Group", group["item_group_name"], {
+                "show_in_portal": group["show_in_portal"],
+                "portal_display_order": group.get("portal_display_order", 1),
+                "portal_icon": group.get("portal_icon", "fa-tag"),
+                "portal_description": group.get("portal_description", "")
+            })
+            print(f"✅ Updated item group: {group['item_group_name']}")
 
 def setup_rental_accounts():
     """Setup rental-specific account templates"""

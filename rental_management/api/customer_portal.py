@@ -1,7 +1,123 @@
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, getdate, add_days
+from frappe.utils import cint, flt, getdate, add_days, nowdate
 import json
+
+@frappe.whitelist(allow_guest=True)
+def get_portal_banners():
+    """Get active portal banners for home page"""
+    try:
+        banners = frappe.db.sql("""
+            SELECT name, title, image, subtitle, button_text, button_link, display_order
+            FROM `tabPortal Banner`
+            WHERE is_active = 1
+              AND (show_from IS NULL OR show_from <= %s)
+              AND (show_to IS NULL OR show_to >= %s)
+            ORDER BY display_order ASC, modified DESC
+        """, [nowdate(), nowdate()], as_dict=True)
+        
+        return banners
+    except Exception as e:
+        frappe.log_error(f"Error getting portal banners: {str(e)}")
+        return []
+
+@frappe.whitelist(allow_guest=True)
+def get_portal_categories():
+    """Get portal categories using Item Group with custom portal fields"""
+    try:
+        # Get Item Groups that are marked to show in portal
+        categories = frappe.db.sql("""
+            SELECT 
+                ig.name,
+                ig.item_group_name as label,
+                ig.portal_image as image,
+                ig.portal_icon as icon,
+                ig.portal_description as description,
+                ig.portal_display_order as display_order,
+                COUNT(DISTINCT m.item_code) as item_count
+            FROM `tabItem Group` ig
+            LEFT JOIN `tabItem` m ON m.item_group = ig.name
+                AND m.is_rental_item = 1
+                AND m.approval_status = 'Approved'
+                AND m.disabled = 0
+            LEFT JOIN `tabItem` s ON s.item_code = CONCAT(m.item_code, '-RENTAL')
+                AND s.is_stock_item = 0
+                AND s.disabled = 0
+                AND COALESCE(s.approval_status, m.approval_status) = 'Approved'
+            WHERE ig.show_in_portal = 1
+              AND ig.is_group = 0
+            GROUP BY ig.name
+            HAVING item_count > 0
+            ORDER BY ig.portal_display_order ASC, ig.item_group_name ASC
+        """, as_dict=True)
+        
+        # Add default icons and images for categories without custom settings
+        for category in categories:
+            if not category.get('image'):
+                category['image'] = f"/assets/rental_management/images/categories/{(category['label'] or '').lower().replace(' ', '_')}.jpg"
+            
+            if not category.get('icon'):
+                category['icon'] = get_default_category_icon(category['label'])
+        
+        # If no Item Groups are configured for portal, fallback to rental_item_type
+        if not categories:
+            categories = frappe.db.sql("""
+                SELECT 
+                    m.rental_item_type AS name,
+                    m.rental_item_type AS label,
+                    COUNT(s.item_code) AS item_count
+                FROM `tabItem` m
+                JOIN `tabItem` s ON s.item_code = CONCAT(m.item_code, '-RENTAL')
+                WHERE m.is_rental_item = 1
+                  AND m.approval_status = 'Approved'
+                  AND m.disabled = 0
+                  AND s.is_stock_item = 0
+                  AND s.disabled = 0
+                  AND COALESCE(s.approval_status, m.approval_status) = 'Approved'
+                  AND m.rental_item_type IS NOT NULL
+                GROUP BY m.rental_item_type
+                ORDER BY item_count DESC
+            """, as_dict=True)
+            
+            # Add default image and icon for fallback categories
+            for category in categories:
+                category['image'] = f"/assets/rental_management/images/categories/{(category['name'] or '').lower()}.jpg"
+                category['icon'] = get_default_category_icon(category.get('label') or category.get('name'))
+        
+        return categories
+    except Exception as e:
+        frappe.log_error(f"Error getting portal categories: {str(e)}")
+        return []
+
+def get_default_category_icon(category_name):
+    """Get default icon for category"""
+    if not category_name:
+        return 'fa-tag'
+        
+    icon_map = {
+        'Dress': 'fa-person-dress',
+        'Gown': 'fa-person-dress', 
+        'Lehenga': 'fa-person-dress',
+        'Saree': 'fa-person-dress',
+        'Ornament': 'fa-gem',
+        'Jewellery': 'fa-gem',
+        'Jewelry': 'fa-gem',
+        'Necklace': 'fa-gem',
+        'Earring': 'fa-gem',
+        'Bracelet': 'fa-gem',
+        'Ring': 'fa-gem',
+        'Accessory': 'fa-star',
+        'Bag': 'fa-shopping-bag',
+        'Shoes': 'fa-shoe-prints',
+        'Other': 'fa-tags'
+    }
+    
+    # Check for partial matches in category name
+    for key, icon in icon_map.items():
+        if key.lower() in category_name.lower():
+            return icon
+    
+    return 'fa-tag'
 
 @frappe.whitelist(allow_guest=True)
 def get_rental_categories():
