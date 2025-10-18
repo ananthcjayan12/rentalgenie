@@ -214,47 +214,34 @@ def setup_desk_customization():
         frappe.log_error(f"Desk customization error: {str(e)}")
 
 def hide_unwanted_modules():
-    """Configure module visibility by blocking access"""
-    import frappe
-    
+    """Hide modules not needed for rental management"""
     try:
-        print("Configuring module visibility...")
+        print("Hiding unwanted modules...")
         
-        # Modules to hide completely
+        # List of modules to hide
         modules_to_hide = [
             'CRM', 'Projects', 'Support', 'Quality', 'Manufacturing',
             'Buying', 'Selling', 'HR', 'Payroll', 'Assets',
             'Loan Management', 'Healthcare', 'Education', 'Agriculture',
-            'Non Profit', 'Hospitality', 'Utilities', 'Loan Management'
+            'Non Profit', 'Hospitality', 'Utilities'
         ]
         
-        # Modules to keep visible
-        modules_to_keep = [
-            'Stock', 'Accounting', 'Accounts', 'Rental Management', 
-            'Setup', 'Website', 'Home', 'Tools', 'Build'
-        ]
-        
-        # Try to disable modules at Module Def level
         for module_name in modules_to_hide:
-            try:
-                if frappe.db.exists("Module Def", module_name):
-                    # Can't actually disable Module Def, but we can set properties
-                    # The actual hiding is done via boot.py and CSS
-                    pass
-            except Exception as e:
-                print(f"⚠️  Could not process module {module_name}: {e}")
+            if frappe.db.exists("Module Def", module_name):
+                try:
+                    # Simply set the module as disabled
+                    frappe.db.set_value("Module Def", module_name, "disabled", 1)
+                    print(f"✅ Hidden module: {module_name}")
+                except Exception as e:
+                    print(f"⚠️  Could not hide module {module_name}: {str(e)}")
         
-        print("ℹ️  Visible modules: " + ", ".join(modules_to_keep))
-        print("ℹ️  Hidden modules: " + ", ".join(modules_to_hide))
-        print("✅ Module visibility configured")
-        print("📌 Module hiding is enforced via:")
-        print("   1. boot.py - Filters modules at login")
-        print("   2. rental_theme.css - Hides UI elements")
+        frappe.db.commit()
+        print("✅ Module hiding complete!")
         print("📌 Refresh your browser to see the changes")
         
     except Exception as e:
-        print(f"❌ Error configuring modules: {e}")
-        frappe.log_error(f"Module configuration error: {str(e)}")
+        print(f"❌ Error hiding modules: {e}")
+        frappe.log_error(f"Module hiding error: {str(e)}")
 
 def create_rental_workspace():
     """Create a custom Rental Management workspace"""
@@ -339,3 +326,68 @@ def create_rental_workspace():
     except Exception as e:
         print(f"❌ Error creating workspace: {e}")
         frappe.log_error(f"Workspace creation error: {str(e)}")
+
+def setup_rental_roles_and_users():
+    """Create Rental Manager role with proper permissions and test user"""
+    try:
+        print("Setting up Rental Manager role and permissions...")
+        
+        # Create Rental Manager role if it doesn't exist
+        if not frappe.db.exists("Role", "Rental Manager"):
+            rental_role = frappe.get_doc({
+                "doctype": "Role",
+                "role_name": "Rental Manager",
+                "desk_access": 1,
+            })
+            rental_role.insert(ignore_permissions=True)
+            print("✅ Created Rental Manager role")
+        
+        # Create test user
+        test_email = "rental.manager@example.com"
+        
+        if not frappe.db.exists("User", test_email):
+            user = frappe.get_doc({
+                "doctype": "User",
+                "email": test_email,
+                "first_name": "Rental",
+                "last_name": "Manager",
+                "send_welcome_email": 0,
+                "enabled": 1,
+                "user_type": "System User"
+            })
+            user.insert(ignore_permissions=True)
+            user.new_password = "rental123"
+            user.save(ignore_permissions=True)
+            print(f"✅ Created test user: {test_email}")
+        
+        # Add standard roles for full functionality
+        user = frappe.get_doc("User", test_email)
+        roles_to_add = [
+            "Rental Manager",
+            "Item Manager",
+            "Stock Manager", 
+            "Accounts Manager",
+            "Sales Manager",
+            "Sales User",
+            "Stock User",
+            "Accounts User"
+        ]
+        
+        for role in roles_to_add:
+            if frappe.db.exists("Role", role) and not any(d.role == role for d in user.get("roles", [])):
+                user.append("roles", {"role": role})
+        
+        user.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        print("\n" + "="*60)
+        print("✅ Rental Manager Setup Complete!")
+        print("="*60)
+        print(f"📧 Email: {test_email}")
+        print(f"🔑 Password: rental123")
+        print(f"🎯 Roles: " + ", ".join(roles_to_add))
+        print("="*60 + "\n")
+        
+    except Exception as e:
+        print(f"❌ Error setting up roles: {e}")
+        frappe.log_error(f"Role setup error: {str(e)}")

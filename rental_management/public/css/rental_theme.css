@@ -1,6 +1,6 @@
 /**
  * Blush & Glow Rental Management Theme
- * Uses ERPNext default colors with minimal custom branding
+ * Minimal branding customization - modules are hidden at database level
  */
 
 /* Logo customization */
@@ -10,49 +10,6 @@
     max-height: 40px;
     width: auto;
     object-fit: contain;
-}
-
-/* Hide unwanted modules from sidebar and home page */
-/* Using attribute selector to match module names */
-a[data-name="CRM"],
-a[data-name="Projects"],
-a[data-name="Support"],
-a[data-name="Quality"],
-a[data-name="Manufacturing"],
-a[data-name="Buying"],
-a[data-name="Selling"],
-a[data-name="HR"],
-a[data-name="Payroll"],
-a[data-name="Assets"],
-a[data-name="Loan Management"],
-a[data-name="Healthcare"],
-a[data-name="Education"],
-a[data-name="Agriculture"],
-a[data-name="Non Profit"],
-a[data-name="Hospitality"],
-a[data-name="Utilities"] {
-    display: none !important;
-}
-
-/* Hide workspace cards */
-.standard-sidebar-item:has(a[data-name="CRM"]),
-.standard-sidebar-item:has(a[data-name="Projects"]),
-.standard-sidebar-item:has(a[data-name="Support"]),
-.standard-sidebar-item:has(a[data-name="Quality"]),
-.standard-sidebar-item:has(a[data-name="Manufacturing"]),
-.standard-sidebar-item:has(a[data-name="Buying"]),
-.standard-sidebar-item:has(a[data-name="Selling"]),
-.standard-sidebar-item:has(a[data-name="HR"]),
-.standard-sidebar-item:has(a[data-name="Payroll"]),
-.standard-sidebar-item:has(a[data-name="Assets"]),
-.standard-sidebar-item:has(a[data-name="Loan Management"]),
-.standard-sidebar-item:has(a[data-name="Healthcare"]),
-.standard-sidebar-item:has(a[data-name="Education"]),
-.standard-sidebar-item:has(a[data-name="Agriculture"]),
-.standard-sidebar-item:has(a[data-name="Non Profit"]),
-.standard-sidebar-item:has(a[data-name="Hospitality"]),
-.standard-sidebar-item:has(a[data-name="Utilities"]) {
-    display: none !important;
 }
 
 /* Custom branding footer */
