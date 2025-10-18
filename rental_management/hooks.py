@@ -25,8 +25,8 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/rental_management/css/rental_management.css"
-# app_include_js = "/assets/rental_management/js/rental_management.js"
+app_include_css = "/assets/rental_management/css/rental_theme.css"
+app_include_js = "/assets/rental_management/js/rental_desk.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/rental_management/css/rental_management.css"
@@ -65,6 +65,18 @@ doctype_js = {
 # role_home_page = {
 # 	"Role": "home_page"
 # }
+
+# Website brand and app logo
+brand_html = """
+<div class="app-logo navbar-brand-custom">
+    <img src="/assets/rental_management/images/blush_glow_logo.png" 
+         alt="Blush & Glow" 
+         style="max-height: 40px; width: auto;" />
+</div>
+"""
+
+# Desk customization
+app_logo_url = "/assets/rental_management/images/blush_glow_logo.png"
 
 # Generators
 # ----------

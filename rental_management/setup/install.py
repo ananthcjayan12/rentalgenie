@@ -29,11 +29,19 @@ def after_install():
     # Create default warehouses for rental items
     create_rental_warehouses()
     
+    # Setup desk customizations and branding
+    setup_desk_customization()
+    
+    # Hide unwanted modules
+    hide_unwanted_modules()
+    
     print("Rental Management setup completed!")
     print("\n📋 Next Steps:")
-    print("1. Go to Portal Banner list to upload banner images: /app/portal-banner")
-    print("2. Go to Item Group list to configure category images: /app/item-group")
-    print("3. Your portal is now ready for image uploads!")
+    print("1. Upload Blush & Glow logo to: /public/images/blush_glow_logo.png")
+    print("2. Go to Portal Banner list to upload banner images: /app/portal-banner")
+    print("3. Go to Item Group list to configure category images: /app/item-group")
+    print("4. Refresh your browser to see the new desk customizations")
+    print("5. Your portal is now ready for image uploads!")
 
 def setup_portal_banners():
     """Create Portal Banner DocType and sample banner"""
@@ -173,3 +181,150 @@ def create_rental_warehouses():
 def create_warehouses_manually():
     """Manual function to create warehouses - can be called from console"""
     create_rental_warehouses()
+
+def setup_desk_customization():
+    """Setup desk customizations including logo and theme"""
+    try:
+        print("Setting up desk customizations...")
+        
+        # Update Website Settings with custom branding
+        if frappe.db.exists("Website Settings", "Website Settings"):
+            website_settings = frappe.get_doc("Website Settings", "Website Settings")
+            website_settings.app_name = "Blush & Glow"
+            website_settings.app_logo = "/assets/rental_management/images/blush_glow_logo.png"
+            website_settings.brand_html = """
+                <div class="app-logo navbar-brand-custom">
+                    <img src="/assets/rental_management/images/blush_glow_logo.png" 
+                         alt="Blush & Glow" 
+                         style="max-height: 40px; width: auto;" />
+                </div>
+            """
+            website_settings.save(ignore_permissions=True)
+            print("✅ Website settings updated with Blush & Glow branding")
+        
+        # Update System Settings
+        if frappe.db.exists("System Settings", "System Settings"):
+            system_settings = frappe.get_doc("System Settings", "System Settings")
+            system_settings.app_name = "Blush & Glow - Rental Management"
+            system_settings.save(ignore_permissions=True)
+            print("✅ System settings updated")
+            
+    except Exception as e:
+        print(f"❌ Error setting up desk customization: {e}")
+        frappe.log_error(f"Desk customization error: {str(e)}")
+
+def hide_unwanted_modules():
+    """Hide unwanted modules from desk"""
+    try:
+        print("Hiding unwanted modules...")
+        
+        # List of modules to hide
+        modules_to_hide = [
+            'CRM', 'Projects', 'Support', 'Quality', 'Manufacturing',
+            'Buying', 'Selling', 'HR', 'Payroll', 'Assets',
+            'Loan Management', 'Healthcare', 'Education', 'Agriculture',
+            'Non Profit', 'Hospitality', 'Utilities'
+        ]
+        
+        for module_name in modules_to_hide:
+            if frappe.db.exists("Module Def", module_name):
+                try:
+                    # Set module as hidden
+                    frappe.db.set_value("Module Def", module_name, {
+                        "disabled": 1,
+                        "hidden": 1
+                    })
+                    print(f"✅ Hidden module: {module_name}")
+                except Exception as e:
+                    print(f"⚠️  Could not hide module {module_name}: {str(e)}")
+        
+        frappe.db.commit()
+        print("✅ Module visibility configured")
+        
+    except Exception as e:
+        print(f"❌ Error hiding modules: {e}")
+        frappe.log_error(f"Module hiding error: {str(e)}")
+
+def create_rental_workspace():
+    """Create a custom Rental Management workspace"""
+    try:
+        if frappe.db.exists("Workspace", "Rental Management"):
+            print("⚠️  Rental Management workspace already exists")
+            return
+            
+        workspace = frappe.get_doc({
+            "doctype": "Workspace",
+            "name": "Rental Management",
+            "title": "Rental Management",
+            "icon": "rental",
+            "indicator_color": "purple",
+            "is_standard": 1,
+            "public": 1,
+            "content": """
+            [
+                {
+                    "type": "Card Break",
+                    "data": {
+                        "card_label": "Quick Access"
+                    }
+                },
+                {
+                    "type": "Link",
+                    "data": {
+                        "label": "Item",
+                        "type": "Link",
+                        "link_type": "DocType",
+                        "link_to": "Item"
+                    }
+                },
+                {
+                    "type": "Link",
+                    "data": {
+                        "label": "Customer",
+                        "type": "Link",
+                        "link_type": "DocType",
+                        "link_to": "Customer"
+                    }
+                },
+                {
+                    "type": "Link",
+                    "data": {
+                        "label": "Sales Invoice",
+                        "type": "Link",
+                        "link_type": "DocType",
+                        "link_to": "Sales Invoice"
+                    }
+                },
+                {
+                    "type": "Card Break",
+                    "data": {
+                        "card_label": "Portal Management"
+                    }
+                },
+                {
+                    "type": "Link",
+                    "data": {
+                        "label": "Portal Banner",
+                        "type": "Link",
+                        "link_type": "DocType",
+                        "link_to": "Portal Banner"
+                    }
+                },
+                {
+                    "type": "Link",
+                    "data": {
+                        "label": "Item Group",
+                        "type": "Link",
+                        "link_type": "DocType",
+                        "link_to": "Item Group"
+                    }
+                }
+            ]
+            """
+        })
+        workspace.insert(ignore_permissions=True)
+        print("✅ Created Rental Management workspace")
+        
+    except Exception as e:
+        print(f"❌ Error creating workspace: {e}")
+        frappe.log_error(f"Workspace creation error: {str(e)}")
