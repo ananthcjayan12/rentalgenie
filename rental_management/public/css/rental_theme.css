@@ -1,6 +1,6 @@
 /**
  * Blush & Glow Rental Management Theme
- * Minimal branding customization - modules are hidden at database level
+ * Minimal branding + module hiding via CSS
  */
 
 /* Logo customization */
@@ -10,6 +10,45 @@
     max-height: 40px;
     width: auto;
     object-fit: contain;
+}
+
+/* Hide unwanted modules from workspace cards (home page) */
+.workspace-card[data-name="CRM"],
+.workspace-card[data-name="Projects"],
+.workspace-card[data-name="Support"],
+.workspace-card[data-name="Quality"],
+.workspace-card[data-name="Manufacturing"],
+.workspace-card[data-name="Buying"],
+.workspace-card[data-name="Selling"],
+.workspace-card[data-name="HR"],
+.workspace-card[data-name="Payroll"],
+.workspace-card[data-name="Assets"],
+.workspace-card[data-name="Loan Management"],
+.workspace-card[data-name="Healthcare"],
+.workspace-card[data-name="Education"],
+.workspace-card[data-name="Agriculture"],
+.workspace-card[data-name="Non Profit"],
+.workspace-card[data-name="Hospitality"],
+.workspace-card[data-name="Utilities"],
+/* Hide from sidebar links */
+a[href*="/app/crm"],
+a[href*="/app/projects"],
+a[href*="/app/support"],
+a[href*="/app/quality"],
+a[href*="/app/manufacturing"],
+a[href*="/app/buying"],
+a[href*="/app/selling"],
+a[href*="/app/hr"],
+a[href*="/app/payroll"],
+a[href*="/app/assets"],
+a[href*="/app/loan-management"],
+a[href*="/app/healthcare"],
+a[href*="/app/education"],
+a[href*="/app/agriculture"],
+a[href*="/app/non-profit"],
+a[href*="/app/hospitality"],
+a[href*="/app/utilities"] {
+    display: none !important;
 }
 
 /* Custom branding footer */
