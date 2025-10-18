@@ -64,13 +64,8 @@ home_page = "home"
 # 	"Role": "home_page"
 # }
 
-# Boot session - run when user logs in
-boot_session = "rental_management.setup.boot.boot_session"
 
-# Extend bootinfo
-extend_bootinfo = [
-    "rental_management.setup.boot.extend_bootinfo"
-]
+
 
 # Website brand and app logo
 brand_html = """
