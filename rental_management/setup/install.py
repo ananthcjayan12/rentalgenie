@@ -214,11 +214,15 @@ def setup_desk_customization():
         frappe.log_error(f"Desk customization error: {str(e)}")
 
 def hide_unwanted_modules():
-    """Hide unwanted modules from desk"""
+    """Configure module visibility - actual hiding is done via desk customization JS"""
     try:
-        print("Hiding unwanted modules...")
+        print("Configuring module visibility...")
         
-        # List of modules to hide
+        # The actual module hiding is handled by:
+        # 1. rental_management/public/js/rental_desk.js - Client-side hiding
+        # 2. Desk customization via hooks.py
+        
+        # List of modules that will be hidden (for reference)
         modules_to_hide = [
             'CRM', 'Projects', 'Support', 'Quality', 'Manufacturing',
             'Buying', 'Selling', 'HR', 'Payroll', 'Assets',
@@ -226,24 +230,21 @@ def hide_unwanted_modules():
             'Non Profit', 'Hospitality', 'Utilities'
         ]
         
-        for module_name in modules_to_hide:
-            if frappe.db.exists("Module Def", module_name):
-                try:
-                    # Set module as hidden
-                    frappe.db.set_value("Module Def", module_name, {
-                        "disabled": 1,
-                        "hidden": 1
-                    })
-                    print(f"✅ Hidden module: {module_name}")
-                except Exception as e:
-                    print(f"⚠️  Could not hide module {module_name}: {str(e)}")
+        # List of modules to keep visible
+        modules_to_keep = [
+            'Stock', 'Accounting', 'Rental Management', 
+            'Setup', 'Website', 'Home'
+        ]
         
-        frappe.db.commit()
-        print("✅ Module visibility configured")
+        print("ℹ️  Module visibility is controlled by rental_desk.js")
+        print("ℹ️  Visible modules: " + ", ".join(modules_to_keep))
+        print("ℹ️  Hidden modules: " + ", ".join(modules_to_hide))
+        print("✅ Module configuration complete")
+        print("📌 Refresh your browser to see the changes")
         
     except Exception as e:
-        print(f"❌ Error hiding modules: {e}")
-        frappe.log_error(f"Module hiding error: {str(e)}")
+        print(f"❌ Error configuring modules: {e}")
+        frappe.log_error(f"Module configuration error: {str(e)}")
 
 def create_rental_workspace():
     """Create a custom Rental Management workspace"""
