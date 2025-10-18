@@ -6,8 +6,8 @@
 
 frappe.provide('rental_management');
 
-// Initialize customizations after frappe is ready
-frappe.ready(function() {
+// Initialize customizations when desk is loaded
+$(document).ready(function() {
     console.log('🎨 Initializing Blush & Glow Branding...');
     
     // Apply customizations with delay to ensure DOM is ready
@@ -23,18 +23,16 @@ frappe.ready(function() {
 });
 
 // Also update branding on route changes
-if (frappe.router) {
-    frappe.router.on('change', function() {
-        setTimeout(function() {
-            try {
-                customizeLogo();
-                updateBranding();
-            } catch (error) {
-                console.error('❌ Error on route change:', error);
-            }
-        }, 300);
-    });
-}
+$(document).on('page-change', function() {
+    setTimeout(function() {
+        try {
+            customizeLogo();
+            updateBranding();
+        } catch (error) {
+            console.error('❌ Error on route change:', error);
+        }
+    }, 300);
+});
 
 function customizeLogo() {
     try {
