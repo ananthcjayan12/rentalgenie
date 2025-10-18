@@ -12,7 +12,7 @@
     object-fit: contain;
 }
 
-/* Hide unwanted modules from workspace cards (home page) */
+/* Hide ALL modules from home page except Stock and Accounting */
 .workspace-card[data-name="CRM"],
 .workspace-card[data-name="Projects"],
 .workspace-card[data-name="Support"],
@@ -30,6 +30,7 @@
 .workspace-card[data-name="Non Profit"],
 .workspace-card[data-name="Hospitality"],
 .workspace-card[data-name="Utilities"],
+.workspace-card[data-name="Home"],
 /* Hide from sidebar links */
 a[href*="/app/crm"],
 a[href*="/app/projects"],
@@ -47,7 +48,47 @@ a[href*="/app/education"],
 a[href*="/app/agriculture"],
 a[href*="/app/non-profit"],
 a[href*="/app/hospitality"],
-a[href*="/app/utilities"] {
+a[href*="/app/utilities"],
+a[href="/app/home"],
+/* Hide sidebar items */
+.sidebar-item-container[data-name="Home"],
+.standard-sidebar-item[data-name="Home"] {
+    display: none !important;
+}
+
+/* Hide the "Let's begin your journey" section on home page */
+.onboarding-step,
+.onboarding-banner,
+.container-onboarding,
+[data-page-route="setup-wizard"] {
+    display: none !important;
+}
+
+/* Hide "Reports & Masters" section on home page */
+.reports-and-masters,
+.dashboard-list-item h6:contains("Reports & Masters"),
+.module-category:contains("Reports & Masters") {
+    display: none !important;
+}
+
+/* Hide specific sections from home page */
+.home-section h3:contains("Your Shortcuts"),
+.home-section h3:contains("Reports & Masters"),
+.home-section h3:contains("Data Import and Settings") {
+    display: none !important;
+}
+
+/* Hide the entire sections if they contain these headings */
+h3:contains("Reports & Masters"),
+h3:contains("Data Import and Settings"),
+h3:contains("Your Shortcuts") {
+    display: none !important;
+}
+
+/* Target the specific section containers */
+.home-section:has(h3:contains("Reports & Masters")),
+.home-section:has(h3:contains("Data Import and Settings")),
+.home-section:has(h3:contains("Your Shortcuts")) {
     display: none !important;
 }
 

@@ -57,15 +57,24 @@ doctype_js = {
 # ----------
 
 # application home page (will override Website Settings)
-home_page = "home"
+home_page = "rental-management"
 
 # website user home page (by Role)
-# role_home_page = {
-# 	"Role": "home_page"
-# }
+role_home_page = {
+	"Rental Manager": "rental-management",
+	"Sales Manager": "rental-management",
+	"Item Manager": "rental-management",
+	"Stock Manager": "rental-management",
+	"Accounts Manager": "rental-management"
+}
 
+# Boot session - run when user logs in
+boot_session = "rental_management.setup.boot.boot_session"
 
-
+# Extend bootinfo
+extend_bootinfo = [
+    "rental_management.setup.boot.extend_bootinfo"
+]
 
 # Website brand and app logo
 brand_html = """
