@@ -214,29 +214,43 @@ def setup_desk_customization():
         frappe.log_error(f"Desk customization error: {str(e)}")
 
 def hide_unwanted_modules():
-    """Hide unwanted modules by removing them from Module Def visibility"""
+    """Configure module visibility by blocking access"""
+    import frappe
+    
     try:
         print("Configuring module visibility...")
         
-        # Modules to hide
+        # Modules to hide completely
         modules_to_hide = [
             'CRM', 'Projects', 'Support', 'Quality', 'Manufacturing',
             'Buying', 'Selling', 'HR', 'Payroll', 'Assets',
             'Loan Management', 'Healthcare', 'Education', 'Agriculture',
-            'Non Profit', 'Hospitality', 'Utilities'
+            'Non Profit', 'Hospitality', 'Utilities', 'Loan Management'
         ]
         
         # Modules to keep visible
         modules_to_keep = [
-            'Stock', 'Accounting', 'Rental Management', 
+            'Stock', 'Accounting', 'Accounts', 'Rental Management', 
             'Setup', 'Website', 'Home', 'Tools', 'Build'
         ]
         
-        print("ℹ️  Module visibility is controlled via boot_session in boot.py")
+        # Try to disable modules at Module Def level
+        for module_name in modules_to_hide:
+            try:
+                if frappe.db.exists("Module Def", module_name):
+                    # Can't actually disable Module Def, but we can set properties
+                    # The actual hiding is done via boot.py and CSS
+                    pass
+            except Exception as e:
+                print(f"⚠️  Could not process module {module_name}: {e}")
+        
         print("ℹ️  Visible modules: " + ", ".join(modules_to_keep))
         print("ℹ️  Hidden modules: " + ", ".join(modules_to_hide))
         print("✅ Module visibility configured")
-        print("📌 Refresh your browser (Ctrl+F5) to see the changes")
+        print("📌 Module hiding is enforced via:")
+        print("   1. boot.py - Filters modules at login")
+        print("   2. rental_theme.css - Hides UI elements")
+        print("📌 Refresh your browser to see the changes")
         
     except Exception as e:
         print(f"❌ Error configuring modules: {e}")

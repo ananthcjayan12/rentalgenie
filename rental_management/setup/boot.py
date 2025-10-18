@@ -6,17 +6,48 @@ Controls module visibility and desk customizations
 import frappe
 
 def boot_session(bootinfo):
-    """Called when user logs in - customize boot info"""
+    """Called when user logs in - customize what modules are shown"""
+    import frappe
+    
     try:
-        # Customize modules shown in desk
-        customize_modules(bootinfo)
+        # Define modules to show for Rental Management
+        rental_modules = {
+            'Stock',           # For managing rental items
+            'Accounting',      # For invoicing and payments  
+            'Accounts',        # Financial accounting
+            'Home',           # Dashboard
+            'Setup',          # Configuration
+            'Website',        # Portal management
+            'Rental Management'  # Our custom module
+        }
         
-        # Add custom branding
-        bootinfo["app_name"] = "Blush & Glow Rental"
-        bootinfo["app_logo_url"] = "/assets/rental_management/images/blush_glow_logo.png"
+        # Get the user's role to determine access
+        user_roles = frappe.get_roles()
+        
+        # System Manager sees everything, others see only rental modules
+        if "System Manager" not in user_roles:
+            # Filter modules in bootinfo
+            if 'modules' in bootinfo:
+                original_count = len(bootinfo['modules'])
+                bootinfo['modules'] = [
+                    m for m in bootinfo['modules'] 
+                    if m.get('module_name') in rental_modules or m.get('name') in rental_modules
+                ]
+                filtered_count = len(bootinfo['modules'])
+                print(f"✅ Filtered modules: {original_count} → {filtered_count}")
+            
+            # Filter desktop items
+            if 'desktop_items' in bootinfo:
+                bootinfo['desktop_items'] = [
+                    item for item in bootinfo['desktop_items']
+                    if item.get('module_name') in rental_modules
+                ]
+        else:
+            print("ℹ️ System Manager - showing all modules")
         
     except Exception as e:
-        frappe.log_error(f"Error in boot_session: {str(e)}", "Rental Management Boot")
+        frappe.log_error(f"Error in boot_session: {str(e)}", "Rental Boot Error")
+        print(f"❌ Error in boot_session: {e}")
 
 
 def extend_bootinfo(bootinfo):
