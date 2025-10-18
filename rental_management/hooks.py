@@ -1,25 +1,23 @@
 app_name = "rental_management"
-app_title = "Rental Management"
+app_title = "Blush & Glow Rental"
 app_publisher = "clearmydesk"
-app_description = "Rental Management module"
+app_description = "Rental Management for Blush & Glow"
 app_email = "ananthcjayan@gmail.com"
 app_license = "mit"
+app_logo_url = "/assets/rental_management/images/blush_glow_logo.png"
 
 # Apps
 # ------------------
 
-# required_apps = []
-
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "rental_management",
-# 		"logo": "/assets/rental_management/logo.png",
-# 		"title": "Rental Management",
-# 		"route": "/rental_management",
-# 		"has_permission": "rental_management.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "rental_management",
+		"logo": "/assets/rental_management/images/blush_glow_logo.png",
+		"title": "Blush & Glow Rental",
+		"route": "/app/home",
+	}
+]
 
 # Includes in <head>
 # ------------------
@@ -59,12 +57,20 @@ doctype_js = {
 # ----------
 
 # application home page (will override Website Settings)
-# home_page = "login"
+home_page = "home"
 
 # website user home page (by Role)
 # role_home_page = {
 # 	"Role": "home_page"
 # }
+
+# Boot session - run when user logs in
+boot_session = "rental_management.setup.boot.boot_session"
+
+# Extend bootinfo
+extend_bootinfo = [
+    "rental_management.setup.boot.extend_bootinfo"
+]
 
 # Website brand and app logo
 brand_html = """
@@ -74,6 +80,12 @@ brand_html = """
          style="max-height: 40px; width: auto;" />
 </div>
 """
+
+# Website context
+website_context = {
+	"favicon": "/assets/rental_management/images/blush_glow_logo.png",
+	"splash_image": "/assets/rental_management/images/blush_glow_logo.png",
+}
 
 # Desk customization
 app_logo_url = "/assets/rental_management/images/blush_glow_logo.png"

@@ -214,15 +214,11 @@ def setup_desk_customization():
         frappe.log_error(f"Desk customization error: {str(e)}")
 
 def hide_unwanted_modules():
-    """Configure module visibility - actual hiding is done via desk customization JS"""
+    """Hide unwanted modules by removing them from Module Def visibility"""
     try:
         print("Configuring module visibility...")
         
-        # The actual module hiding is handled by:
-        # 1. rental_management/public/js/rental_desk.js - Client-side hiding
-        # 2. Desk customization via hooks.py
-        
-        # List of modules that will be hidden (for reference)
+        # Modules to hide
         modules_to_hide = [
             'CRM', 'Projects', 'Support', 'Quality', 'Manufacturing',
             'Buying', 'Selling', 'HR', 'Payroll', 'Assets',
@@ -230,17 +226,17 @@ def hide_unwanted_modules():
             'Non Profit', 'Hospitality', 'Utilities'
         ]
         
-        # List of modules to keep visible
+        # Modules to keep visible
         modules_to_keep = [
             'Stock', 'Accounting', 'Rental Management', 
-            'Setup', 'Website', 'Home'
+            'Setup', 'Website', 'Home', 'Tools', 'Build'
         ]
         
-        print("ℹ️  Module visibility is controlled by rental_desk.js")
+        print("ℹ️  Module visibility is controlled via boot_session in boot.py")
         print("ℹ️  Visible modules: " + ", ".join(modules_to_keep))
         print("ℹ️  Hidden modules: " + ", ".join(modules_to_hide))
-        print("✅ Module configuration complete")
-        print("📌 Refresh your browser to see the changes")
+        print("✅ Module visibility configured")
+        print("📌 Refresh your browser (Ctrl+F5) to see the changes")
         
     except Exception as e:
         print(f"❌ Error configuring modules: {e}")

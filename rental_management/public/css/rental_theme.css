@@ -1,214 +1,23 @@
 /**
  * Blush & Glow Rental Management Theme
- * Custom styling for desk interface
+ * Uses ERPNext default colors with minimal custom branding
  */
 
-:root {
-    --rental-primary: #7B2CBF;
-    --rental-secondary: #D4A574;
-    --rental-accent: #ffffff;
-}
-
-/* Navbar customization */
-.navbar {
-    background: var(--rental-primary) !important;
-}
-
-.navbar .navbar-brand img {
-    max-height: 40px;
-    width: auto;
-}
-
-/* Sidebar branding */
-.app-logo, .navbar-brand-custom {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-}
-
-.app-logo img {
+/* Logo customization */
+.navbar-brand img,
+.app-logo img,
+.sidebar-brand img {
     max-height: 40px;
     width: auto;
     object-fit: contain;
 }
 
-/* Hide unwanted sidebar items */
-.standard-sidebar-item[data-name="CRM"],
-.standard-sidebar-item[data-name="Projects"],
-.standard-sidebar-item[data-name="Support"],
-.standard-sidebar-item[data-name="Manufacturing"],
-.standard-sidebar-item[data-name="Buying"],
-.standard-sidebar-item[data-name="Selling"],
-.standard-sidebar-item[data-name="HR"],
-.standard-sidebar-item[data-name="Payroll"],
-.standard-sidebar-item[data-name="Assets"],
-.standard-sidebar-item[data-name="Quality"] {
-    display: none !important;
-}
-
-/* Workspace card customization */
-.workspace-card {
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.workspace-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(123, 44, 191, 0.15);
-}
-
-/* Primary button color */
-.btn-primary {
-    background-color: var(--rental-primary) !important;
-    border-color: var(--rental-primary) !important;
-}
-
-.btn-primary:hover {
-    background-color: #6B21A8 !important;
-    border-color: #6B21A8 !important;
-}
-
-/* Links and active states */
-a:hover,
-.sidebar-item-container.active {
-    color: var(--rental-primary) !important;
-}
-
-/* Form customization */
-.form-card {
-    border-radius: 8px;
-}
-
-/* Custom dashboard cards */
-.rental-dashboard-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    margin-bottom: 1rem;
-}
-
-.rental-dashboard-card h3 {
-    color: var(--rental-primary);
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-/* Hide ERPNext branding where not needed */
-.navbar-brand-img[alt="Frappe"],
-.navbar-brand-img[alt="ERPNext"] {
-    display: none;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--rental-secondary);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--rental-primary);
-}
-
-/* Page header customization */
-.page-head {
-    background: white;
-    border-bottom: 2px solid var(--rental-primary);
-}
-
-.page-title {
-    color: var(--rental-primary);
-}
-
-/* List view customization */
-.list-row-head {
-    background: #f8f9fa;
-}
-
-.list-row:hover {
-    background: rgba(123, 44, 191, 0.05);
-}
-
-/* Modal customization */
-.modal-header {
-    background: var(--rental-primary);
-    color: white;
-}
-
-.modal-header .close {
-    color: white;
-}
-
-/* Success states */
-.indicator.green,
-.indicator-pill.green {
-    background: #10b981;
-}
-
-/* Warning states */
-.indicator.orange,
-.indicator-pill.orange {
-    background: #f59e0b;
-}
-
-/* Info states */
-.indicator.blue,
-.indicator-pill.blue {
-    background: var(--rental-primary);
-}
-
-/* Form labels */
-.frappe-control label {
-    color: var(--rental-accent);
-    font-weight: 500;
-}
-
-/* Tab customization */
-.nav-tabs .nav-link.active {
-    border-bottom: 2px solid var(--rental-primary);
-    color: var(--rental-primary);
-}
-
-/* Awesomebar (search) customization */
-.awesomplete input {
-    border-color: var(--rental-secondary);
-}
-
-.awesomplete input:focus {
-    border-color: var(--rental-primary);
-    box-shadow: 0 0 0 0.2rem rgba(123, 44, 191, 0.25);
-}
-
-/* Hide specific unwanted elements */
-.navbar-item[data-label="Marketplace"],
-.dropdown-item:contains("Marketplace"),
-.dropdown-item:contains("ERPNext Settings") {
-    display: none !important;
-}
-
 /* Custom branding footer */
-.page-footer {
-    background: white;
-    border-top: 1px solid #e5e7eb;
-    padding: 1rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: #6b7280;
-}
-
 .page-footer::after {
     content: "Blush & Glow - Premium Bridal Destination";
     display: block;
-    color: var(--rental-primary);
-    font-weight: 600;
+    color: #666;
+    font-weight: 500;
     margin-top: 0.5rem;
+    font-size: 0.875rem;
 }
