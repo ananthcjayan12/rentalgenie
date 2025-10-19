@@ -1649,3 +1649,198 @@ def create_caution_deduction_entry(booking, deduction_amount, reason):
     except Exception as e:
         print(f"Error creating caution deduction entry: {str(e)}")
         raise
+
+@frappe.whitelist()
+def create_rental_item(item_data, new_supplier=None, images=None):
+    """Create a new rental item from portal"""
+    try:
+        # Parse item_data if it's a string
+        if isinstance(item_data, str):
+            import json
+            item_data = json.loads(item_data)
+        
+        # Parse new_supplier if it's a string  
+        if isinstance(new_supplier, str):
+            import json
+            new_supplier = json.loads(new_supplier)
+            
+        # Parse images if it's a string
+        if isinstance(images, str):
+            import json
+            images = json.loads(images)
+        
+        print(f"Creating rental item: {item_data.get('item_code')}")
+        
+        # Create supplier first if needed
+        supplier_name = None
+        if item_data.get('is_third_party_item'):
+            if item_data.get('owner_supplier_source'):
+                supplier_name = item_data['owner_supplier_source']
+            elif new_supplier and new_supplier.get('supplier_name'):
+                # Create new supplier
+                supplier_doc = frappe.get_doc({
+                    "doctype": "Supplier",
+                    "supplier_name": new_supplier['supplier_name'],
+                    "supplier_type": "Individual",
+                    "supplier_group": "Local"
+                })
+                
+                # Add contact details if provided
+                if new_supplier.get('mobile_no'):
+                    supplier_doc.mobile_no = new_supplier['mobile_no']
+                if new_supplier.get('email_id'):
+                    supplier_doc.email_id = new_supplier['email_id']
+                    
+                supplier_doc.insert(ignore_permissions=True)
+                supplier_name = supplier_doc.name
+                
+                # Create contact and address if details provided
+                if new_supplier.get('mobile_no') or new_supplier.get('email_id'):
+                    contact_doc = frappe.get_doc({
+                        "doctype": "Contact",
+                        "first_name": new_supplier['supplier_name'],
+                        "mobile_no": new_supplier.get('mobile_no'),
+                        "email_id": new_supplier.get('email_id'),
+                        "links": [{
+                            "link_doctype": "Supplier",
+                            "link_name": supplier_name
+                        }]
+                    })
+                    contact_doc.insert(ignore_permissions=True)
+                
+                if new_supplier.get('address'):
+                    address_doc = frappe.get_doc({
+                        "doctype": "Address",
+                        "address_line1": new_supplier['address'],
+                        "address_type": "Billing",
+                        "links": [{
+                            "link_doctype": "Supplier", 
+                            "link_name": supplier_name
+                        }]
+                    })
+                    address_doc.insert(ignore_permissions=True)
+                
+                print(f"✅ Created new supplier: {supplier_name}")
+        
+        # Create the item
+        item_doc = frappe.get_doc({
+            "doctype": "Item",
+            "item_code": item_data['item_code'],
+            "item_name": item_data['item_name'],
+            "item_group": item_data['item_group'],
+            "description": item_data.get('description', ''),
+            "stock_uom": "Nos",
+            "is_stock_item": 1,
+            "is_sales_item": 1,
+            "include_item_in_manufacturing": 0,
+            
+            # Rental specific fields
+            "is_rental_item": 1,
+            "rental_rate_per_day": float(item_data['rental_rate_per_day']),
+            "caution_deposit": float(item_data.get('caution_deposit', 0)),
+            "rental_item_type": item_data.get('rental_item_type', 'Other'),
+            "current_rental_status": "Available",
+            "approval_status": "Pending Approval",
+            
+            # Purchase details
+            "purchase_cost": float(item_data.get('purchase_cost', 0)) if item_data.get('purchase_cost') else 0,
+            "purchase_date": frappe.utils.today(),
+            
+            # Third party details
+            "is_third_party_item": item_data.get('is_third_party_item', False),
+            "owner_commission_percent": float(item_data.get('owner_commission_percent', 0)) if item_data.get('is_third_party_item') else 0,
+            "owner_supplier_source": supplier_name if item_data.get('is_third_party_item') else ""
+        })
+        
+        item_doc.insert(ignore_permissions=True)
+        
+        # Handle image uploads
+        if images and len(images) > 0:
+            for index, img_data in enumerate(images):
+                if img_data.get('content') and img_data.get('name'):
+                    try:
+                        # Extract base64 content
+                        content = img_data['content']
+                        if 'base64,' in content:
+                            content = content.split('base64,')[1]
+                        
+                        # Create file
+                        import base64
+                        file_content = base64.b64decode(content)
+                        
+                        # Generate filename
+                        import os
+                        file_ext = os.path.splitext(img_data['name'])[1]
+                        filename = f"{item_data['item_code']}_image_{index + 1}{file_ext}"
+                        
+                        # Save file
+                        file_doc = frappe.get_doc({
+                            "doctype": "File",
+                            "file_name": filename,
+                            "content": file_content,
+                            "is_private": 0,
+                            "folder": "Home/Attachments"
+                        })
+                        file_doc.save(ignore_permissions=True)
+                        
+                        # Create Item Image record
+                        item_image = frappe.get_doc({
+                            "doctype": "Item Image",
+                            "parent": item_doc.name,
+                            "parenttype": "Item",
+                            "parentfield": "item_images", 
+                            "image": file_doc.file_url,
+                            "image_description": f"Image {index + 1}",
+                            "is_primary": 1 if index == 0 else 0,
+                            "display_order": index + 1
+                        })
+                        item_image.insert(ignore_permissions=True)
+                        
+                        # Set primary image
+                        if index == 0:
+                            frappe.db.set_value("Item", item_doc.name, "image", file_doc.file_url)
+                        
+                    except Exception as img_error:
+                        print(f"Error uploading image {index + 1}: {str(img_error)}")
+                        # Continue with other images even if one fails
+                        continue
+        
+        # Create Third Party Owner if needed
+        if item_data.get('is_third_party_item') and supplier_name:
+            try:
+                owner_name = f"Owner - {supplier_name}"
+                if not frappe.db.exists("Third Party Owner", owner_name):
+                    owner_doc = frappe.get_doc({
+                        "doctype": "Third Party Owner",
+                        "owner_name": owner_name,
+                        "supplier_link": supplier_name,
+                        "commission_percentage": float(item_data.get('owner_commission_percent', 30))
+                    })
+                    owner_doc.insert(ignore_permissions=True)
+                    
+                    # Link back to item
+                    frappe.db.set_value("Item", item_doc.name, "third_party_owner", owner_name)
+                    
+                    print(f"✅ Created Third Party Owner: {owner_name}")
+            except Exception as owner_error:
+                print(f"Warning: Could not create Third Party Owner: {str(owner_error)}")
+        
+        frappe.db.commit()
+        
+        return {
+            "success": True,
+            "message": f"Item {item_doc.name} created successfully",
+            "item_code": item_doc.name,
+            "supplier_created": supplier_name if new_supplier else None
+        }
+        
+    except Exception as e:
+        frappe.db.rollback()
+        error_msg = str(e)
+        print(f"Error creating rental item: {error_msg}")
+        frappe.log_error(f"Error creating rental item: {error_msg}")
+        
+        return {
+            "success": False,
+            "message": f"Error creating item: {error_msg}"
+        }
