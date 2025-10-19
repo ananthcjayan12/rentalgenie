@@ -55,10 +55,10 @@ doctype_js = {
 
 # Home Pages
 # ----------
-# Let Frappe handle the default home page (/app)
-# Users will see the standard workspaces view
+# Redirect to the customer portal as the default home page
+home_page = "portal"
 
-# Set Rental Management workspace as default
+# Set Rental Management workspace as default for desk users
 default_workspace = "Rental Management"
 
 
