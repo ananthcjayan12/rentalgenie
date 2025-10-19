@@ -243,206 +243,200 @@ def hide_unwanted_modules():
         print(f"❌ Error hiding modules: {e}")
         frappe.log_error(f"Module hiding error: {str(e)}")
 
-def create_rental_workspace():
-    """Create a custom Rental Management workspace as the default home"""
-    try:
-        workspace_name = "Rental Management"
+# def create_rental_workspace():
+#     """Create a custom Rental Management workspace as the default home"""
+#     try:
+#         workspace_name = "Rental Management"
         
-        # Delete existing workspace if it exists
-        if frappe.db.exists("Workspace", workspace_name):
-            frappe.delete_doc("Workspace", workspace_name, force=1)
-            print(f"🔄 Deleted existing {workspace_name} workspace")
+#         # Delete existing workspace if it exists
+#         if frappe.db.exists("Workspace", workspace_name):
+#             frappe.delete_doc("Workspace", workspace_name, force=1)
+#             print(f"🔄 Deleted existing {workspace_name} workspace")
         
-        # Create new workspace
-        workspace = frappe.get_doc({
-            "doctype": "Workspace",
-            "name": workspace_name,
-            "title": "Rental Management",
-            "module": "Rental Management",
-            "icon": "retail",
-            "indicator_color": "purple",
-            "is_standard": 0,
-            "public": 1,
-            "extends": "",
-            "extends_another_page": 0,
-            "is_hidden": 0,
-            "label": "Rental Management",
-        })
+#         # Create new workspace
+#         workspace = frappe.get_doc({
+#             "doctype": "Workspace",
+#             "name": workspace_name,
+#             "title": "Rental Management",
+#             "module": "Rental Management",
+#             "icon": "retail",
+#             "indicator_color": "purple",
+#             "is_standard": 0,
+#             "public": 1,
+#             "extends": "",
+#             "extends_another_page": 0,
+#             "is_hidden": 0,
+#             "label": "Rental Management",
+#         })
         
-        # Add shortcuts section
-        workspace.append("shortcuts", {
-            "type": "DocType",
-            "label": "New Item",
-            "doc_view": "List",
-            "link_to": "Item",
-            "color": "Blue"
-        })
+#         # Add shortcuts section
+#         workspace.append("shortcuts", {
+#             "type": "DocType",
+#             "label": "New Item",
+#             "doc_view": "List",
+#             "link_to": "Item",
+#             "color": "Blue"
+#         })
         
-        workspace.append("shortcuts", {
-            "type": "DocType",
-            "label": "New Customer",
-            "doc_view": "List",
-            "link_to": "Customer",
-            "color": "Green"
-        })
+#         workspace.append("shortcuts", {
+#             "type": "DocType",
+#             "label": "New Customer",
+#             "doc_view": "List",
+#             "link_to": "Customer",
+#             "color": "Green"
+#         })
         
-        workspace.append("shortcuts", {
-            "type": "DocType",
-            "label": "New Invoice",
-            "doc_view": "List",
-            "link_to": "Sales Invoice",
-            "color": "Orange"
-        })
+#         workspace.append("shortcuts", {
+#             "type": "DocType",
+#             "label": "New Invoice",
+#             "doc_view": "List",
+#             "link_to": "Sales Invoice",
+#             "color": "Orange"
+#         })
         
-        workspace.append("shortcuts", {
-            "type": "DocType",
-            "label": "Payment Entry",
-            "doc_view": "List",
-            "link_to": "Payment Entry",
-            "color": "Green"
-        })
+#         workspace.append("shortcuts", {
+#             "type": "DocType",
+#             "label": "Payment Entry",
+#             "doc_view": "List",
+#             "link_to": "Payment Entry",
+#             "color": "Green"
+#         })
         
-        workspace.append("shortcuts", {
-            "type": "DocType",
-            "label": "Portal Banners",
-            "doc_view": "List",
-            "link_to": "Portal Banner",
-            "color": "Purple"
-        })
+#         workspace.append("shortcuts", {
+#             "type": "DocType",
+#             "label": "Portal Banners",
+#             "doc_view": "List",
+#             "link_to": "Portal Banner",
+#             "color": "Purple"
+#         })
         
-        workspace.append("shortcuts", {
-            "type": "Page",
-            "label": "Customer Portal",
-            "link_to": "/portal",
-            "color": "Cyan"
-        })
+#         workspace.append("shortcuts", {
+#             "type": "DocType",
+#             "label": "Rental Cart",
+#             "doc_view": "List",
+#             "link_to": "Rental Cart",
+#             "color": "Cyan"
+#         })
         
-        # Add links section - Rental Operations
-        workspace.append("links", {
-            "label": "Rental Operations",
-            "type": "Card Break"
-        })
+#         # Add links section - Rental Operations
+#         workspace.append("links", {
+#             "label": "Rental Operations",
+#             "type": "Card Break"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Item",
-            "label": "Items",
-            "onboard": 1
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Item",
+#             "label": "Items",
+#             "onboard": 1
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Customer",
-            "label": "Customers"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Customer",
+#             "label": "Customers"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Sales Invoice",
-            "label": "Sales Invoices"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Sales Invoice",
+#             "label": "Sales Invoices"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Rental Cart",
-            "label": "Rental Carts"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Rental Cart",
+#             "label": "Rental Carts"
+#         })
         
-        # Portal Management section
-        workspace.append("links", {
-            "label": "Portal Management",
-            "type": "Card Break"
-        })
+#         # Portal Management section
+#         workspace.append("links", {
+#             "label": "Portal Management",
+#             "type": "Card Break"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Portal Banner",
-            "label": "Portal Banners"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Portal Banner",
+#             "label": "Portal Banners"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Item Group",
-            "label": "Categories"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Item Group",
+#             "label": "Categories"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "Page",
-            "link_to": "/portal",
-            "label": "View Customer Portal"
-        })
+#         # Accounting section
+#         workspace.append("links", {
+#             "label": "Accounting",
+#             "type": "Card Break"
+#         })
         
-        # Accounting section
-        workspace.append("links", {
-            "label": "Accounting",
-            "type": "Card Break"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Payment Entry",
+#             "label": "Payment Entries"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Payment Entry",
-            "label": "Payment Entries"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Journal Entry",
+#             "label": "Journal Entries"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Journal Entry",
-            "label": "Journal Entries"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "DocType",
+#             "link_to": "Third Party Owner",
+#             "label": "Third Party Owners"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Third Party Owner",
-            "label": "Third Party Owners"
-        })
+#         # Reports section
+#         workspace.append("links", {
+#             "label": "Reports",
+#             "type": "Card Break"
+#         })
         
-        # Reports section
-        workspace.append("links", {
-            "label": "Reports",
-            "type": "Card Break"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "Report",
+#             "link_to": "Profit and Loss Statement",
+#             "label": "Profit & Loss"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "Report",
-            "link_to": "Profit and Loss Statement",
-            "label": "Profit & Loss"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "Report",
+#             "link_to": "Balance Sheet",
+#             "label": "Balance Sheet"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "Report",
-            "link_to": "Balance Sheet",
-            "label": "Balance Sheet"
-        })
+#         workspace.append("links", {
+#             "type": "Link",
+#             "link_type": "Report",
+#             "link_to": "Stock Ledger",
+#             "label": "Stock Ledger"
+#         })
         
-        workspace.append("links", {
-            "type": "Link",
-            "link_type": "Report",
-            "link_to": "Stock Ledger",
-            "label": "Stock Ledger"
-        })
+#         workspace.insert(ignore_permissions=True)
         
-        workspace.insert(ignore_permissions=True)
+#         # Set as default workspace for users
+#         frappe.db.set_value("Workspace Settings", "Workspace Settings", "home_page", workspace_name)
         
-        # Set as default workspace for users
-        frappe.db.set_value("Workspace Settings", "Workspace Settings", "home_page", workspace_name)
+#         print(f"✅ Created {workspace_name} workspace and set as default home")
         
-        print(f"✅ Created {workspace_name} workspace and set as default home")
-        
-    except Exception as e:
-        print(f"❌ Error creating workspace: {e}")
-        frappe.log_error(f"Workspace creation error: {str(e)}")
+#     except Exception as e:
+#         print(f"❌ Error creating workspace: {e}")
+#         frappe.log_error(f"Workspace creation error: {str(e)}")
 
 def setup_rental_roles_and_users():
     """Create Rental Manager role with proper permissions and test user"""

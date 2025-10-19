@@ -62,19 +62,16 @@ home_page = "rental-management"
 # website user home page (by Role)
 role_home_page = {
 	"Rental Manager": "rental-management",
-	"Sales Manager": "rental-management",
+	"Sales Manager": "rental-management", 
 	"Item Manager": "rental-management",
 	"Stock Manager": "rental-management",
 	"Accounts Manager": "rental-management"
 }
 
-# Boot session - run when user logs in
-boot_session = "rental_management.setup.boot.boot_session"
+# Set Rental Management workspace as default
+default_workspace = "Rental Management"
 
-# Extend bootinfo
-extend_bootinfo = [
-    "rental_management.setup.boot.extend_bootinfo"
-]
+
 
 # Website brand and app logo
 brand_html = """
