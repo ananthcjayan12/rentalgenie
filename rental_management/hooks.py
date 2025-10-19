@@ -55,18 +55,8 @@ doctype_js = {
 
 # Home Pages
 # ----------
-
-# application home page (will override Website Settings)
-home_page = "rental-management"
-
-# website user home page (by Role)
-role_home_page = {
-	"Rental Manager": "rental-management",
-	"Sales Manager": "rental-management", 
-	"Item Manager": "rental-management",
-	"Stock Manager": "rental-management",
-	"Accounts Manager": "rental-management"
-}
+# Let Frappe handle the default home page (/app)
+# Users will see the standard workspaces view
 
 # Set Rental Management workspace as default
 default_workspace = "Rental Management"
