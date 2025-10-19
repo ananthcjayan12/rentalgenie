@@ -672,16 +672,22 @@ function addItemForm() {
             this.alertMessage = '';
             
             try {
+                // Prepare data for submission
+                const itemData = JSON.stringify(this.formData);
+                const supplierData = (this.formData.is_third_party_item && !this.formData.owner_supplier_source) ? 
+                    JSON.stringify(this.newSupplier) : null;
+                const imageData = JSON.stringify(this.uploadedImages.map(img => ({
+                    name: img.name,
+                    content: img.url
+                })));
+                
                 // Create item with all data
                 const response = await frappe.call({
                     method: 'rental_management.api.customer_portal.create_rental_item',
                     args: {
-                        item_data: this.formData,
-                        new_supplier: this.formData.is_third_party_item && !this.formData.owner_supplier_source ? this.newSupplier : null,
-                        images: this.uploadedImages.map(img => ({
-                            name: img.name,
-                            content: img.url
-                        }))
+                        item_data: itemData,
+                        new_supplier: supplierData,
+                        images: imageData
                     }
                 });
                 
@@ -700,7 +706,7 @@ function addItemForm() {
                 
             } catch (error) {
                 console.error('Error creating item:', error);
-                this.showAlert('Error creating item: ' + error.message, 'alert-error');
+                this.showAlert(`Error: ${error.message || 'Unknown error occurred'}`, 'alert-error');
             } finally {
                 this.isSubmitting = false;
             }

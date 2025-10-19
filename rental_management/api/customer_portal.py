@@ -1657,20 +1657,54 @@ def create_rental_item(item_data, new_supplier=None, images=None):
         # Parse item_data if it's a string
         if isinstance(item_data, str):
             import json
-            item_data = json.loads(item_data)
+            try:
+                item_data = json.loads(item_data)
+            except json.JSONDecodeError as e:
+                return {
+                    "success": False,
+                    "message": f"Invalid item_data JSON: {str(e)}"
+                }
         
         # Parse new_supplier if it's a string  
-        if isinstance(new_supplier, str):
+        if isinstance(new_supplier, str) and new_supplier.strip():
             import json
-            new_supplier = json.loads(new_supplier)
+            try:
+                new_supplier = json.loads(new_supplier)
+            except json.JSONDecodeError:
+                new_supplier = None
+        elif not new_supplier or new_supplier == "null":
+            new_supplier = None
             
         # Parse images if it's a string
-        if isinstance(images, str):
+        if isinstance(images, str) and images.strip():
             import json
-            images = json.loads(images)
+            try:
+                images = json.loads(images)
+            except json.JSONDecodeError:
+                images = []
+        elif not images or images == "null":
+            images = []
         
-        print(f"Creating rental item: {item_data.get('item_code')}")
+        print(f"Creating rental item: {item_data.get('item_code', 'Unknown')}")
+        print(f"Item data received: {item_data}")
+        print(f"New supplier: {new_supplier}")
+        print(f"Images count: {len(images) if images else 0}")
         
+        # Validate required fields
+        required_fields = ['item_code', 'item_name', 'item_group', 'rental_rate_per_day']
+        for field in required_fields:
+            if not item_data.get(field):
+                return {
+                    "success": False,
+                    "message": f"Missing required field: {field}"
+                }
+        
+        # Check if item already exists
+        if frappe.db.exists("Item", item_data['item_code']):
+            return {
+                "success": False,
+                "message": f"Item with code {item_data['item_code']} already exists"
+            }
         # Create supplier first if needed
         supplier_name = None
         if item_data.get('is_third_party_item'):
