@@ -6,13 +6,8 @@ import urllib.parse
 def get_context(context):
     """Get context for staff dashboard - booking management"""
     
-    # CRITICAL: Disable all caching for real-time updates
+    # CRITICAL: Disable page caching only (don't break Frappe internals)
     context.no_cache = 1
-    frappe.response['type'] = 'page'
-    
-    # Clear request-level cache
-    if hasattr(frappe.local, 'request_cache'):
-        frappe.local.request_cache = {}
     
     # Check if user has permission to access staff portal
     if not frappe.session.user or frappe.session.user == 'Guest':

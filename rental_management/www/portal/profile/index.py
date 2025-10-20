@@ -5,25 +5,16 @@ import urllib.parse
 def get_context(context):
     """Get context for customer profile/management page"""
     
-    # CRITICAL: Disable all caching for real-time updates
+    # CRITICAL: Disable page caching only (don't break Frappe internals)
     context.no_cache = 1
-    frappe.response['type'] = 'page'
-    
-    # Clear request-level cache
-    if hasattr(frappe.local, 'request_cache'):
-        frappe.local.request_cache = {}
     
     try:
         # Get customer parameter (selected by shopkeeper)
         customer_id = frappe.form_dict.get('customer')
         
-        # Debug logging
-        frappe.logger().info(f"Profile page - Raw customer_id: {customer_id}")
-        
         if customer_id:
             # Decode URL-encoded customer name
             customer_id = urllib.parse.unquote(customer_id)
-            frappe.logger().info(f"Profile page - Decoded customer_id: {customer_id}")
             
             # Check if customer exists using fresh SQL query
             customer_exists = frappe.db.sql(
@@ -37,7 +28,6 @@ def get_context(context):
             )
             
             if not customer_exists:
-                frappe.logger().warning(f"Customer not found: {customer_id}")
                 context.mode = 'search'
                 context.error_message = f"Customer '{customer_id}' not found"
                 context.customer = None
@@ -59,7 +49,6 @@ def get_context(context):
             )
             
             if not customer:
-                frappe.logger().warning(f"Customer data not retrieved: {customer_id}")
                 context.mode = 'search'
                 context.error_message = "Unable to load customer information"
                 context.customer = None
@@ -71,8 +60,6 @@ def get_context(context):
             # Set customer view mode
             context.customer = customer[0]
             context.mode = 'view'
-            
-            frappe.logger().info(f"Loading profile for: {context.customer['customer_name']}")
             
             # Get customer's addresses - force fresh query
             addresses = frappe.db.sql(
@@ -151,7 +138,6 @@ def get_context(context):
             
         else:
             # Show customer search/selection interface
-            frappe.logger().info("Profile page - showing search mode")
             context.mode = 'search'
             context.customer = None
             context.customer_bookings = []
@@ -170,7 +156,6 @@ def get_context(context):
         return context
         
     except Exception as e:
-        frappe.logger().error(f"Error in profile page: {str(e)}")
         frappe.log_error(f"Profile page error: {str(e)}", "Profile Page Error")
         
         context.error_message = "Unable to load customer information. Please try again."
@@ -217,9 +202,8 @@ def load_recent_customers(context):
             as_dict=True,
         )
         
-        frappe.logger().info(f"Loaded {len(recent_customers)} recent customers (cache_bust: {cache_bust})")
         context.recent_customers = recent_customers
         
     except Exception as e:
-        frappe.logger().error(f"Error loading recent customers: {str(e)}")
+        frappe.log_error(f"Error loading recent customers: {str(e)}")
         context.recent_customers = []

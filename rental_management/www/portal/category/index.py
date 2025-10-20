@@ -5,13 +5,8 @@ import urllib.parse
 def get_context(context):
     """Get context for category listing page with customer context"""
     
-    # CRITICAL: Disable all caching for real-time updates
+    # CRITICAL: Disable page caching only (don't break Frappe internals)
     context.no_cache = 1
-    frappe.response['type'] = 'page'
-    
-    # Clear request-level cache
-    if hasattr(frappe.local, 'request_cache'):
-        frappe.local.request_cache = {}
     
     category = frappe.form_dict.get('category', '')
     search = frappe.form_dict.get('search', '')

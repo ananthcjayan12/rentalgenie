@@ -4,13 +4,8 @@ from frappe import _
 def get_context(context):
     """Context for Add Item page"""
     
-    # CRITICAL: Disable all caching for real-time updates
+    # CRITICAL: Disable page caching only (don't break Frappe internals)
     context.no_cache = 1
-    frappe.response['type'] = 'page'
-    
-    # Clear request-level cache
-    if hasattr(frappe.local, 'request_cache'):
-        frappe.local.request_cache = {}
     
     context.page_title = "Add New Item"
     context.meta_description = "Add new rental items to inventory"

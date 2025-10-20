@@ -4,13 +4,8 @@ from rental_management.api.customer_portal import get_portal_categories, get_por
 def get_context(context):
     """Get context for portal home page"""
     
-    # CRITICAL: Disable all caching for real-time updates
+    # CRITICAL: Disable page caching only (don't break Frappe internals)
     context.no_cache = 1
-    frappe.response['type'] = 'page'
-    
-    # Clear request-level cache
-    if hasattr(frappe.local, 'request_cache'):
-        frappe.local.request_cache = {}
     
     # Get banners for the carousel (force fresh data)
     context.banners = get_portal_banners()
