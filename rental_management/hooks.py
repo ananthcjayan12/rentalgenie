@@ -1,32 +1,30 @@
 app_name = "rental_management"
-app_title = "Rental Management"
+app_title = "Blush & Glow Rental"
 app_publisher = "clearmydesk"
-app_description = "Rental Management module"
+app_description = "Rental Management for Blush & Glow"
 app_email = "ananthcjayan@gmail.com"
 app_license = "mit"
+app_logo_url = "/assets/rental_management/images/blush_glow_logo.png"
 
 # Apps
 # ------------------
 
-# required_apps = []
-
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "rental_management",
-# 		"logo": "/assets/rental_management/logo.png",
-# 		"title": "Rental Management",
-# 		"route": "/rental_management",
-# 		"has_permission": "rental_management.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "rental_management",
+		"logo": "/assets/rental_management/images/blush_glow_logo.png",
+		"title": "Blush & Glow Rental",
+		"route": "/app/home",
+	}
+]
 
 # Includes in <head>
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/rental_management/css/rental_management.css"
-# app_include_js = "/assets/rental_management/js/rental_management.js"
+app_include_css = "/assets/rental_management/css/rental_theme.css"
+app_include_js = "/assets/rental_management/js/rental_desk.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/rental_management/css/rental_management.css"
@@ -57,14 +55,31 @@ doctype_js = {
 
 # Home Pages
 # ----------
+# Redirect to the customer portal as the default home page
+home_page = "portal"
 
-# application home page (will override Website Settings)
-# home_page = "login"
+# Set Rental Management workspace as default for desk users
+default_workspace = "Rental Management"
 
-# website user home page (by Role)
-# role_home_page = {
-# 	"Role": "home_page"
-# }
+
+
+# Website brand and app logo
+brand_html = """
+<div class="app-logo navbar-brand-custom">
+    <img src="/assets/rental_management/images/blush_glow_logo.png" 
+         alt="Blush & Glow" 
+         style="max-height: 40px; width: auto;" />
+</div>
+"""
+
+# Website context
+website_context = {
+	"favicon": "/assets/rental_management/images/blush_glow_logo.png",
+	"splash_image": "/assets/rental_management/images/blush_glow_logo.png",
+}
+
+# Desk customization
+app_logo_url = "/assets/rental_management/images/blush_glow_logo.png"
 
 # Generators
 # ----------
@@ -153,6 +168,17 @@ doc_events = {
 		"on_submit": "rental_management.automations.booking_automation.on_submit_sales_invoice"
 	}
 }
+
+# Accounting Configuration
+# ------------------------
+# Add Third Party Owner as a party type for accounting entries
+accounting_dimension_doctypes = ["Third Party Owner"]
+
+# Third Party Owner as a party type
+party_account_types = ["Third Party Owner"]
+
+# Add Third Party Owner to party types for Journal Entry
+get_party_account = "rental_management.utils.get_third_party_owner_account"
 
 # Scheduled Tasks
 # ---------------

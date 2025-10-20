@@ -1,7 +1,123 @@
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, getdate, add_days
+from frappe.utils import cint, flt, getdate, add_days, nowdate
 import json
+
+@frappe.whitelist(allow_guest=True)
+def get_portal_banners():
+    """Get active portal banners for home page"""
+    try:
+        banners = frappe.db.sql("""
+            SELECT name, title, image, subtitle, button_text, button_link, display_order
+            FROM `tabPortal Banner`
+            WHERE is_active = 1
+              AND (show_from IS NULL OR show_from <= %s)
+              AND (show_to IS NULL OR show_to >= %s)
+            ORDER BY display_order ASC, modified DESC
+        """, [nowdate(), nowdate()], as_dict=True)
+        
+        return banners
+    except Exception as e:
+        frappe.log_error(f"Error getting portal banners: {str(e)}")
+        return []
+
+@frappe.whitelist(allow_guest=True)
+def get_portal_categories():
+    """Get portal categories using Item Group with custom portal fields"""
+    try:
+        # Get Item Groups that are marked to show in portal
+        categories = frappe.db.sql("""
+            SELECT 
+                ig.name,
+                ig.item_group_name as label,
+                ig.portal_image as image,
+                ig.portal_icon as icon,
+                ig.portal_description as description,
+                ig.portal_display_order as display_order,
+                COUNT(DISTINCT m.item_code) as item_count
+            FROM `tabItem Group` ig
+            LEFT JOIN `tabItem` m ON m.item_group = ig.name
+                AND m.is_rental_item = 1
+                AND m.approval_status = 'Approved'
+                AND m.disabled = 0
+            LEFT JOIN `tabItem` s ON s.item_code = CONCAT(m.item_code, '-RENTAL')
+                AND s.is_stock_item = 0
+                AND s.disabled = 0
+                AND COALESCE(s.approval_status, m.approval_status) = 'Approved'
+            WHERE ig.show_in_portal = 1
+              AND ig.is_group = 0
+            GROUP BY ig.name
+            HAVING item_count > 0
+            ORDER BY ig.portal_display_order ASC, ig.item_group_name ASC
+        """, as_dict=True)
+        
+        # Add default icons and images for categories without custom settings
+        for category in categories:
+            if not category.get('image'):
+                category['image'] = f"/assets/rental_management/images/categories/{(category['label'] or '').lower().replace(' ', '_')}.jpg"
+            
+            if not category.get('icon'):
+                category['icon'] = get_default_category_icon(category['label'])
+        
+        # If no Item Groups are configured for portal, fallback to rental_item_type
+        if not categories:
+            categories = frappe.db.sql("""
+                SELECT 
+                    m.rental_item_type AS name,
+                    m.rental_item_type AS label,
+                    COUNT(s.item_code) AS item_count
+                FROM `tabItem` m
+                JOIN `tabItem` s ON s.item_code = CONCAT(m.item_code, '-RENTAL')
+                WHERE m.is_rental_item = 1
+                  AND m.approval_status = 'Approved'
+                  AND m.disabled = 0
+                  AND s.is_stock_item = 0
+                  AND s.disabled = 0
+                  AND COALESCE(s.approval_status, m.approval_status) = 'Approved'
+                  AND m.rental_item_type IS NOT NULL
+                GROUP BY m.rental_item_type
+                ORDER BY item_count DESC
+            """, as_dict=True)
+            
+            # Add default image and icon for fallback categories
+            for category in categories:
+                category['image'] = f"/assets/rental_management/images/categories/{(category['name'] or '').lower()}.jpg"
+                category['icon'] = get_default_category_icon(category.get('label') or category.get('name'))
+        
+        return categories
+    except Exception as e:
+        frappe.log_error(f"Error getting portal categories: {str(e)}")
+        return []
+
+def get_default_category_icon(category_name):
+    """Get default icon for category"""
+    if not category_name:
+        return 'fa-tag'
+        
+    icon_map = {
+        'Dress': 'fa-person-dress',
+        'Gown': 'fa-person-dress', 
+        'Lehenga': 'fa-person-dress',
+        'Saree': 'fa-person-dress',
+        'Ornament': 'fa-gem',
+        'Jewellery': 'fa-gem',
+        'Jewelry': 'fa-gem',
+        'Necklace': 'fa-gem',
+        'Earring': 'fa-gem',
+        'Bracelet': 'fa-gem',
+        'Ring': 'fa-gem',
+        'Accessory': 'fa-star',
+        'Bag': 'fa-shopping-bag',
+        'Shoes': 'fa-shoe-prints',
+        'Other': 'fa-tags'
+    }
+    
+    # Check for partial matches in category name
+    for key, icon in icon_map.items():
+        if key.lower() in category_name.lower():
+            return icon
+    
+    return 'fa-tag'
 
 @frappe.whitelist(allow_guest=True)
 def get_rental_categories():
@@ -98,6 +214,8 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
             order_clause = "m.modified DESC"
         elif sort_by == "trending" or trending_mode:
             order_clause = "m.total_rental_count DESC, m.modified DESC"
+        elif sort_by == "random":
+            order_clause = "RAND()"
         else:
             order_clause = "m.total_rental_count DESC, m.modified DESC"
         
@@ -231,33 +349,64 @@ def check_item_availability(item_code, start_date, end_date):
         start_date = getdate(start_date)
         end_date = getdate(end_date)
         
-        # Check for conflicting bookings
+        # Handle both main item codes and service item codes
+        # Bookings always use service item codes (with -RENTAL suffix)
+        if item_code.endswith('-RENTAL'):
+            service_item_code = item_code
+        else:
+            service_item_code = item_code + '-RENTAL'
+        
+        # Verify the service item exists
+        if not frappe.db.exists("Item", service_item_code):
+            return {'is_available': False, 'message': f'Service item {service_item_code} not found'}
+        
+        # Check for conflicting bookings using the service item code
+        # Fixed overlap logic: two ranges overlap if start1 <= end2 AND start2 <= end1
+        # Use Sales Invoice level dates (si.rental_start_date/rental_end_date) instead of Item level dates
         conflicting_bookings = frappe.db.sql("""
-            SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date
+            SELECT si.name, si.customer, si.rental_start_date, si.rental_end_date, si.booking_status
             FROM `tabSales Invoice` si
             JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
             WHERE sii.item_code = %s
             AND si.is_rental_booking = 1
             AND si.docstatus = 1
             AND si.booking_status NOT IN ('Cancelled', 'Completed', 'Exchanged')
-            AND (
-                (si.rental_start_date <= %s AND si.rental_end_date >= %s) OR
-                (si.rental_start_date <= %s AND si.rental_end_date >= %s) OR
-                (si.rental_start_date >= %s AND si.rental_end_date <= %s)
-            )
-        """, (item_code, start_date, start_date, end_date, end_date, start_date, end_date))
+            AND si.rental_start_date IS NOT NULL
+            AND si.rental_end_date IS NOT NULL
+            AND si.rental_start_date <= %s
+            AND si.rental_end_date >= %s
+        """, (service_item_code, end_date, start_date))
         
         is_available = len(conflicting_bookings) == 0
+        
+        # Enhanced debug logging
+        print(f"DEBUG Availability Check:")
+        print(f"  - Input item_code: {item_code}")
+        print(f"  - Service item_code: {service_item_code}")
+        print(f"  - Date range: {start_date} to {end_date}")
+        print(f"  - Found conflicts: {len(conflicting_bookings)}")
+        
+        if conflicting_bookings:
+            print(f"  - Conflict details:")
+            for b in conflicting_bookings:
+                print(f"    * Booking {b[0]} for customer {b[1]} ({b[2]} to {b[3]})")
+            booking_details = [f"Booking {b[0]} for customer {b[1]} ({b[2]} to {b[3]})" for b in conflicting_bookings]
+            message = f'Item is already booked for selected dates. Conflicting bookings: {"; ".join(booking_details)}'
+        else:
+            print(f"  - No conflicts found - item is available")
+            message = 'Available'
+        
+        print(f"  - Final result: available={is_available}")
         
         return {
             'is_available': is_available,
             'conflicting_bookings': conflicting_bookings,
-            'message': 'Available' if is_available else 'Item is already booked for selected dates'
+            'message': message
         }
         
     except Exception as e:
-        frappe.log_error(f"Error checking availability for {item_code}: {str(e)}")
-        return {'is_available': False, 'message': 'Error checking availability'}
+        print(f"Error checking availability for {item_code}: {str(e)}")
+        return {'is_available': False, 'message': f'Error checking availability: {str(e)}'}
 
 
 
@@ -705,12 +854,19 @@ def create_customer_booking_from_cart(customer_id, advance_amount=0, special_ins
                     'message': f"Item {item['item_name']} is no longer available for the selected dates"
                 }
         
-        # Calculate amounts
-        total_rental_amount = sum(flt(item['total_amount']) for item in cart_items)
-        advance_amount = flt(advance_amount)
-        balance_amount = total_rental_amount - advance_amount
+        # Get function date and calculate rental duration from first cart item
+        # (assuming all items have same function date for a single booking)
+        first_item = cart_items[0]
+        function_date = first_item.get('function_date')
+        rental_start_date = first_item.get('rental_start_date') 
+        rental_end_date = first_item.get('rental_end_date')
         
-        # Create Sales Invoice for BALANCE AMOUNT ONLY (not full amount)
+        # Calculate rental duration in days
+        rental_duration_days = 0
+        if rental_start_date and rental_end_date:
+            rental_duration_days = (getdate(rental_end_date) - getdate(rental_start_date)).days + 1
+        
+        # Create Sales Invoice (Booking) - Draft status initially
         sales_invoice = frappe.get_doc({
             "doctype": "Sales Invoice",
             "customer": customer_id,
@@ -718,42 +874,42 @@ def create_customer_booking_from_cart(customer_id, advance_amount=0, special_ins
             "posting_date": frappe.utils.today(),
             "due_date": frappe.utils.add_days(frappe.utils.today(), 7),
             "is_rental_booking": 1,
-            "booking_status": "",  # Start with empty status
+            "booking_status": "",  # Start with empty status, will be set to "Confirmed" after advance collection
             "special_instructions": special_instructions,
-            "advance_amount": advance_amount,
-            "advance_collected_outside": advance_amount,  # For tracking
-            "total_rental_amount": total_rental_amount,  # Store full amount for reference
+            "advance_amount": flt(advance_amount),
+            "function_date": function_date,
+            "rental_start_date": rental_start_date,
+            "rental_end_date": rental_end_date,
+            "rental_duration_days": rental_duration_days,
             "items": []
         })
         
+        total_rental_amount = 0
         total_caution_deposit = 0
         
-        # Add cart items to invoice - but adjust rates to reflect only balance amount
-        balance_ratio = balance_amount / total_rental_amount if total_rental_amount > 0 else 0
-        
+        # Add cart items to invoice
         for cart_item in cart_items:
             rental_days = cart_item['rental_days']
-            full_line_total = flt(cart_item['total_amount'])
-            # Adjust rate to show only balance portion
-            balance_line_total = full_line_total * balance_ratio
+            rate = flt(cart_item['rental_rate'])
+            line_total = flt(cart_item['total_amount'])
             
             # Add rental service item
             sales_invoice.append("items", {
                 "item_code": cart_item['item_code'],
                 "item_name": cart_item['item_name'],
-                "description": f"Rental for {rental_days} days (Balance after advance)",
+                "description": f"Rental for {rental_days} days",
                 "qty": 1,
                 "uom": "Nos",
-                "rate": balance_line_total,
-                "amount": balance_line_total,
+                "rate": line_total,
                 "rental_start_date": cart_item['rental_start_date'],
                 "rental_end_date": cart_item['rental_end_date'],
                 "function_date": cart_item.get('function_date'),
-                "rental_days": rental_days,
-                "full_rental_amount": full_line_total  # Store full amount for reference
+                "rental_days": rental_days
             })
             
-            # Get caution deposit from main item (if field exists)
+            total_rental_amount += line_total
+            
+            # Get caution deposit from main item
             main_item_code = cart_item['item_code'][:-7] if cart_item['item_code'].endswith('-RENTAL') else cart_item['item_code']
             main_item = frappe.get_doc("Item", main_item_code)
             caution_deposit = flt(main_item.get('caution_deposit', 0))
@@ -762,7 +918,11 @@ def create_customer_booking_from_cart(customer_id, advance_amount=0, special_ins
         # Set caution deposit amount on the booking
         sales_invoice.caution_deposit_amount = total_caution_deposit
         
-        # Insert the sales invoice (keep as draft until advance is collected)
+        # Calculate pending amount after advance
+        pending_amount = total_rental_amount - flt(advance_amount)
+        sales_invoice.pending_payment_amount = pending_amount
+        
+        # Insert the sales invoice (don't submit yet - keep as draft for advance collection)
         sales_invoice.insert()
         
         # Clear customer's cart after successful booking creation
@@ -770,11 +930,11 @@ def create_customer_booking_from_cart(customer_id, advance_amount=0, special_ins
         
         return {
             'success': True,
-            'message': 'Booking created successfully. Collect advance to confirm.',
+            'message': 'Booking created successfully',
             'booking_id': sales_invoice.name,
             'total_rental_amount': total_rental_amount,
-            'advance_amount': advance_amount,
-            'balance_amount': balance_amount,
+            'advance_amount': flt(advance_amount),
+            'pending_amount': pending_amount,
             'caution_deposit_amount': total_caution_deposit,
             'booking_url': f"/app/sales-invoice/{sales_invoice.name}"
         }
@@ -861,8 +1021,6 @@ def create_customer(customer_name, mobile_number=None, email_id=None, customer_g
 def confirm_booking_with_advance(booking_id, advance_amount, payment_mode="Cash"):
     """Stage 1: Confirm booking and collect advance payment"""
     try:
-        from rental_management.utils.accounting import create_advance_revenue_journal_entry
-        
         advance_amount = flt(advance_amount)
         
         # Get the booking
@@ -873,21 +1031,24 @@ def confirm_booking_with_advance(booking_id, advance_amount, payment_mode="Cash"
         if booking.booking_status not in ("", None):
             return {'success': False, 'message': f'Booking is not in initial status (current: {booking.booking_status})'}
         
-        # Create advance revenue journal entry (Cash Dr, Revenue Cr)
-        advance_journal_entry = create_advance_revenue_journal_entry(booking_id, advance_amount, booking.company)
-        
-        # Update booking with advance amount and status
+        # Update booking with advance amount
         booking.advance_amount = advance_amount
         booking.booking_status = "Confirmed"
-        booking.advance_journal_entry = advance_journal_entry
         booking.save()
         
         # Submit the booking now that advance is collected
         booking.submit()
         
+        # Create Payment Entry for advance (proper allocation against invoice)
+        payment_entry = create_advance_payment_entry(booking, advance_amount, payment_mode)
+        
+        # Link the payment entry to the booking
+        if payment_entry:
+            booking.db_set('advance_payment_entry', payment_entry.name)
+        
         # Calculate remaining amounts
-        total_rental = booking.get('total_rental_amount', booking.total + advance_amount)
-        remaining_balance = booking.total  # This is already the balance amount
+        total_rental = booking.total
+        remaining_balance = total_rental - advance_amount
         caution_deposit = booking.caution_deposit_amount or 0
         
         return {
@@ -898,7 +1059,7 @@ def confirm_booking_with_advance(booking_id, advance_amount, payment_mode="Cash"
             'remaining_balance': remaining_balance,
             'caution_deposit_required': caution_deposit,
             'total_due_at_delivery': remaining_balance + caution_deposit,
-            'advance_journal_entry': advance_journal_entry
+            'payment_entry': payment_entry.name if payment_entry else None
         }
         
     except Exception as e:
@@ -909,13 +1070,6 @@ def confirm_booking_with_advance(booking_id, advance_amount, payment_mode="Cash"
 def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_deposit_amount, payment_mode="Cash"):
     """Stage 2: Collect remaining balance + caution deposit at item delivery"""
     try:
-        from rental_management.utils.accounting import (
-            create_balance_payment_entry, 
-            create_caution_deposit_journal_entry,
-            create_owner_commission_journal_entry,
-            calculate_owner_commission
-        )
-        
         balance_amount = flt(balance_amount)
         caution_deposit_amount = flt(caution_deposit_amount)
         
@@ -927,34 +1081,14 @@ def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_depo
         if booking.booking_status != "Confirmed":
             return {'success': False, 'message': 'Booking must be confirmed first'}
         
-        # Calculate expected balance amount (should equal invoice total)
-        expected_balance = booking.total
+        # Calculate expected amounts
+        total_rental = booking.total
+        advance_paid = booking.advance_amount or 0
+        expected_balance = total_rental - advance_paid
         
         # Validate balance amount
         if abs(balance_amount - expected_balance) > 0.01:
             return {'success': False, 'message': f'Balance amount should be {expected_balance}'}
-        
-        # Create balance payment entry (clears AR)
-        balance_payment_entry = None
-        if balance_amount > 0:
-            balance_payment_entry = create_balance_payment_entry(
-                booking_id, balance_amount, booking.customer, booking.company
-            )
-        
-        # Create caution deposit journal entry (creates liability)
-        caution_journal_entry = None
-        if caution_deposit_amount > 0:
-            caution_journal_entry = create_caution_deposit_journal_entry(
-                booking_id, caution_deposit_amount, booking.company
-            )
-        
-        # Calculate and create owner commission entries for third-party items
-        commission_total, commission_details = calculate_owner_commission(booking.items)
-        commission_journal_entry = None
-        if commission_total > 0:
-            commission_journal_entry = create_owner_commission_journal_entry(
-                booking_id, commission_total, None, booking.company
-            )
         
         # Update booking status and amounts using db_set for submitted documents
         booking.db_set('balance_amount_collected', balance_amount)
@@ -964,20 +1098,44 @@ def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_depo
         if caution_deposit_amount != (booking.caution_deposit_amount or 0):
             booking.db_set('caution_deposit_amount', caution_deposit_amount)
         
-        # Store journal entry references
-        if balance_payment_entry:
-            booking.db_set('balance_payment_entry', balance_payment_entry)
-        if caution_journal_entry:
-            booking.db_set('caution_deposit_journal_entry', caution_journal_entry)
-        if commission_journal_entry:
-            booking.db_set('commission_journal_entry', commission_journal_entry)
-        
-        booking.db_set('owner_commission_amount', commission_total)
         booking.db_set('booking_status', "Out for Rental")
         booking.db_set('actual_delivery_time', frappe.utils.now_datetime())
         
         # Reload the document to get updated values
         booking.reload()
+        
+        # Create proper accounting entries for delivery stage
+        try:
+            # Create Payment Entry for balance amount (reduces AR to zero)
+            if balance_amount > 0:
+                balance_payment = create_delivery_balance_payment(booking, balance_amount, payment_mode)
+                frappe.log_error(f"✅ Balance payment entry created: {balance_payment}")
+            
+            # Create Journal Entry for caution deposit (liability)
+            if caution_deposit_amount > 0:
+                caution_je = create_caution_deposit_entry(booking, caution_deposit_amount, payment_mode)
+                frappe.log_error(f"✅ Caution deposit entry created: {caution_je}")
+                
+        except Exception as e:
+            # Use print instead of frappe.log_error to avoid nested error issues
+            print(f"Error creating delivery accounting entries: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {'success': False, 'message': f'Accounting error: {str(e)}'}
+        
+        # Create owner commission liability entries for third-party items (now at delivery stage)
+        try:
+            # Only create commissions if not already created
+            if not booking.get('owner_commission_created'):
+                from rental_management.automations.booking_automation import create_owner_commission_liabilities
+                create_owner_commission_liabilities(booking)
+                print(f"✅ Owner commission entries created at delivery for booking {booking.name}")
+            else:
+                print(f"ℹ️ Owner commission entries already exist for booking {booking.name}")
+        except Exception as e:
+            # Log error but don't fail the delivery process
+            print(f"Warning: Could not create owner commission entries: {str(e)}")
+            frappe.log_error(f"Error creating owner commission entries at delivery for {booking.name}: {str(e)}")
         
         return {
             'success': True,
@@ -985,24 +1143,20 @@ def collect_balance_and_caution_deposit(booking_id, balance_amount, caution_depo
             'booking_id': booking.name,
             'balance_collected': balance_amount,
             'caution_deposit_collected': caution_deposit_amount,
-            'owner_commission': commission_total,
             'total_collected': balance_amount + caution_deposit_amount,
-            'status': 'Out for Rental',
-            'balance_payment_entry': balance_payment_entry,
-            'caution_journal_entry': caution_journal_entry,
-            'commission_journal_entry': commission_journal_entry
+            'status': 'Out for Rental'
         }
         
     except Exception as e:
         print(f"Error collecting balance and caution deposit: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {'success': False, 'message': str(e)}
 
 @frappe.whitelist()
 def process_item_return_and_refund(booking_id, caution_deposit_refund, deduction_amount=0, deduction_reason="", payment_mode="Cash"):
     """Stage 3: Process item return and caution deposit refund"""
     try:
-        from rental_management.utils.accounting import create_caution_refund_journal_entry
-        
         caution_deposit_refund = flt(caution_deposit_refund)
         deduction_amount = flt(deduction_amount)
         
@@ -1021,18 +1175,12 @@ def process_item_return_and_refund(booking_id, caution_deposit_refund, deduction
         if caution_deposit_refund > max_refund:
             return {'success': False, 'message': f'Refund cannot exceed {max_refund} (collected: {caution_collected} - deductions: {deduction_amount})'}
         
-        # Create caution refund journal entry
-        refund_journal_entry = create_caution_refund_journal_entry(
-            booking_id, caution_deposit_refund, deduction_amount, booking.company
-        )
-        
         # Update booking with return details using db_set for submitted documents
         booking.db_set('caution_deposit_refunded', caution_deposit_refund)
         booking.db_set('caution_deposit_deduction', deduction_amount)
         booking.db_set('deduction_reason', deduction_reason)
         booking.db_set('booking_status', "Completed")
         booking.db_set('actual_return_time', frappe.utils.now_datetime())
-        booking.db_set('refund_journal_entry', refund_journal_entry)
         
         if deduction_reason:
             existing_notes = booking.return_notes or ""
@@ -1042,6 +1190,20 @@ def process_item_return_and_refund(booking_id, caution_deposit_refund, deduction
         # Reload the document to get updated values
         booking.reload()
         
+        # Create refund accounting entries
+        try:
+            if caution_deposit_refund > 0:
+                refund_je = create_caution_refund_entry(booking, caution_deposit_refund, payment_mode)
+                frappe.log_error(f"✅ Caution refund entry created: {refund_je}")
+            
+            if deduction_amount > 0:
+                deduction_je = create_caution_deduction_entry(booking, deduction_amount, deduction_reason)
+                frappe.log_error(f"✅ Caution deduction entry created: {deduction_je}")
+                
+        except Exception as e:
+            frappe.log_error(f"Error creating return accounting entries: {str(e)}")
+            return {'success': False, 'message': f'Accounting error: {str(e)}'}
+        
         return {
             'success': True,
             'message': 'Item return processed and caution deposit refunded',
@@ -1049,12 +1211,11 @@ def process_item_return_and_refund(booking_id, caution_deposit_refund, deduction
             'caution_refunded': caution_deposit_refund,
             'deduction_amount': deduction_amount,
             'net_refund': caution_deposit_refund,
-            'status': 'Completed',
-            'refund_journal_entry': refund_journal_entry
+            'status': 'Completed'
         }
         
     except Exception as e:
-        print(f"Error processing item return: {str(e)}")
+        frappe.log_error(f"Error processing item return: {str(e)}")
         return {'success': False, 'message': str(e)}
 
 @frappe.whitelist()
@@ -1176,3 +1337,559 @@ def get_customer_active_bookings(customer_id):
     except Exception as e:
         frappe.log_error(f"Error getting customer active bookings: {str(e)}")
         return {'success': False, 'message': str(e)}
+
+# Helper function for advance payment entry creation
+
+def create_advance_payment_entry(booking, advance_amount, payment_mode="Cash"):
+    """Create Payment Entry for advance payment with proper allocation against Sales Invoice"""
+    try:
+        # Get cash account based on payment mode
+        if payment_mode == "Cash":
+            cash_account = frappe.get_value("Company", booking.company, "default_cash_account")
+            if not cash_account:
+                cash_account = frappe.db.get_value("Account", {
+                    "account_type": "Cash", 
+                    "company": booking.company
+                }, "name")
+        else:
+            # For bank payments, get default bank account
+            cash_account = frappe.get_value("Company", booking.company, "default_bank_account")
+            if not cash_account:
+                cash_account = frappe.db.get_value("Account", {
+                    "account_type": "Bank", 
+                    "company": booking.company
+                }, "name")
+        
+        if not cash_account:
+            frappe.throw("No cash/bank account found for payment processing")
+        
+        # Create Payment Entry
+        payment_entry = frappe.get_doc({
+            "doctype": "Payment Entry",
+            "payment_type": "Receive",
+            "party_type": "Customer", 
+            "party": booking.customer,
+            "party_name": booking.customer_name,
+            "company": booking.company,
+            "posting_date": frappe.utils.today(),
+            "paid_amount": advance_amount,
+            "received_amount": advance_amount,
+            "target_exchange_rate": 1,
+            "source_exchange_rate": 1,
+            "paid_to": cash_account,
+            "paid_to_account_currency": frappe.get_value("Account", cash_account, "account_currency"),
+            "mode_of_payment": payment_mode,
+            "reference_no": f"ADV-{booking.name}",
+            "reference_date": frappe.utils.today(),
+            "remarks": f"Advance payment for booking {booking.name}"
+        })
+        
+        # Add reference to the Sales Invoice for allocation
+        payment_entry.append("references", {
+            "reference_doctype": "Sales Invoice",
+            "reference_name": booking.name,
+            "total_amount": booking.grand_total,
+            "outstanding_amount": booking.outstanding_amount,
+            "allocated_amount": advance_amount
+        })
+        
+        # Insert and submit payment entry
+        payment_entry.insert(ignore_permissions=True)
+        payment_entry.submit()
+        
+        print(f"✅ Advance Payment Entry {payment_entry.name} created and submitted successfully")
+        
+        return payment_entry
+        
+    except Exception as e:
+        print(f"Error creating advance payment entry: {str(e)}")
+        # Log error but don't fail the booking
+        frappe.log_error(f"Error creating advance payment entry for {booking.name}: {str(e)}")
+        return None
+
+def create_delivery_balance_payment(booking, balance_amount, payment_mode="Cash"):
+    """Create Payment Entry for balance amount to reduce AR to zero"""
+    try:
+        # Find the appropriate cash/bank account
+        company = booking.company
+        
+        # Get mode of payment account
+        if payment_mode == "Cash":
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Cash", "company": company, "is_group": 0}, 
+                "name")
+            if not cash_account:
+                # Create default cash account if not found
+                cash_account = f"Cash - {frappe.get_cached_value('Company', company, 'abbr')}"
+        else:
+            # For bank payments, get default bank account
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Bank", "company": company, "is_group": 0}, 
+                "name")
+        
+        if not cash_account:
+            frappe.throw("No suitable cash/bank account found for payment")
+        
+        # Create Payment Entry
+        payment_entry = frappe.get_doc({
+            "doctype": "Payment Entry",
+            "payment_type": "Receive",
+            "party_type": "Customer",
+            "party": booking.customer,
+            "company": company,
+            "posting_date": frappe.utils.nowdate(),
+            "paid_from": frappe.get_cached_value("Customer", booking.customer, "default_receivable_account") or 
+                        frappe.get_value("Account", {"account_type": "Receivable", "company": company}, "name"),
+            "paid_to": cash_account,
+            "paid_amount": balance_amount,
+            "received_amount": balance_amount,
+            "reference_no": f"Balance-{booking.name}",
+            "reference_date": frappe.utils.nowdate(),
+            "remarks": f"Balance payment for rental booking {booking.name}",
+            "references": [{
+                "reference_doctype": "Sales Invoice",
+                "reference_name": booking.name,
+                "allocated_amount": balance_amount
+            }]
+        })
+        
+        payment_entry.insert(ignore_permissions=True)
+        payment_entry.submit()
+        
+        return payment_entry.name
+        
+    except Exception as e:
+        print(f"Error creating balance payment entry: {str(e)}")
+        raise
+
+def create_caution_deposit_entry(booking, caution_amount, payment_mode="Cash"):
+    """Create Journal Entry for caution deposit as liability"""
+    try:
+        company = booking.company
+        company_abbr = frappe.get_cached_value("Company", company, "abbr")
+        
+        # Get cash account
+        if payment_mode == "Cash":
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Cash", "company": company, "is_group": 0}, 
+                "name")
+            if not cash_account:
+                cash_account = f"Cash - {company_abbr}"
+        else:
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Bank", "company": company, "is_group": 0}, 
+                "name")
+        
+        # Get or create caution deposit liability account
+        caution_liability_account = f"Customer Caution Deposits - {company_abbr}"
+        if not frappe.db.exists("Account", caution_liability_account):
+            # Create the liability account
+            parent_account = f"Current Liabilities - {company_abbr}"
+            if not frappe.db.exists("Account", parent_account):
+                # Find any liability group account
+                parent_account = frappe.get_value("Account", 
+                    {"company": company, "is_group": 1, "account_name": ("like", "%liabilit%")}, 
+                    "name")
+            
+            caution_account = frappe.get_doc({
+                "doctype": "Account",
+                "account_name": "Customer Caution Deposits",
+                "parent_account": parent_account,
+                "company": company,
+                "is_group": 0
+                # No specific account_type - general liability account
+            })
+            caution_account.insert(ignore_permissions=True)
+            caution_liability_account = caution_account.name
+        
+        # Create Journal Entry
+        journal_entry = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry",
+            "posting_date": frappe.utils.nowdate(),
+            "company": company,
+            "user_remark": f"Caution deposit collected for booking {booking.name} - Customer: {booking.customer}",
+            "accounts": [
+                {
+                    "account": cash_account,
+                    "debit_in_account_currency": caution_amount,
+                    "credit_in_account_currency": 0
+                },
+                {
+                    "account": caution_liability_account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": caution_amount
+                    # No party_type for liability accounts - customer info in remark instead
+                }
+            ]
+        })
+        
+        journal_entry.insert(ignore_permissions=True)
+        journal_entry.submit()
+        
+        return journal_entry.name
+        
+    except Exception as e:
+        print(f"Error creating caution deposit entry: {str(e)}")
+        raise
+
+def create_caution_refund_entry(booking, refund_amount, payment_mode="Cash"):
+    """Create Journal Entry for caution deposit refund"""
+    try:
+        company = booking.company
+        company_abbr = frappe.get_cached_value("Company", company, "abbr")
+        
+        # Get cash account
+        if payment_mode == "Cash":
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Cash", "company": company, "is_group": 0}, 
+                "name")
+            if not cash_account:
+                cash_account = f"Cash - {company_abbr}"
+        else:
+            cash_account = frappe.get_value("Account", 
+                {"account_type": "Bank", "company": company, "is_group": 0}, 
+                "name")
+        
+        # Get caution deposit liability account
+        caution_liability_account = f"Customer Caution Deposits - {company_abbr}"
+        if not frappe.db.exists("Account", caution_liability_account):
+            frappe.throw(f"Caution deposit liability account not found: {caution_liability_account}")
+        
+        # Create Journal Entry for refund
+        journal_entry = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry", 
+            "posting_date": frappe.utils.nowdate(),
+            "company": company,
+            "user_remark": f"Caution deposit refund for booking {booking.name} - Customer: {booking.customer}",
+            "accounts": [
+                {
+                    "account": caution_liability_account,
+                    "debit_in_account_currency": refund_amount,
+                    "credit_in_account_currency": 0
+                    # No party_type for liability accounts - customer info in remark
+                },
+                {
+                    "account": cash_account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": refund_amount
+                }
+            ]
+        })
+        
+        journal_entry.insert(ignore_permissions=True)
+        journal_entry.submit()
+        
+        return journal_entry.name
+        
+    except Exception as e:
+        print(f"Error creating caution refund entry: {str(e)}")
+        raise
+
+def create_caution_deduction_entry(booking, deduction_amount, reason):
+    """Create Journal Entry for caution deposit deduction (convert liability to income)"""
+    try:
+        company = booking.company
+        company_abbr = frappe.get_cached_value("Company", company, "abbr")
+        
+        # Get caution deposit liability account
+        caution_liability_account = f"Customer Caution Deposits - {company_abbr}"
+        if not frappe.db.exists("Account", caution_liability_account):
+            frappe.throw(f"Caution deposit liability account not found: {caution_liability_account}")
+        
+        # Get or create deduction income account
+        deduction_income_account = f"Caution Deposit Forfeit Income - {company_abbr}"
+        if not frappe.db.exists("Account", deduction_income_account):
+            # Create the income account
+            parent_account = f"Direct Income - {company_abbr}"
+            if not frappe.db.exists("Account", parent_account):
+                parent_account = frappe.get_value("Account", 
+                    {"company": company, "account_type": "Income", "is_group": 1}, 
+                    "name")
+            
+            income_account = frappe.get_doc({
+                "doctype": "Account",
+                "account_name": "Caution Deposit Forfeit Income",
+                "parent_account": parent_account,
+                "company": company,
+                "account_type": "Income",
+                "is_group": 0
+            })
+            income_account.insert(ignore_permissions=True)
+            deduction_income_account = income_account.name
+        
+        # Create Journal Entry for deduction
+        journal_entry = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry",
+            "posting_date": frappe.utils.nowdate(),
+            "company": company,
+            "user_remark": f"Caution deposit deduction for booking {booking.name} - Customer: {booking.customer} - Reason: {reason}",
+            "accounts": [
+                {
+                    "account": caution_liability_account,
+                    "debit_in_account_currency": deduction_amount,
+                    "credit_in_account_currency": 0
+                    # No party_type for liability accounts - customer info in remark
+                },
+                {
+                    "account": deduction_income_account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": deduction_amount
+                }
+            ]
+        })
+        
+        journal_entry.insert(ignore_permissions=True)
+        journal_entry.submit()
+        
+        return journal_entry.name
+        
+    except Exception as e:
+        print(f"Error creating caution deduction entry: {str(e)}")
+        raise
+
+@frappe.whitelist()
+def create_rental_item(item_data, new_supplier=None, images=None):
+    """Create a new rental item from portal"""
+    try:
+        # Parse item_data if it's a string
+        if isinstance(item_data, str):
+            import json
+            try:
+                item_data = json.loads(item_data)
+            except json.JSONDecodeError as e:
+                return {
+                    "success": False,
+                    "message": f"Invalid item_data JSON: {str(e)}"
+                }
+        
+        # Parse new_supplier if it's a string  
+        if isinstance(new_supplier, str) and new_supplier.strip():
+            import json
+            try:
+                new_supplier = json.loads(new_supplier)
+            except json.JSONDecodeError:
+                new_supplier = None
+        elif not new_supplier or new_supplier == "null":
+            new_supplier = None
+            
+        # Parse images if it's a string
+        if isinstance(images, str) and images.strip():
+            import json
+            try:
+                images = json.loads(images)
+            except json.JSONDecodeError:
+                images = []
+        elif not images or images == "null":
+            images = []
+        
+        print(f"Creating rental item: {item_data.get('item_code', 'Unknown')}")
+        print(f"Item data received: {item_data}")
+        print(f"New supplier: {new_supplier}")
+        print(f"Images count: {len(images) if images else 0}")
+        
+        # Validate required fields
+        required_fields = ['item_code', 'item_name', 'item_group', 'rental_rate_per_day']
+        for field in required_fields:
+            if not item_data.get(field):
+                return {
+                    "success": False,
+                    "message": f"Missing required field: {field}"
+                }
+        
+        # Check if item already exists
+        if frappe.db.exists("Item", item_data['item_code']):
+            return {
+                "success": False,
+                "message": f"Item with code {item_data['item_code']} already exists"
+            }
+        # Create supplier first if needed
+        supplier_name = None
+        if item_data.get('is_third_party_item'):
+            if item_data.get('owner_supplier_source'):
+                supplier_name = item_data['owner_supplier_source']
+            elif new_supplier and new_supplier.get('supplier_name'):
+                # Create new supplier
+                supplier_doc = frappe.get_doc({
+                    "doctype": "Supplier",
+                    "supplier_name": new_supplier['supplier_name'],
+                    "supplier_type": "Individual",
+                    "supplier_group": "Local"
+                })
+                
+                # Add contact details if provided
+                if new_supplier.get('mobile_no'):
+                    supplier_doc.mobile_no = new_supplier['mobile_no']
+                if new_supplier.get('email_id'):
+                    supplier_doc.email_id = new_supplier['email_id']
+                    
+                supplier_doc.insert(ignore_permissions=True)
+                supplier_name = supplier_doc.name
+                
+                # Create contact if details provided
+                if new_supplier.get('mobile_no') or new_supplier.get('email_id'):
+                    contact_doc = frappe.get_doc({
+                        "doctype": "Contact",
+                        "first_name": new_supplier['supplier_name'],
+                        "mobile_no": new_supplier.get('mobile_no', ''),
+                        "email_id": new_supplier.get('email_id', ''),
+                        "links": [{
+                            "link_doctype": "Supplier",
+                            "link_name": supplier_name
+                        }]
+                    })
+                    contact_doc.insert(ignore_permissions=True)
+                
+                # Create address if provided (with required city field)
+                if new_supplier.get('address'):
+                    # Parse address and extract city if possible, otherwise use default
+                    address_line = new_supplier['address']
+                    city = "Not Specified"  # Default city
+                    
+                    # Try to extract city from address if it contains commas
+                    address_parts = [part.strip() for part in address_line.split(',')]
+                    if len(address_parts) >= 2:
+                        # Assume last part is city/state, second last is area
+                        city = address_parts[-1]
+                        address_line = ', '.join(address_parts[:-1])
+                    
+                    address_doc = frappe.get_doc({
+                        "doctype": "Address",
+                        "address_title": f"{new_supplier['supplier_name']} - Billing",
+                        "address_line1": address_line,
+                        "city": city,
+                        "country": frappe.get_value("Global Defaults", None, "country") or "India",
+                        "address_type": "Billing",
+                        "links": [{
+                            "link_doctype": "Supplier", 
+                            "link_name": supplier_name
+                        }]
+                    })
+                    address_doc.insert(ignore_permissions=True)
+                
+                print(f"✅ Created new supplier: {supplier_name}")
+        
+        # Create the item
+        item_doc = frappe.get_doc({
+            "doctype": "Item",
+            "item_code": item_data['item_code'],
+            "item_name": item_data['item_name'],
+            "item_group": item_data['item_group'],
+            "description": item_data.get('description', ''),
+            "stock_uom": "Nos",
+            "is_stock_item": 1,
+            "is_sales_item": 1,
+            "include_item_in_manufacturing": 0,
+            
+            # Rental specific fields
+            "is_rental_item": 1,
+            "rental_rate_per_day": float(item_data['rental_rate_per_day']),
+            "caution_deposit": float(item_data.get('caution_deposit', 0)),
+            "rental_item_type": item_data.get('rental_item_type', 'Other'),
+            "current_rental_status": "Available",
+            "approval_status": "Pending Approval",
+            
+            # Purchase details
+            "purchase_cost": float(item_data.get('purchase_cost', 0)) if item_data.get('purchase_cost') else 0,
+            "purchase_date": frappe.utils.today(),
+            
+            # Third party details
+            "is_third_party_item": item_data.get('is_third_party_item', False),
+            "owner_commission_percent": float(item_data.get('owner_commission_percent', 0)) if item_data.get('is_third_party_item') else 0,
+            "owner_supplier_source": supplier_name if item_data.get('is_third_party_item') else ""
+        })
+        
+        item_doc.insert(ignore_permissions=True)
+        
+        # Handle image uploads
+        if images and len(images) > 0:
+            for index, img_data in enumerate(images):
+                if img_data.get('content') and img_data.get('name'):
+                    try:
+                        # Extract base64 content
+                        content = img_data['content']
+                        if 'base64,' in content:
+                            content = content.split('base64,')[1]
+                        
+                        # Create file
+                        import base64
+                        file_content = base64.b64decode(content)
+                        
+                        # Generate filename
+                        import os
+                        file_ext = os.path.splitext(img_data['name'])[1]
+                        filename = f"{item_data['item_code']}_image_{index + 1}{file_ext}"
+                        
+                        # Save file
+                        file_doc = frappe.get_doc({
+                            "doctype": "File",
+                            "file_name": filename,
+                            "content": file_content,
+                            "is_private": 0,
+                            "folder": "Home/Attachments"
+                        })
+                        file_doc.save(ignore_permissions=True)
+                        
+                        # Create Item Image record
+                        item_image = frappe.get_doc({
+                            "doctype": "Item Image",
+                            "parent": item_doc.name,
+                            "parenttype": "Item",
+                            "parentfield": "item_images", 
+                            "image": file_doc.file_url,
+                            "image_description": f"Image {index + 1}",
+                            "is_primary": 1 if index == 0 else 0,
+                            "display_order": index + 1
+                        })
+                        item_image.insert(ignore_permissions=True)
+                        
+                        # Set primary image
+                        if index == 0:
+                            frappe.db.set_value("Item", item_doc.name, "image", file_doc.file_url)
+                        
+                    except Exception as img_error:
+                        print(f"Error uploading image {index + 1}: {str(img_error)}")
+                        # Continue with other images even if one fails
+                        continue
+        
+        # Create Third Party Owner if needed
+        if item_data.get('is_third_party_item') and supplier_name:
+            try:
+                owner_name = f"Owner - {supplier_name}"
+                if not frappe.db.exists("Third Party Owner", owner_name):
+                    owner_doc = frappe.get_doc({
+                        "doctype": "Third Party Owner",
+                        "owner_name": owner_name,
+                        "supplier_link": supplier_name,
+                        "commission_percentage": float(item_data.get('owner_commission_percent', 30))
+                    })
+                    owner_doc.insert(ignore_permissions=True)
+                    
+                    # Link back to item
+                    frappe.db.set_value("Item", item_doc.name, "third_party_owner", owner_name)
+                    
+                    print(f"✅ Created Third Party Owner: {owner_name}")
+            except Exception as owner_error:
+                print(f"Warning: Could not create Third Party Owner: {str(owner_error)}")
+        
+        frappe.db.commit()
+        
+        return {
+            "success": True,
+            "message": f"Item {item_doc.name} created successfully",
+            "item_code": item_doc.name,
+            "supplier_created": supplier_name if new_supplier else None
+        }
+        
+    except Exception as e:
+        frappe.db.rollback()
+        error_msg = str(e)
+        print(f"Error creating rental item: {error_msg}")
+        frappe.log_error(f"Error creating rental item: {error_msg}")
+        
+        return {
+            "success": False,
+            "message": f"Error creating item: {error_msg}"
+        }

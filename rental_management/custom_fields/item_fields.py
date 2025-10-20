@@ -112,12 +112,22 @@ def create_item_custom_fields():
         },
         {
             "doctype": "Item",
-            "fieldname": "third_party_supplier",
-            "label": "Owner (Supplier)",
+            "fieldname": "third_party_owner",
+            "label": "Third Party Owner",
+            "fieldtype": "Link",
+            "options": "Third Party Owner",
+            "depends_on": "is_third_party_item",
+            "insert_after": "owner_commission_percent"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "owner_supplier_source",
+            "label": "Source Supplier",
             "fieldtype": "Link",
             "options": "Supplier",
             "depends_on": "is_third_party_item",
-            "insert_after": "owner_commission_percent"
+            "insert_after": "third_party_owner",
+            "description": "Original supplier - will auto-create Third Party Owner"
         },
         # Additional Management Fields
         {
@@ -127,7 +137,7 @@ def create_item_custom_fields():
             "fieldtype": "Section Break",
             "depends_on": "is_rental_item",
             "collapsible": 1,
-            "insert_after": "third_party_supplier"
+            "insert_after": "owner_supplier_source"
         },
         {
             "doctype": "Item",

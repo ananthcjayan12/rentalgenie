@@ -1,0 +1,23 @@
+<!-- Shared Bottom Navigation Component -->
+<nav class="bottom-nav">
+    <a href="/portal" class="nav-item" :class="{ 'active': currentPage === 'home' }">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="/portal/category" class="nav-item" :class="{ 'active': currentPage === 'browse' }">
+        <i class="fas fa-th-large"></i>
+        <span>Browse</span>
+    </a>
+    <a href="/portal/add-item" class="nav-item" :class="{ 'active': currentPage === 'add-item' }">
+        <i class="fas fa-plus"></i>
+        <span>Add Item</span>
+    </a>
+    <a href="/portal/cart" class="nav-item" :class="{ 'active': currentPage === 'cart' }">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Cart</span>
+    </a>
+    <a href="/portal/staff" class="nav-item" :class="{ 'active': currentPage === 'bookings' }">
+        <i class="fas fa-calendar-check"></i>
+        <span>Bookings</span>
+    </a>
+</nav>

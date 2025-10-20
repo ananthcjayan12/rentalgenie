@@ -99,12 +99,22 @@ def create_sales_invoice_custom_fields():
         },
         {
             "doctype": "Sales Invoice",
+            "fieldname": "advance_payment_entry",
+            "label": "Advance Payment Entry",
+            "fieldtype": "Link",
+            "options": "Payment Entry",
+            "depends_on": "is_rental_booking",
+            "read_only": 1,
+            "insert_after": "advance_amount"
+        },
+        {
+            "doctype": "Sales Invoice",
             "fieldname": "pending_payment_amount",
             "label": "Pending Payment Amount",
             "fieldtype": "Currency",
             "depends_on": "is_rental_booking",
             "read_only": 1,
-            "insert_after": "advance_amount"
+            "insert_after": "advance_payment_entry"
         },
         {
             "doctype": "Sales Invoice",
@@ -168,10 +178,20 @@ def create_sales_invoice_custom_fields():
         },
         {
             "doctype": "Sales Invoice",
+            "fieldname": "owner_commission_created",
+            "label": "Owner Commission Created",
+            "fieldtype": "Check",
+            "depends_on": "is_rental_booking",
+            "default": 0,
+            "read_only": 1,
+            "insert_after": "deduction_reason"
+        },
+        {
+            "doctype": "Sales Invoice",
             "fieldname": "exchange_booking_section",
             "label": "Exchange Booking Details",
             "fieldtype": "Section Break",
-            "insert_after": "deduction_reason",
+            "insert_after": "owner_commission_created",
             "collapsible": 1,
             "depends_on": "is_rental_booking"
         },
