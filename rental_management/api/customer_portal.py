@@ -1728,13 +1728,13 @@ def create_rental_item(item_data, new_supplier=None, images=None):
                 supplier_doc.insert(ignore_permissions=True)
                 supplier_name = supplier_doc.name
                 
-                # Create contact and address if details provided
+                # Create contact if details provided
                 if new_supplier.get('mobile_no') or new_supplier.get('email_id'):
                     contact_doc = frappe.get_doc({
                         "doctype": "Contact",
                         "first_name": new_supplier['supplier_name'],
-                        "mobile_no": new_supplier.get('mobile_no'),
-                        "email_id": new_supplier.get('email_id'),
+                        "mobile_no": new_supplier.get('mobile_no', ''),
+                        "email_id": new_supplier.get('email_id', ''),
                         "links": [{
                             "link_doctype": "Supplier",
                             "link_name": supplier_name
@@ -1742,10 +1742,25 @@ def create_rental_item(item_data, new_supplier=None, images=None):
                     })
                     contact_doc.insert(ignore_permissions=True)
                 
+                # Create address if provided (with required city field)
                 if new_supplier.get('address'):
+                    # Parse address and extract city if possible, otherwise use default
+                    address_line = new_supplier['address']
+                    city = "Not Specified"  # Default city
+                    
+                    # Try to extract city from address if it contains commas
+                    address_parts = [part.strip() for part in address_line.split(',')]
+                    if len(address_parts) >= 2:
+                        # Assume last part is city/state, second last is area
+                        city = address_parts[-1]
+                        address_line = ', '.join(address_parts[:-1])
+                    
                     address_doc = frappe.get_doc({
                         "doctype": "Address",
-                        "address_line1": new_supplier['address'],
+                        "address_title": f"{new_supplier['supplier_name']} - Billing",
+                        "address_line1": address_line,
+                        "city": city,
+                        "country": frappe.get_value("Global Defaults", None, "country") or "India",
                         "address_type": "Billing",
                         "links": [{
                             "link_doctype": "Supplier", 
