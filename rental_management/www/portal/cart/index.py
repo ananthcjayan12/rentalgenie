@@ -1,11 +1,24 @@
 import frappe
 from frappe.utils import formatdate, get_datetime
 from rental_management.api.customer_portal import get_customer_cart_items
+import urllib.parse
 
 def get_context(context):
     """Get context for shopping cart page with customer context"""
     
+    # CRITICAL: Disable all caching for real-time updates
+    context.no_cache = 1
+    frappe.response['type'] = 'page'
+    
+    # Clear request-level cache
+    if hasattr(frappe.local, 'request_cache'):
+        frappe.local.request_cache = {}
+    
     customer_id = frappe.form_dict.get('customer', '')  # Sales staff customer selection
+    
+    # Decode URL parameters
+    if customer_id:
+        customer_id = urllib.parse.unquote(customer_id)
     
     try:
         # Handle customer context for sales staff portal
@@ -13,15 +26,19 @@ def get_context(context):
         context.customer = None
         
         if customer_id:
-            # Get customer details for header display
-            customer_data = frappe.db.get_value(
-                "Customer",
-                customer_id,
-                ["name", "customer_name", "mobile_number"],
+            # Get customer details for header display - force fresh query
+            customer_data = frappe.db.sql(
+                """
+                SELECT name, customer_name, mobile_number
+                FROM `tabCustomer`
+                WHERE name = %s AND disabled = 0
+                LIMIT 1
+                """,
+                (customer_id,),
                 as_dict=True
             )
             if customer_data:
-                context.customer = customer_data
+                context.customer = customer_data[0]
                 
                 # Get customer-specific cart items
                 cart_data = get_customer_cart_items(customer_id)
@@ -102,6 +119,10 @@ def get_context(context):
         else:
             context.page_title = f"Shopping Cart ({context.item_count}) | Blush & Glow"
             context.meta_description = "Review your rental cart and proceed to checkout."
+        
+        # Add cache-busting timestamp
+        import time
+        context.cache_bust = int(time.time())
         
         return context
         

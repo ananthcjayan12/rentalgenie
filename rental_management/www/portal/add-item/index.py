@@ -3,22 +3,46 @@ from frappe import _
 
 def get_context(context):
     """Context for Add Item page"""
+    
+    # CRITICAL: Disable all caching for real-time updates
+    context.no_cache = 1
+    frappe.response['type'] = 'page'
+    
+    # Clear request-level cache
+    if hasattr(frappe.local, 'request_cache'):
+        frappe.local.request_cache = {}
+    
     context.page_title = "Add New Item"
     context.meta_description = "Add new rental items to inventory"
     
-    # Get item groups for dropdown
-    context.item_groups = frappe.get_all(
-        "Item Group", 
-        filters={"is_group": 0}, 
-        fields=["name", "item_group_name"], 
-        order_by="item_group_name"
+    # Force fresh queries with cache-busting
+    import random
+    cache_bust = random.randint(1, 1000000)
+    
+    # Get item groups for dropdown - force fresh query
+    context.item_groups = frappe.db.sql(
+        f"""
+        SELECT /* cache_bust_{cache_bust}_1 */ name, item_group_name
+        FROM `tabItem Group`
+        WHERE is_group = 0
+        ORDER BY item_group_name
+        """,
+        as_dict=True
     )
     
-    # Get existing suppliers for dropdown
-    context.suppliers = frappe.get_all(
-        "Supplier",
-        fields=["name", "supplier_name"],
-        order_by="supplier_name"
+    # Get existing suppliers for dropdown - force fresh query
+    context.suppliers = frappe.db.sql(
+        f"""
+        SELECT /* cache_bust_{cache_bust}_2 */ name, supplier_name
+        FROM `tabSupplier`
+        WHERE disabled = 0
+        ORDER BY supplier_name
+        """,
+        as_dict=True
     )
+    
+    # Add cache-busting timestamp
+    import time
+    context.cache_bust = int(time.time())
     
     return context

@@ -1,8 +1,17 @@
 import frappe
 from rental_management.api.customer_portal import get_rental_items, get_rental_categories
+import urllib.parse
 
 def get_context(context):
     """Get context for category listing page with customer context"""
+    
+    # CRITICAL: Disable all caching for real-time updates
+    context.no_cache = 1
+    frappe.response['type'] = 'page'
+    
+    # Clear request-level cache
+    if hasattr(frappe.local, 'request_cache'):
+        frappe.local.request_cache = {}
     
     category = frappe.form_dict.get('category', '')
     search = frappe.form_dict.get('search', '')
@@ -11,30 +20,46 @@ def get_context(context):
     customer_id = frappe.form_dict.get('customer', '')  # Sales staff customer selection
     per_page = 12
     
+    # Decode URL parameters
+    if category:
+        category = urllib.parse.unquote(category)
+    if search:
+        search = urllib.parse.unquote(search)
+    if customer_id:
+        customer_id = urllib.parse.unquote(customer_id)
+    
     try:
         # Handle customer context for sales staff portal
         context.customer_id = customer_id
         context.customer = None
         if customer_id:
-            # Get customer details for header display
-            customer_data = frappe.db.get_value(
-                "Customer",
-                customer_id,
-                ["name", "customer_name", "mobile_number"],
+            # Get customer details for header display - force fresh query
+            customer_data = frappe.db.sql(
+                """
+                SELECT name, customer_name, mobile_number
+                FROM `tabCustomer`
+                WHERE name = %s AND disabled = 0
+                LIMIT 1
+                """,
+                (customer_id,),
                 as_dict=True
             )
             if customer_data:
-                context.customer = customer_data
+                context.customer = customer_data[0]
                 
-                # Get customer's current cart count from database
-                cart_doc = frappe.db.get_value("Rental Cart", {
-                    "customer": customer_id,
-                    "status": "Active",
-                    "docstatus": 0
-                })
+                # Get customer's current cart count from database - force fresh query
+                cart_doc_name = frappe.db.sql(
+                    """
+                    SELECT name FROM `tabRental Cart`
+                    WHERE customer = %s AND status = 'Active' AND docstatus = 0
+                    LIMIT 1
+                    """,
+                    (customer_id,),
+                    as_dict=True
+                )
                 
-                if cart_doc:
-                    cart = frappe.get_doc("Rental Cart", cart_doc)
+                if cart_doc_name:
+                    cart = frappe.get_doc("Rental Cart", cart_doc_name[0].name)
                     context.cart_count = len(cart.items)
                 else:
                     context.cart_count = 0
@@ -102,6 +127,10 @@ def get_context(context):
         
         context.base_url = "/portal/category"
         context.url_params = "&".join(url_params)
+        
+        # Add cache-busting timestamp
+        import time
+        context.cache_bust = int(time.time())
         
         return context
         

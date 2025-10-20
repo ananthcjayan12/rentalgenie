@@ -4,7 +4,15 @@ from rental_management.api.customer_portal import get_portal_categories, get_por
 def get_context(context):
     """Get context for portal home page"""
     
-    # Get banners for the carousel
+    # CRITICAL: Disable all caching for real-time updates
+    context.no_cache = 1
+    frappe.response['type'] = 'page'
+    
+    # Clear request-level cache
+    if hasattr(frappe.local, 'request_cache'):
+        frappe.local.request_cache = {}
+    
+    # Get banners for the carousel (force fresh data)
     context.banners = get_portal_banners()
     
     # Get categories for the main navigation (using new portal categories)
@@ -17,5 +25,9 @@ def get_context(context):
     # Page metadata
     context.page_title = "Blush & Glow - Premium Rental Collection"
     context.meta_description = "Rent premium designer wear for your special occasions. Lehengas, Gowns, Jewelry and more."
+    
+    # Add cache-busting timestamp
+    import time
+    context.cache_bust = int(time.time())
     
     return context

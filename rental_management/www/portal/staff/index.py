@@ -1,19 +1,33 @@
 import frappe
 from frappe.utils import formatdate, get_datetime, flt
 from rental_management.api.customer_portal import get_customer_active_bookings, get_booking_payment_summary
+import urllib.parse
 
 def get_context(context):
     """Get context for staff dashboard - booking management"""
+    
+    # CRITICAL: Disable all caching for real-time updates
+    context.no_cache = 1
+    frappe.response['type'] = 'page'
+    
+    # Clear request-level cache
+    if hasattr(frappe.local, 'request_cache'):
+        frappe.local.request_cache = {}
     
     # Check if user has permission to access staff portal
     if not frappe.session.user or frappe.session.user == 'Guest':
         frappe.local.flags.redirect_location = '/login?redirect-to=/portal/staff'
         raise frappe.Redirect
     
-    # Get parameters
+    # Get parameters and decode
     customer_id = frappe.form_dict.get('customer', '')
     booking_id = frappe.form_dict.get('booking', '')
     view = frappe.form_dict.get('view', 'dashboard')  # dashboard, customer, booking
+    
+    if customer_id:
+        customer_id = urllib.parse.unquote(customer_id)
+    if booking_id:
+        booking_id = urllib.parse.unquote(booking_id)
     
     context.customer_id = customer_id
     context.booking_id = booking_id
@@ -44,42 +58,54 @@ def get_context(context):
 def get_dashboard_context(context):
     """Get dashboard overview with stats and recent activity"""
     
-    # Get dashboard statistics
+    # Add cache-busting to SQL queries
+    import random
+    cache_bust = random.randint(1, 1000000)
+    
+    # Get dashboard statistics - force fresh queries
     stats = {}
     
     # Bookings awaiting advance collection (initial status)
-    stats['pending_advance'] = frappe.db.count('Sales Invoice', {
-        'is_rental_booking': 1,
-        'booking_status': '',  # Initial empty status
-        'docstatus': 0  # Draft invoices
-    })
+    stats['pending_advance'] = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_1 */ COUNT(*) as count
+        FROM `tabSales Invoice`
+        WHERE is_rental_booking = 1
+        AND booking_status = ''
+        AND docstatus = 0
+    """, as_dict=True)[0].count
     
     # Bookings awaiting delivery (advance collected, balance + caution pending)
-    stats['pending_delivery'] = frappe.db.count('Sales Invoice', {
-        'is_rental_booking': 1,
-        'booking_status': 'Confirmed',  # Advance collected, ready for delivery
-        'docstatus': 1
-    })
+    stats['pending_delivery'] = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_2 */ COUNT(*) as count
+        FROM `tabSales Invoice`
+        WHERE is_rental_booking = 1
+        AND booking_status = 'Confirmed'
+        AND docstatus = 1
+    """, as_dict=True)[0].count
     
     # Bookings awaiting return (items delivered)
-    stats['pending_return'] = frappe.db.count('Sales Invoice', {
-        'is_rental_booking': 1,
-        'booking_status': 'Out for Rental',  # Items delivered, awaiting return
-        'docstatus': 1
-    })
+    stats['pending_return'] = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_3 */ COUNT(*) as count
+        FROM `tabSales Invoice`
+        WHERE is_rental_booking = 1
+        AND booking_status = 'Out for Rental'
+        AND docstatus = 1
+    """, as_dict=True)[0].count
     
     # Total active bookings
-    stats['total_active'] = frappe.db.count('Sales Invoice', {
-        'is_rental_booking': 1,
-        'booking_status': ['in', ['', 'Confirmed', 'Out for Rental']],
-        'docstatus': ['in', [0, 1]]
-    })
+    stats['total_active'] = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_4 */ COUNT(*) as count
+        FROM `tabSales Invoice`
+        WHERE is_rental_booking = 1
+        AND booking_status IN ('', 'Confirmed', 'Out for Rental')
+        AND docstatus IN (0, 1)
+    """, as_dict=True)[0].count
     
     context.dashboard_stats = stats
     
     # Get pending advance bookings (draft invoices awaiting advance collection)
-    pending_advance = frappe.db.sql("""
-        SELECT 
+    pending_advance = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_5 */
             si.name, si.posting_date, si.total, si.customer_name, 
             si.customer, si.function_date, si.rental_start_date
         FROM `tabSales Invoice` si
@@ -92,8 +118,8 @@ def get_dashboard_context(context):
     context.pending_advance = pending_advance
     
     # Get recent bookings (last 10)
-    recent_bookings = frappe.db.sql("""
-        SELECT 
+    recent_bookings = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_6 */
             si.name, si.posting_date, si.total, si.booking_status,
             si.customer_name, si.customer, si.advance_amount,
             si.balance_amount_collected, si.caution_deposit_amount,
@@ -110,8 +136,8 @@ def get_dashboard_context(context):
     context.recent_bookings = recent_bookings
     
     # Get pending deliveries (advance collected, balance + caution pending)
-    pending_deliveries = frappe.db.sql("""
-        SELECT 
+    pending_deliveries = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_7 */
             si.name, si.posting_date, si.total, si.customer_name, 
             si.customer, si.advance_amount, 
             (si.total - COALESCE(si.advance_amount, 0)) as balance_due,
@@ -125,8 +151,8 @@ def get_dashboard_context(context):
     context.pending_deliveries = pending_deliveries
     
     # Get pending returns (items delivered, awaiting return)
-    pending_returns = frappe.db.sql("""
-        SELECT 
+    pending_returns = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_8 */
             si.name, si.posting_date, si.total, si.customer_name,
             si.customer, si.caution_deposit_collected, si.rental_end_date,
             si.function_date
@@ -143,20 +169,28 @@ def get_dashboard_context(context):
     context.page_title = "Staff Dashboard | Blush & Glow"
     context.meta_description = "Rental booking management dashboard for sales staff"
     
+    # Add cache-busting timestamp
+    import time
+    context.cache_bust = int(time.time())
+    
     return context
 
 def get_customer_context(context, customer_id):
     """Get customer-specific booking management"""
     
-    # Get customer details
-    customer_data = frappe.db.get_value(
-        "Customer",
-        customer_id,
-        ["name", "customer_name", "mobile_number", "email_id"],
+    # Get customer details - force fresh query
+    customer_data = frappe.db.sql(
+        """
+        SELECT name, customer_name, mobile_number, email_id
+        FROM `tabCustomer`
+        WHERE name = %s AND disabled = 0
+        LIMIT 1
+        """,
+        (customer_id,),
         as_dict=True
     )
     if customer_data:
-        context.customer = customer_data
+        context.customer = customer_data[0]
         
         # Get customer's active bookings
         bookings_result = get_customer_active_bookings(customer_id)
@@ -166,6 +200,10 @@ def get_customer_context(context, customer_id):
     # Page metadata
     context.page_title = f"Customer Management - {context.customer.get('customer_name', '')} | Blush & Glow"
     context.meta_description = "Manage customer rental bookings"
+    
+    # Add cache-busting timestamp
+    import time
+    context.cache_bust = int(time.time())
     
     return context
 
@@ -178,15 +216,19 @@ def get_booking_context(context, booking_id):
         if summary_result.get('success'):
             context.booking_summary = summary_result.get('summary', {})
             
-            # Get customer info from booking
+            # Get customer info from booking - force fresh query
             if context.booking_summary.get('customer_id'):
-                customer_data = frappe.db.get_value(
-                    "Customer",
-                    context.booking_summary['customer_id'],
-                    ["name", "customer_name", "mobile_number", "email_id"],
+                customer_data = frappe.db.sql(
+                    """
+                    SELECT name, customer_name, mobile_number, email_id
+                    FROM `tabCustomer`
+                    WHERE name = %s AND disabled = 0
+                    LIMIT 1
+                    """,
+                    (context.booking_summary['customer_id'],),
                     as_dict=True
                 )
-                context.customer = customer_data
+                context.customer = customer_data[0] if customer_data else None
         else:
             # If booking summary fails, set defaults
             context.booking_summary = None
@@ -200,5 +242,9 @@ def get_booking_context(context, booking_id):
     # Page metadata
     context.page_title = f"Booking Management - {booking_id} | Blush & Glow"
     context.meta_description = "Manage rental booking payments and status"
+    
+    # Add cache-busting timestamp
+    import time
+    context.cache_bust = int(time.time())
     
     return context
