@@ -180,9 +180,9 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
             values.append(category)
             
         if search:
-            conditions_m.append("(m.item_name LIKE %s OR m.description LIKE %s)")
+            conditions_m.append("(m.item_name LIKE %s OR m.description LIKE %s OR m.item_code LIKE %s)")
             search_term = f"%{search}%"
-            values.extend([search_term, search_term])
+            values.extend([search_term, search_term, search_term])
             
         trending_mode = False
         # Parse filters if provided
