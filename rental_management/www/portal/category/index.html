@@ -241,16 +241,50 @@
     margin-bottom: 0.5rem;
 }
 
-.item-price {
-    font-size: 1.25rem;
-    font-weight: 700;
+.item-pricing {
+    margin-top: 0.5rem;
+}
+
+.price-with-discount {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mrp-small {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: line-through;
+    font-weight: 400;
+}
+
+.price-main {
     color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.discount-small {
+    background: linear-gradient(135deg, #FF6B6B, #FF5722);
+    color: white;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    align-self: flex-start;
+    box-shadow: 0 1px 3px rgba(255, 107, 107, 0.3);
+}
+
+.item-price {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 1.1rem;
     margin-bottom: 0.25rem;
 }
 
 .price-label {
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
 }
 
 .item-actions {
@@ -557,8 +591,19 @@
                     <div class="item-details">
                         <h3 class="item-title">{{ item.item_name }}</h3>
                         <p class="item-description">{{ item.description or 'Premium rental item available for your special occasions.' }}</p>
-                        <div class="item-price">₹{{ "{:,.0f}".format(item.rental_rate_per_day) }}</div>
-                        <div class="price-label">per day</div>
+                        <div class="item-pricing">
+                            {% if item.rental_mrp_per_day and item.rental_mrp_per_day > item.rental_rate_per_day %}
+                                <div class="price-with-discount">
+                                    <div class="mrp-small">₹{{ "{:,.0f}".format(item.rental_mrp_per_day) }}</div>
+                                    <div class="price-main">₹{{ "{:,.0f}".format(item.rental_rate_per_day) }}/day</div>
+                                    {% if item.discount_percentage and item.discount_percentage > 0 %}
+                                        <div class="discount-small">{{ "{:,.0f}".format(item.discount_percentage) }}% OFF</div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="price-main">₹{{ "{:,.0f}".format(item.rental_rate_per_day) }}/day</div>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="item-actions">
                         <button onclick="event.stopPropagation(); window.location.href='/portal/item?item={{ item.item_code }}'" class="btn btn-primary">

@@ -327,6 +327,8 @@ def get_item_details(item_code):
             'item_name': display_name,
             'description': display_desc,
             'rental_rate_per_day': main_item.rental_rate_per_day,
+            'rental_mrp_per_day': getattr(main_item, 'rental_mrp_per_day', 0) or 0,
+            'discount_percentage': getattr(main_item, 'discount_percentage', 0) or 0,
             'rental_item_type': main_item.rental_item_type,
             'current_rental_status': main_item.current_rental_status,
             'is_available': main_item.current_rental_status == 'Available',
@@ -1785,6 +1787,7 @@ def create_rental_item(item_data, new_supplier=None, images=None):
             
             # Rental specific fields
             "is_rental_item": 1,
+            "rental_mrp_per_day": float(item_data.get('rental_mrp_per_day', 0)) if item_data.get('rental_mrp_per_day') else 0,
             "rental_rate_per_day": float(item_data['rental_rate_per_day']),
             "caution_deposit": float(item_data.get('caution_deposit', 0)),
             "rental_item_type": item_data.get('rental_item_type', 'Other'),
@@ -1800,6 +1803,21 @@ def create_rental_item(item_data, new_supplier=None, images=None):
             "owner_commission_percent": float(item_data.get('owner_commission_percent', 0)) if item_data.get('is_third_party_item') else 0,
             "owner_supplier_source": supplier_name if item_data.get('is_third_party_item') else ""
         })
+        
+        # Calculate discount percentage if MRP is provided
+        mrp = float(item_data.get('rental_mrp_per_day', 0)) if item_data.get('rental_mrp_per_day') else 0
+        rate = float(item_data['rental_rate_per_day'])
+        
+        if mrp > 0 and rate > 0 and mrp > rate:
+            discount_percentage = ((mrp - rate) / mrp) * 100
+            item_doc.discount_percentage = round(discount_percentage, 2)
+        else:
+            item_doc.discount_percentage = 0
+        if item_doc.rental_mrp_per_day and item_doc.rental_rate_per_day and item_doc.rental_mrp_per_day > item_doc.rental_rate_per_day:
+            discount_percent = ((item_doc.rental_mrp_per_day - item_doc.rental_rate_per_day) / item_doc.rental_mrp_per_day) * 100
+            item_doc.discount_percentage = round(discount_percent, 2)
+        else:
+            item_doc.discount_percentage = 0
         
         item_doc.insert(ignore_permissions=True)
         

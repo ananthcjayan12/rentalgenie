@@ -312,6 +312,41 @@
     border: 1px solid #e5e7eb;
 }
 
+/* Form Help Text */
+.form-help {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* Discount Display */
+.discount-display {
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #FFE5E5, #FFF0E5);
+    border: 2px solid #FFB5B5;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.discount-value {
+    background: linear-gradient(135deg, #FF6B6B, #FF5722);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 1rem;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .add-item-container {
@@ -391,6 +426,18 @@
                     </div>
                     
                     <div class="form-group">
+                        <label class="form-label">MRP Rate (₹/day)</label>
+                        <input type="number" 
+                               x-model="formData.rental_mrp_per_day"
+                               class="form-input"
+                               placeholder="e.g., 3000 (strike-through price)"
+                               min="0"
+                               step="1"
+                               @input="calculateDiscount()">
+                        <small class="form-help">Maximum Retail Price - will be shown as strike-through price for marketing appeal</small>
+                    </div>
+                    
+                    <div class="form-group">
                         <label class="form-label required">Rental Rate (₹/day)</label>
                         <input type="number" 
                                x-model="formData.rental_rate_per_day"
@@ -398,7 +445,17 @@
                                placeholder="e.g., 2500"
                                min="1"
                                step="1"
-                               required>
+                               required
+                               @input="calculateDiscount()">
+                    </div>
+                    
+                    <!-- Discount Display -->
+                    <div class="form-group" x-show="discountPercentage > 0">
+                        <label class="form-label">Discount Percentage</label>
+                        <div class="discount-display">
+                            <span class="discount-value" x-text="discountPercentage.toFixed(1) + '% OFF'"></span>
+                            <small class="form-help">Auto-calculated based on MRP and Rental Rate</small>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -601,6 +658,7 @@ function addItemForm() {
             item_name: '',
             item_group: '',
             description: '',
+            rental_mrp_per_day: '',
             rental_rate_per_day: '',
             caution_deposit: 0,
             purchase_cost: '',
@@ -608,6 +666,8 @@ function addItemForm() {
             owner_commission_percent: 30,
             owner_supplier_source: ''
         },
+        
+        discountPercentage: 0,
         
         newSupplier: {
             supplier_name: '',
@@ -652,6 +712,17 @@ function addItemForm() {
         
         removeImage(index) {
             this.uploadedImages.splice(index, 1);
+        },
+        
+        calculateDiscount() {
+            const mrp = parseFloat(this.formData.rental_mrp_per_day) || 0;
+            const rate = parseFloat(this.formData.rental_rate_per_day) || 0;
+            
+            if (mrp > 0 && rate > 0 && mrp > rate) {
+                this.discountPercentage = ((mrp - rate) / mrp) * 100;
+            } else {
+                this.discountPercentage = 0;
+            }
         },
         
         async submitForm() {
@@ -718,6 +789,7 @@ function addItemForm() {
                 item_name: '',
                 item_group: '',
                 description: '',
+                rental_mrp_per_day: '',
                 rental_rate_per_day: '',
                 caution_deposit: 0,
                 purchase_cost: '',
@@ -725,6 +797,7 @@ function addItemForm() {
                 owner_commission_percent: 30,
                 owner_supplier_source: ''
             };
+            this.discountPercentage = 0;
             this.newSupplier = {
                 supplier_name: '',
                 mobile_no: '',

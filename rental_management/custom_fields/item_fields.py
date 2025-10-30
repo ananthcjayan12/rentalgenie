@@ -31,12 +31,31 @@ def create_item_custom_fields():
         },
         {
             "doctype": "Item",
+            "fieldname": "rental_mrp_per_day",
+            "label": "MRP Rate (₹/day)",
+            "fieldtype": "Currency", 
+            "depends_on": "is_rental_item",
+            "insert_after": "is_rental_item",
+            "description": "Maximum Retail Price - will be shown as strike-through price"
+        },
+        {
+            "doctype": "Item",
             "fieldname": "rental_rate_per_day",
             "label": "Rental Rate (₹/day)",
             "fieldtype": "Currency", 
             "depends_on": "is_rental_item",
             "mandatory_depends_on": "is_rental_item",
-            "insert_after": "is_rental_item"
+            "insert_after": "rental_mrp_per_day"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "discount_percentage",
+            "label": "Discount %",
+            "fieldtype": "Percent",
+            "depends_on": "is_rental_item",
+            "read_only": 1,
+            "insert_after": "rental_rate_per_day",
+            "description": "Auto-calculated discount percentage"
         },
         {
             "doctype": "Item",
@@ -45,7 +64,7 @@ def create_item_custom_fields():
             "fieldtype": "Currency",
             "depends_on": "is_rental_item",
             "default": 0,
-            "insert_after": "rental_rate_per_day",
+            "insert_after": "discount_percentage",
             "description": "Security deposit amount required for this item"
         },
         # Note: Caution deposit managed at item level for consistent pricing
