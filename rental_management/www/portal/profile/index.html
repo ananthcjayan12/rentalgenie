@@ -379,6 +379,45 @@
     }
 }
 
+/* Success Notification */
+.success-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--success-color);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
+    font-weight: 600;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Return Context Indicator */
+.return-context-indicator {
+    background: #e0f2fe;
+    border: 1px solid #0277bd;
+    color: #01579b;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 /* Bottom Navigation */
 .bottom-nav {
     position: fixed;
@@ -419,11 +458,17 @@
     <!-- Header -->
     <div class="portal-header">
         <div class="header-content">
-            <a href="/portal" class="back-btn">
+            <a href="{% if return_to == 'item' and return_item %}/portal/item?item={{ return_item }}{% else %}/portal{% endif %}" class="back-btn">
                 <i class="fas fa-arrow-left"></i>
             </a>
             <div class="header-title">
-                {% if mode == 'view' %}Customer Profile{% else %}Customer Management{% endif %}
+                {% if mode == 'view' %}
+                    Customer Profile
+                {% elif return_to == 'item' and return_item %}
+                    Select Customer for {{ return_item }}
+                {% else %}
+                    Customer Management
+                {% endif %}
             </div>
         </div>
     </div>
@@ -432,9 +477,23 @@
         {% if mode == 'search' %}
         <!-- Customer Search Mode -->
         <div class="customer-search">
+            <!-- Return Context Indicator -->
+            {% if return_to == 'item' and return_item %}
+            <div class="return-context-indicator">
+                <i class="fas fa-arrow-left"></i>
+                <span>Select a customer to continue booking <strong>{{ return_item }}</strong></span>
+            </div>
+            {% endif %}
+            
             <div class="search-header">
                 <h1 class="search-title">Select Customer</h1>
-                <p class="search-subtitle">Search for an existing customer or create a new one</p>
+                <p class="search-subtitle">
+                    {% if return_to == 'item' and return_item %}
+                    Choose a customer to proceed with booking the selected item
+                    {% else %}
+                    Search for an existing customer or create a new one
+                    {% endif %}
+                </p>
             </div>
             
             <div class="customer-search-box">
@@ -676,6 +735,14 @@
     {% include "templates/includes/bottom_nav.html" %}
 </div>
 
+<!-- Pass return context to JavaScript -->
+<script>
+window.returnContext = {
+    return_to: '{{ return_to or "" }}',
+    return_item: '{{ return_item or "" }}'
+};
+</script>
+
 {% if mode == 'view' %}
 <script>
 // Pass customer data to JavaScript
@@ -713,7 +780,62 @@ function profilePage() {
         },
         
         async init() {
-            // Initialize profile page
+            // Check if we need to redirect back to an item
+            this.checkReturnNavigation();
+        },
+        
+        checkReturnNavigation() {
+            // Check URL params first
+            if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
+                // We're in customer selection mode for a specific item
+                return;
+            }
+            
+            // Check session storage for return context
+            const returnToItem = sessionStorage.getItem('returnToItem');
+            const returnUrl = sessionStorage.getItem('returnUrl');
+            
+            // If we're viewing a customer profile and have return context, redirect back
+            if (window.currentCustomer && returnToItem && returnUrl) {
+                sessionStorage.removeItem('returnToItem');
+                sessionStorage.removeItem('returnUrl');
+                
+                // Redirect back to item with customer context
+                const customerId = window.currentCustomer.name;
+                const newUrl = `/portal/item?item=${returnToItem}&customer=${encodeURIComponent(customerId)}`;
+                
+                // Show a brief success message before redirecting
+                this.showSuccessAndRedirect(newUrl);
+                return;
+            }
+        },
+        
+        showSuccessAndRedirect(url) {
+            // Create and show success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--success-color);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1000;
+                font-weight: 600;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+                Customer selected! Returning to item...
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Redirect after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = url;
+            }, 1500);
         },
         
         async searchCustomers() {
@@ -739,7 +861,14 @@ function profilePage() {
         },
         
         selectCustomer(customerId) {
-            window.location.href = `/portal/profile?customer=${encodeURIComponent(customerId)}`;
+            // Check if we need to return to a specific item
+            if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
+                // Redirect to item with customer context
+                window.location.href = `/portal/item?item=${window.returnContext.return_item}&customer=${encodeURIComponent(customerId)}`;
+            } else {
+                // Normal customer selection flow
+                window.location.href = `/portal/profile?customer=${encodeURIComponent(customerId)}`;
+            }
         },
         
         async createCustomer() {
@@ -755,8 +884,14 @@ function profilePage() {
                 });
                 
                 if (response.message.success) {
-                    // Redirect to new customer profile
-                    window.location.href = `/portal/profile?customer=${response.message.customer.name}`;
+                    // Check if we need to return to a specific item
+                    if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
+                        // Redirect to item with new customer context
+                        window.location.href = `/portal/item?item=${window.returnContext.return_item}&customer=${encodeURIComponent(response.message.customer.name)}`;
+                    } else {
+                        // Redirect to new customer profile
+                        window.location.href = `/portal/profile?customer=${response.message.customer.name}`;
+                    }
                 } else {
                     alert('Error creating customer: ' + response.message.message);
                 }

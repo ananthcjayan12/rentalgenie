@@ -528,13 +528,23 @@
                 <i class="fas fa-arrow-left"></i>
             </a>
             <div class="header-title">
-                {% if customer %}{{ customer.customer_name }} - {% endif %}{{ item.item_name }}
+                {% if customer %}
+                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">{{ customer.customer_name }}</div>
+                        <div>{{ item.item_name }}</div>
+                    </div>
+                {% else %}
+                    {{ item.item_name }}
+                {% endif %}
             </div>
             <div class="header-actions">
                 {% if customer_id %}
                 <!-- Customer info display -->
                 <div class="customer-info" style="margin-right: 1rem; text-align: right;">
-                    <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">{{ customer.customer_name }}</div>
+                    <div style="font-size: 0.9rem; font-weight: 600; color: var(--primary-color);">
+                        <i class="fas fa-user-check" style="margin-right: 0.25rem;"></i>
+                        {{ customer.customer_name }}
+                    </div>
                     {% if customer.mobile_number %}
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ customer.mobile_number }}</div>
                     {% endif %}
@@ -611,6 +621,16 @@
                     </div>
                 </template>
                 
+                {% if customer_id %}
+                <div style="position: absolute; top: 1rem; left: 1rem;">
+                    <a :href="`/portal/profile?return_to=item&item={{ item.item_code }}`" 
+                       style="background: rgba(255,255,255,0.9); padding: 0.5rem 0.75rem; border-radius: 20px; text-decoration: none; color: var(--text-primary); font-size: 0.85rem; backdrop-filter: blur(5px);">
+                        <i class="fas fa-user-cog" style="margin-right: 0.25rem;"></i>
+                        Change Customer
+                    </a>
+                </div>
+                {% endif %}
+                
                 <div class="availability-badge" :class="item.is_available ? 'available' : 'unavailable'">
                     <span x-text="item.is_available ? 'Available' : 'Not Available'"></span>
                 </div>
@@ -637,7 +657,9 @@
                                 <span>Please select a customer to continue with booking</span>
                             </div>
                             <div style="margin-top: 1rem;">
-                                <a href="/portal/profile" class="btn btn-primary" style="background: var(--warning-color); border-color: var(--warning-color);">
+                                <a :href="`/portal/profile?return_to=item&item=${item.item_code}`" 
+                                   class="btn btn-primary" 
+                                   style="background: var(--warning-color); border-color: var(--warning-color);">
                                     <i class="fas fa-users" style="margin-right: 0.5rem;"></i>
                                     Select Customer
                                 </a>
@@ -778,6 +800,12 @@ function itemDetailApp() {
         
         init() {
             this.loadCartCount();
+            
+            // Store current item context for return navigation
+            if (!this.customerId) {
+                sessionStorage.setItem('returnToItem', itemPageData.item.item_code);
+                sessionStorage.setItem('returnUrl', window.location.href);
+            }
             
             // Set default function date to next week
             const nextWeek = new Date();

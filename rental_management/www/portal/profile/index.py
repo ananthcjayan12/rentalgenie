@@ -9,8 +9,14 @@ def get_context(context):
     context.no_cache = 1
     
     try:
-        # Get customer parameter (selected by shopkeeper)
+        # Get parameters
         customer_id = frappe.form_dict.get('customer')
+        return_to = frappe.form_dict.get('return_to')
+        return_item = frappe.form_dict.get('item')
+        
+        # Store return context
+        context.return_to = return_to
+        context.return_item = return_item
         
         if customer_id:
             # Decode URL-encoded customer name
