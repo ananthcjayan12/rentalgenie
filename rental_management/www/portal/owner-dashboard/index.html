@@ -1,0 +1,731 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head_include %}
+<meta name="description" content="{{ meta_description }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<!-- Google Fonts for Modern SaaS Look -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+{% include "templates/includes/portal_styles.html" %}
+
+<style>
+    /* Modern SaaS Variables */
+    :root {
+        --bg-page: #F3F4F6;
+        --bg-card: #FFFFFF;
+        --text-main: #111827;
+        --text-muted: #6B7280;
+        --primary: #10B981;
+        --primary-dark: #059669;
+        --primary-light: #D1FAE5;
+        --border-subtle: #E5E7EB;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+    }
+
+    body {
+        background-color: var(--bg-page);
+        font-family: 'Inter', sans-serif;
+        color: var(--text-main);
+    }
+
+    /* Dashboard Container & Grid */
+    .dashboard-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Modern Header */
+    .saas-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .saas-title h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -0.025em;
+        margin: 0;
+    }
+
+    .saas-subtitle {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .btn-saas {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background-color: white;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-main);
+        font-weight: 500;
+        font-size: 0.875rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-saas:hover {
+        background-color: #F9FAFB;
+        border-color: #D1D5DB;
+    }
+
+    .btn-saas i {
+        margin-right: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .btn-primary-saas {
+        background-color: var(--primary);
+        border-color: transparent;
+        color: white;
+    }
+
+    .btn-primary-saas:hover {
+        background-color: var(--primary-dark);
+        color: white;
+    }
+
+    .btn-primary-saas i {
+        color: white;
+    }
+
+    /* Select Control */
+    .saas-select-wrapper {
+        position: relative;
+        min-width: 250px;
+    }
+
+    .saas-select {
+        width: 100%;
+        padding: 0.5rem 2.5rem 0.5rem 1rem;
+        background-color: white;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        font-size: 0.875rem;
+        color: var(--text-main);
+        appearance: none;
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+    }
+
+    .saas-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .saas-select-icon {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .stat-icon-wrapper {
+        padding: 0.5rem;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+    }
+
+    .stat-value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+    }
+
+    /* Owner Profile Summary */
+    .profile-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .profile-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), #3B82F6);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        font-weight: 600;
+    }
+
+    .profile-info h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0.0;
+        color: var(--text-main);
+    }
+
+    .profile-meta {
+        display: flex;
+        gap: 1.5rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .card-section {
+        background: white;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #ffffff;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card-body {
+        padding: 0;
+        flex: 1;
+    }
+
+    /* Table Styles - Modern */
+    .saas-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .saas-table th {
+        background-color: #F9FAFB;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 1.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .saas-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--text-main);
+        font-size: 0.875rem;
+        vertical-align: middle;
+    }
+
+    .saas-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-row-hover:hover {
+        background-color: #F9FAFB;
+        transition: background-color 0.1s ease;
+    }
+
+    /* List Items (Sales/Commission) */
+    .list-group {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .list-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.1s;
+    }
+
+    .list-item:hover {
+        background-color: #F9FAFB;
+    }
+
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .list-item-main {
+        font-weight: 500;
+        color: var(--text-main);
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .list-item-sub {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .list-item-value {
+        font-weight: 600;
+        color: var(--text-main);
+        text-align: right;
+        font-size: 0.9rem;
+    }
+
+    .list-item-value.positive {
+        color: var(--primary-dark);
+    }
+
+    /* Utilities */
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-active {
+        background-color: #ECFDF5;
+        color: #047857;
+        border: 1px solid #A7F3D0;
+    }
+
+    .badge-inactive {
+        background-color: #FEF2F2;
+        color: #B91C1C;
+        border: 1px solid #FECACA;
+    }
+
+    .empty-state-modern {
+        padding: 3rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .saas-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-actions {
+            width: 100%;
+            gap: 0.5rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .btn-saas {
+            justify-content: center;
+        }
+
+        .profile-card {
+            flex-direction: column;
+            text-align: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem 1rem;
+        }
+
+        .profile-meta {
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .saas-table {
+            min-width: 600px;
+            /* Force scroll on small screens */
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div x-data="ownerDashboard()">
+    <div class="dashboard-container">
+
+        <!-- Header -->
+        <header class="saas-header">
+            <div class="saas-title">
+                <h1>Dashboard</h1>
+                <div class="saas-subtitle">Overview of your rental business performance</div>
+            </div>
+
+            <div class="header-actions">
+                <!-- Admin Selector Integrated -->
+                {% if is_admin and all_owners %}
+                <div class="saas-select-wrapper">
+                    <select class="saas-select"
+                        onchange="window.location.href='/portal/owner-dashboard?owner=' + this.value">
+                        <option value="">Viewing: Self</option>
+                        {% for o in all_owners %}
+                        <option value="{{ o.name }}" {% if o.name==selected_owner_id %}selected{% endif %}>
+                            {{ o.owner_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <i class="fas fa-chevron-down saas-select-icon"></i>
+                </div>
+                {% endif %}
+
+                <div style="display: flex; gap: 0.5rem; width: 100%;">
+                    <a href="/portal" class="btn-saas" style="flex: 1; justify-content: center;">
+                        <i class="fas fa-arrow-left"></i> Portal
+                    </a>
+                    {% if is_admin %}
+                    <a href="/portal/staff" class="btn-saas" style="flex: 1; justify-content: center;">
+                        <i class="fas fa-users"></i> Staff
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        {% if owner %}
+
+        <!-- Profile Summary -->
+        <div class="profile-card">
+            <div class="profile-avatar">
+                {{ owner.owner_name[0]|upper }}
+            </div>
+            <div class="profile-info">
+                <h2>{{ owner.owner_name }}</h2>
+                <div class="profile-meta">
+                    {% if owner.email %}
+                    <div class="meta-item"><i class="fas fa-envelope"></i> {{ owner.email }}</div>
+                    {% endif %}
+                    {% if owner.phone %}
+                    <div class="meta-item"><i class="fas fa-phone"></i> {{ owner.phone }}</div>
+                    {% endif %}
+                    {% if owner.city %}
+                    <div class="meta-item"><i class="fas fa-map-marker-alt"></i> {{ owner.city }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Pending Commission</span>
+                    <div class="stat-icon-wrapper" style="background-color: #FEF3C7; color: #D97706;">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₹{{ "{:,.0f}".format(owner_stats.commission_pending or 0) }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Total Earnings</span>
+                    <div class="stat-icon-wrapper" style="background-color: #D1FAE5; color: #059669;">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₹{{ "{:,.0f}".format(owner_stats.commission_earned or 0) }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Total Sales</span>
+                    <div class="stat-icon-wrapper" style="background-color: #DBEAFE; color: #2563EB;">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₹{{ "{:,.0f}".format(owner_stats.total_sales_amount or 0) }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Listed Items</span>
+                    <div class="stat-icon-wrapper" style="background-color: #F3E8FF; color: #7C3AED;">
+                        <i class="fas fa-box"></i>
+                    </div>
+                </div>
+                <div class="stat-value">{{ owner_stats.total_items or 0 }}</div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-grid">
+
+            <!-- Items Table -->
+            <div class="card-section">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-boxes" style="color: var(--primary);"></i> Inventory</div>
+                </div>
+                <div class="card-body" style="overflow-x: auto;">
+                    {% if owner_items %}
+                    <table class="saas-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Rate</th>
+                                <th>Commission</th>
+                                <th>Revenue</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in owner_items %}
+                            <tr class="table-row-hover">
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <div
+                                            style="width: 40px; height: 40px; background: #F3F4F6; border-radius: 8px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                                            {% if item.image %}
+                                            <img src="{{ item.image }}"
+                                                style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% else %}
+                                            <i class="fas fa-image" style="color: var(--text-muted); opacity: 0.5;"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 500; font-size: 0.9rem;">{{ item.item_name }}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{
+                                                item.item_group or 'General' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>₹{{ "{:,.0f}".format(item.rental_rate_per_day or 0) }}</td>
+                                <td>
+                                    {% if item.owner_commission_fixed %}
+                                    ₹{{ "{:,.0f}".format(item.owner_commission_fixed) }}
+                                    {% else %}
+                                    {{ item.owner_commission_percent }}%
+                                    {% endif %}
+                                </td>
+                                <td>₹{{ "{:,.0f}".format(item.total_revenue or 0) }}</td>
+                                <td>
+                                    <span
+                                        class="badge-status {{ 'badge-active' if not item.disabled else 'badge-inactive' }}">
+                                        {{ 'Active' if not item.disabled else 'Inactive' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state-modern">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;"><i class="fas fa-box-open"></i></div>
+                        No items found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Side Column: Recent Sales & Payments -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+                <!-- Recent Commission Payments -->
+                <div class="card-section">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-money-check" style="color: var(--primary);"></i>
+                            Payouts</div>
+                    </div>
+                    <div class="card-body">
+                        {% if commission_history %}
+                        <ul class="list-group">
+                            {% for payment in commission_history %}
+                            <li class="list-item">
+                                <div>
+                                    <div class="list-item-main">{{ payment.posting_date.strftime('%d %b %Y') }}</div>
+                                    <div class="list-item-sub">{{ payment.journal_entry }}</div>
+                                </div>
+                                <div class="list-item-value positive">+₹{{ "{:,.0f}".format(payment.amount or 0) }}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="empty-state-modern" style="padding: 2rem 1rem;">No recent payouts</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recent Sales Activity -->
+                <div class="card-section">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-history" style="color: var(--text-muted);"></i> Recent
+                            Activity</div>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_sales %}
+                        <ul class="list-group">
+                            {% for sale in recent_sales %}
+                            <li class="list-item">
+                                <div>
+                                    <div class="list-item-main">{{ sale.item_name }}</div>
+                                    <div class="list-item-sub">{{ sale.posting_date.strftime('%d %b') }} • {{
+                                        sale.customer_name }}</div>
+                                </div>
+                                <div class="list-item-value" style="font-size: 0.875rem;">
+                                    ₹{{ "{:,.0f}".format(sale.commission_amount or 0) }}
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 400;">
+                                        commission</div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="empty-state-modern" style="padding: 2rem 1rem;">No recent activity</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {% elif not owner and not is_admin %}
+        <div class="card-section" style="padding: 4rem; text-align: center; max-width: 600px; margin: 4rem auto;">
+            <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"><i
+                    class="fas fa-user-slash"></i></div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Access
+                Denied</h3>
+            <p style="color: var(--text-muted);">Your account is not linked to an owner profile.</p>
+        </div>
+        {% elif is_admin and not owner %}
+        <div class="card-section" style="padding: 4rem; text-align: center; max-width: 600px; margin: 4rem auto;">
+            <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"><i class="fas fa-user-tie"></i>
+            </div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Select
+                Owner</h3>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Please select an owner from the dropdown above to
+                view their dashboard.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bottom Nav -->
+    {% include "templates/includes/bottom_nav.html" %}
+</div>
+
+<script>
+    function ownerDashboard() {
+        return {
+            init() { }
+        }
+    }
+</script>
+{% endblock %}

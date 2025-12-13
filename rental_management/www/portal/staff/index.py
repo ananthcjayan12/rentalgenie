@@ -65,7 +65,7 @@ def get_dashboard_context(context):
         SELECT /* cache_bust_{cache_bust}_1 */ COUNT(*) as count
         FROM `tabSales Invoice`
         WHERE is_rental_booking = 1
-        AND booking_status = ''
+        AND (booking_status = '' OR booking_status IS NULL)
         AND docstatus = 0
     """, as_dict=True)[0].count
     
@@ -92,11 +92,53 @@ def get_dashboard_context(context):
         SELECT /* cache_bust_{cache_bust}_4 */ COUNT(*) as count
         FROM `tabSales Invoice`
         WHERE is_rental_booking = 1
-        AND booking_status IN ('', 'Confirmed', 'Out for Rental')
+        AND (booking_status IN ('', 'Confirmed', 'Out for Rental') OR booking_status IS NULL)
         AND docstatus IN (0, 1)
     """, as_dict=True)[0].count
     
     context.dashboard_stats = stats
+    
+    # Get ALL bookings for the new unified table with filters
+    all_bookings = frappe.db.sql(f"""
+        SELECT /* cache_bust_{cache_bust}_all */
+            si.name, si.posting_date, si.total, si.booking_status,
+            si.customer_name, si.customer, si.advance_amount,
+            si.balance_amount_collected, si.caution_deposit_amount,
+            si.caution_deposit_collected, si.function_date,
+            si.rental_start_date, si.rental_end_date,
+            (si.total - COALESCE(si.advance_amount, 0)) as balance_due,
+            c.mobile_number,
+            COUNT(sii.name) as item_count,
+            GROUP_CONCAT(DISTINCT i.third_party_owner) as third_party_owner
+        FROM `tabSales Invoice` si
+        LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+        LEFT JOIN `tabItem` i ON sii.item_code = i.name
+        LEFT JOIN `tabCustomer` c ON si.customer = c.name
+        WHERE si.is_rental_booking = 1
+        AND si.docstatus IN (0, 1)
+        GROUP BY si.name
+        ORDER BY si.posting_date DESC, si.creation DESC
+        LIMIT 200
+    """, as_dict=True)
+    
+    # Convert date objects to strings for JSON serialization
+    from datetime import date, datetime
+    for booking in all_bookings:
+        for key, value in booking.items():
+            if isinstance(value, (date, datetime)):
+                booking[key] = str(value)
+    
+    context.all_bookings = all_bookings
+    
+    # Get all third party owners for filter dropdown
+    all_owners = frappe.db.sql("""
+        SELECT name, owner_name
+        FROM `tabThird Party Owner`
+        WHERE disabled = 0 OR disabled IS NULL
+        ORDER BY owner_name
+    """, as_dict=True)
+    
+    context.all_owners = all_owners
     
     # Get pending advance bookings (draft invoices awaiting advance collection)
     pending_advance = frappe.db.sql(f"""
@@ -105,7 +147,7 @@ def get_dashboard_context(context):
             si.customer, si.function_date, si.rental_start_date
         FROM `tabSales Invoice` si
         WHERE si.is_rental_booking = 1
-        AND si.booking_status = ''
+        AND (si.booking_status = '' OR si.booking_status IS NULL)
         AND si.docstatus = 0
         ORDER BY si.function_date ASC, si.creation ASC
     """, as_dict=True)

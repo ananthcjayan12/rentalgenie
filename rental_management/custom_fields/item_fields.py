@@ -130,6 +130,15 @@ def create_item_custom_fields():
             "insert_after": "is_third_party_item"
         },
         {
+            "doctype": "Item", 
+            "fieldname": "owner_commission_fixed",
+            "label": "Fixed Commission Amount (₹)",
+            "fieldtype": "Currency",
+            "depends_on": "is_third_party_item",
+            "insert_after": "owner_commission_percent",
+            "description": "If set, this fixed amount will be used instead of percentage"
+        },
+        {
             "doctype": "Item",
             "fieldname": "third_party_owner",
             "label": "Third Party Owner",

@@ -11,366 +11,376 @@
 {% include "templates/includes/portal_styles.html" %}
 
 <style>
-/* Add Item Form Styles */
-.add-item-container {
-    max-width: 900px;
-    margin: 2rem auto;
-    padding: 1rem;
-}
-
-.form-section {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.section-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e5e7eb;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group.full-width {
-    grid-column: 1 / -1;
-}
-
-.form-label {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.form-label.required::after {
-    content: " *";
-    color: #dc2626;
-}
-
-.form-input {
-    padding: 0.75rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: border-color 0.3s;
-    outline: none;
-}
-
-.form-input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.1);
-}
-
-.form-select {
-    padding: 0.75rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 1rem;
-    background-color: white;
-    cursor: pointer;
-    outline: none;
-}
-
-.form-select:focus {
-    border-color: var(--primary-color);
-}
-
-.form-textarea {
-    padding: 0.75rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 1rem;
-    min-height: 100px;
-    resize: vertical;
-    outline: none;
-    font-family: inherit;
-}
-
-.form-textarea:focus {
-    border-color: var(--primary-color);
-}
-
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.checkbox-input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-.checkbox-label {
-    cursor: pointer;
-    font-weight: 500;
-}
-
-/* Image Upload Styles */
-.image-upload-area {
-    border: 2px dashed #e5e7eb;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    transition: border-color 0.3s;
-    cursor: pointer;
-}
-
-.image-upload-area:hover {
-    border-color: var(--primary-color);
-    background: rgba(123, 44, 191, 0.05);
-}
-
-.image-upload-area.dragover {
-    border-color: var(--primary-color);
-    background: rgba(123, 44, 191, 0.1);
-}
-
-.upload-icon {
-    font-size: 3rem;
-    color: #9ca3af;
-    margin-bottom: 1rem;
-}
-
-.upload-text {
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-}
-
-.upload-hint {
-    font-size: 0.9rem;
-    color: #9ca3af;
-}
-
-.image-preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.image-preview {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    aspect-ratio: 1;
-    border: 2px solid #e5e7eb;
-}
-
-.image-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.image-remove {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: rgba(220, 38, 38, 0.9);
-    color: white;
-    border: none;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-}
-
-.image-primary-badge {
-    position: absolute;
-    bottom: 0.5rem;
-    left: 0.5rem;
-    background: rgba(34, 197, 94, 0.9);
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-/* Form Actions */
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 2rem;
-}
-
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s;
-    border: none;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-secondary {
-    background: #f3f4f6;
-    color: var(--text-primary);
-    border: 2px solid #e5e7eb;
-}
-
-.btn-secondary:hover {
-    background: #e5e7eb;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: #6b21a8;
-    transform: translateY(-1px);
-}
-
-.btn-primary:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-}
-
-.alert {
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.alert-success {
-    background: #f0fdf4;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-}
-
-.alert-error {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-}
-
-.loading-spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid transparent;
-    border-top: 2px solid currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Third Party Section */
-.third-party-section {
-    opacity: 0.5;
-    pointer-events: none;
-    transition: all 0.3s;
-}
-
-.third-party-section.enabled {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.supplier-create-section {
-    background: #f9fafb;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-top: 1rem;
-    border: 1px solid #e5e7eb;
-}
-
-/* Form Help Text */
-.form-help {
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-    font-style: italic;
-}
-
-/* Discount Display */
-.discount-display {
-    padding: 0.75rem;
-    background: linear-gradient(135deg, #FFE5E5, #FFF0E5);
-    border: 2px solid #FFB5B5;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.discount-value {
-    background: linear-gradient(135deg, #FF6B6B, #FF5722);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 1rem;
-    display: inline-block;
-    box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
+    /* Add Item Form Styles */
     .add-item-container {
-        margin: 1rem;
-        padding: 0.5rem;
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 1rem;
     }
-    
+
     .form-section {
-        padding: 1.5rem;
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
     .form-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
     }
-    
-    .form-actions {
+
+    .form-group {
+        display: flex;
         flex-direction: column;
     }
-    
-    .btn {
-        justify-content: center;
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
     }
-}
+
+    .form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: #dc2626;
+    }
+
+    .form-input {
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+        outline: none;
+    }
+
+    .form-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.1);
+    }
+
+    .form-select {
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: white;
+        cursor: pointer;
+        outline: none;
+    }
+
+    .form-select:focus {
+        border-color: var(--primary-color);
+    }
+
+    .form-textarea {
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        min-height: 100px;
+        resize: vertical;
+        outline: none;
+        font-family: inherit;
+    }
+
+    .form-textarea:focus {
+        border-color: var(--primary-color);
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .checkbox-input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .checkbox-label {
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    /* Image Upload Styles */
+    .image-upload-area {
+        border: 2px dashed #e5e7eb;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        transition: border-color 0.3s;
+        cursor: pointer;
+    }
+
+    .image-upload-area:hover {
+        border-color: var(--primary-color);
+        background: rgba(123, 44, 191, 0.05);
+    }
+
+    .image-upload-area.dragover {
+        border-color: var(--primary-color);
+        background: rgba(123, 44, 191, 0.1);
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+
+    .upload-text {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+        font-size: 0.9rem;
+        color: #9ca3af;
+    }
+
+    .image-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .image-preview {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1;
+        border: 2px solid #e5e7eb;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-remove {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(220, 38, 38, 0.9);
+        color: white;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+
+    .image-primary-badge {
+        position: absolute;
+        bottom: 0.5rem;
+        left: 0.5rem;
+        background: rgba(34, 197, 94, 0.9);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: var(--text-primary);
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #6b21a8;
+        transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .alert-success {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .alert-error {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Third Party Section */
+    .third-party-section {
+        opacity: 0.5;
+        pointer-events: none;
+        transition: all 0.3s;
+    }
+
+    .third-party-section.enabled {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .supplier-create-section {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    /* Form Help Text */
+    .form-help {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        font-style: italic;
+    }
+
+    /* Discount Display */
+    .discount-display {
+        padding: 0.75rem;
+        background: linear-gradient(135deg, #FFE5E5, #FFF0E5);
+        border: 2px solid #FFB5B5;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .discount-value {
+        background: linear-gradient(135deg, #FF6B6B, #FF5722);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 1rem;
+        display: inline-block;
+        box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .add-item-container {
+            margin: 1rem;
+            padding: 0.5rem;
+        }
+
+        .form-section {
+            padding: 1.5rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            justify-content: center;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -381,9 +391,7 @@
 
     <div class="add-item-container">
         <!-- Alert Messages -->
-        <div x-show="alertMessage" 
-             :class="'alert ' + alertType" 
-             style="display: none;">
+        <div x-show="alertMessage" :class="'alert ' + alertType" style="display: none;">
             <i class="fas fa-info-circle"></i>
             <span x-text="alertMessage"></span>
         </div>
@@ -395,26 +403,20 @@
                     <i class="fas fa-info-circle"></i>
                     Basic Information
                 </h2>
-                
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label required">Item Code</label>
-                        <input type="text" 
-                               x-model="formData.item_code"
-                               class="form-input"
-                               placeholder="e.g., DRESS-001"
-                               required>
+                        <input type="text" x-model="formData.item_code" class="form-input" placeholder="e.g., DRESS-001"
+                            required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label required">Item Name</label>
-                        <input type="text" 
-                               x-model="formData.item_name"
-                               class="form-input"
-                               placeholder="e.g., Red Wedding Lehenga"
-                               required>
+                        <input type="text" x-model="formData.item_name" class="form-input"
+                            placeholder="e.g., Red Wedding Lehenga" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label required">Item Group</label>
                         <select x-model="formData.item_group" class="form-select" required>
@@ -424,31 +426,22 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">MRP Rate (₹/day)</label>
-                        <input type="number" 
-                               x-model="formData.rental_mrp_per_day"
-                               class="form-input"
-                               placeholder="e.g., 3000 (strike-through price)"
-                               min="0"
-                               step="1"
-                               @input="calculateDiscount()">
-                        <small class="form-help">Maximum Retail Price - will be shown as strike-through price for marketing appeal</small>
+                        <input type="number" x-model="formData.rental_mrp_per_day" class="form-input"
+                            placeholder="e.g., 3000 (strike-through price)" min="0" step="1"
+                            @input="calculateDiscount()">
+                        <small class="form-help">Maximum Retail Price - will be shown as strike-through price for
+                            marketing appeal</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label required">Rental Rate (₹/day)</label>
-                        <input type="number" 
-                               x-model="formData.rental_rate_per_day"
-                               class="form-input"
-                               placeholder="e.g., 2500"
-                               min="1"
-                               step="1"
-                               required
-                               @input="calculateDiscount()">
+                        <input type="number" x-model="formData.rental_rate_per_day" class="form-input"
+                            placeholder="e.g., 2500" min="1" step="1" required @input="calculateDiscount()">
                     </div>
-                    
+
                     <!-- Discount Display -->
                     <div class="form-group" x-show="discountPercentage > 0">
                         <label class="form-label">Discount Percentage</label>
@@ -457,33 +450,23 @@
                             <small class="form-help">Auto-calculated based on MRP and Rental Rate</small>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Caution Deposit (₹)</label>
-                        <input type="number" 
-                               x-model="formData.caution_deposit"
-                               class="form-input"
-                               placeholder="e.g., 5000"
-                               min="0"
-                               step="1">
+                        <input type="number" x-model="formData.caution_deposit" class="form-input"
+                            placeholder="e.g., 5000" min="0" step="1">
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Purchase Cost (₹)</label>
-                        <input type="number" 
-                               x-model="formData.purchase_cost"
-                               class="form-input"
-                               placeholder="e.g., 25000"
-                               min="0"
-                               step="1">
+                        <input type="number" x-model="formData.purchase_cost" class="form-input"
+                            placeholder="e.g., 25000" min="0" step="1">
                     </div>
-                    
+
                     <div class="form-group full-width">
                         <label class="form-label">Description</label>
-                        <textarea x-model="formData.description"
-                                  class="form-textarea"
-                                  placeholder="Describe the item, size, color, special features, etc."
-                                  rows="3"></textarea>
+                        <textarea x-model="formData.description" class="form-textarea"
+                            placeholder="Describe the item, size, color, special features, etc." rows="3"></textarea>
                     </div>
                 </div>
             </div>
@@ -494,33 +477,24 @@
                     <i class="fas fa-images"></i>
                     Item Images
                 </h2>
-                
-                <div class="image-upload-area" 
-                     @click="$refs.imageInput.click()"
-                     @dragover.prevent="dragOver = true"
-                     @dragleave.prevent="dragOver = false"
-                     @drop.prevent="handleDrop($event)"
-                     :class="{ 'dragover': dragOver }">
+
+                <div class="image-upload-area" @click="$refs.imageInput.click()" @dragover.prevent="dragOver = true"
+                    @dragleave.prevent="dragOver = false" @drop.prevent="handleDrop($event)"
+                    :class="{ 'dragover': dragOver }">
                     <div class="upload-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
                     <div class="upload-text">Click to upload or drag and drop</div>
                     <div class="upload-hint">PNG, JPG, JPEG up to 5MB each</div>
-                    <input type="file" 
-                           x-ref="imageInput"
-                           @change="handleImageUpload($event)"
-                           accept="image/*"
-                           multiple
-                           style="display: none;">
+                    <input type="file" x-ref="imageInput" @change="handleImageUpload($event)" accept="image/*" multiple
+                        style="display: none;">
                 </div>
-                
+
                 <div x-show="uploadedImages.length > 0" class="image-preview-grid">
                     <template x-for="(image, index) in uploadedImages" :key="index">
                         <div class="image-preview">
                             <img :src="image.url" :alt="'Preview ' + (index + 1)">
-                            <button type="button" 
-                                    @click="removeImage(index)"
-                                    class="image-remove">
+                            <button type="button" @click="removeImage(index)" class="image-remove">
                                 <i class="fas fa-times"></i>
                             </button>
                             <div x-show="index === 0" class="image-primary-badge">
@@ -537,29 +511,24 @@
                     <i class="fas fa-users"></i>
                     Ownership Information
                 </h2>
-                
+
                 <div class="checkbox-group">
-                    <input type="checkbox" 
-                           x-model="formData.is_third_party_item"
-                           class="checkbox-input"
-                           id="isThirdParty">
+                    <input type="checkbox" x-model="formData.is_third_party_item" class="checkbox-input"
+                        id="isThirdParty">
                     <label for="isThirdParty" class="checkbox-label">Third Party Owned Item</label>
                 </div>
-                
-                <div class="third-party-section" 
-                     :class="{ 'enabled': formData.is_third_party_item }">
+
+                <div class="third-party-section" :class="{ 'enabled': formData.is_third_party_item }">
                     <div class="form-grid" style="margin-top: 1.5rem;">
+
+
                         <div class="form-group">
-                            <label class="form-label">Owner Commission (%)</label>
-                            <input type="number" 
-                                   x-model="formData.owner_commission_percent"
-                                   class="form-input"
-                                   placeholder="e.g., 30"
-                                   min="0"
-                                   max="100"
-                                   step="1">
+                            <label class="form-label">Fixed Commission Amount (₹)</label>
+                            <input type="number" x-model="formData.owner_commission_fixed" class="form-input"
+                                placeholder="e.g., 4000" min="0" step="1">
+                            <small class="form-help">If set, this amount is used instead of percentage</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label class="form-label">Select Existing Supplier</label>
                             <select x-model="formData.owner_supplier_source" class="form-select">
@@ -570,46 +539,38 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <!-- Create New Supplier Section -->
-                    <div x-show="formData.is_third_party_item && !formData.owner_supplier_source" 
-                         class="supplier-create-section">
+                    <div x-show="formData.is_third_party_item && !formData.owner_supplier_source"
+                        class="supplier-create-section">
                         <h4 style="margin-bottom: 1rem; color: var(--text-primary);">
                             <i class="fas fa-plus"></i>
                             Create New Supplier
                         </h4>
-                        
+
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">Supplier Name</label>
-                                <input type="text" 
-                                       x-model="newSupplier.supplier_name"
-                                       class="form-input"
-                                       placeholder="e.g., Rajesh Kumar">
+                                <input type="text" x-model="newSupplier.supplier_name" class="form-input"
+                                    placeholder="e.g., Rajesh Kumar">
                             </div>
-                            
+
                             <div class="form-group">
                                 <label class="form-label">Mobile Number</label>
-                                <input type="tel" 
-                                       x-model="newSupplier.mobile_no"
-                                       class="form-input"
-                                       placeholder="e.g., 9876543210">
+                                <input type="tel" x-model="newSupplier.mobile_no" class="form-input"
+                                    placeholder="e.g., 9876543210">
                             </div>
-                            
+
                             <div class="form-group">
                                 <label class="form-label">Email</label>
-                                <input type="email" 
-                                       x-model="newSupplier.email_id"
-                                       class="form-input"
-                                       placeholder="e.g., rajesh@example.com">
+                                <input type="email" x-model="newSupplier.email_id" class="form-input"
+                                    placeholder="e.g., rajesh@example.com">
                             </div>
-                            
+
                             <div class="form-group">
                                 <label class="form-label">Address</label>
-                                <input type="text" 
-                                       x-model="newSupplier.address"
-                                       class="form-input"
-                                       placeholder="Complete address">
+                                <input type="text" x-model="newSupplier.address" class="form-input"
+                                    placeholder="Complete address">
                             </div>
                         </div>
                     </div>
@@ -622,10 +583,8 @@
                     <i class="fas fa-arrow-left"></i>
                     Cancel
                 </a>
-                
-                <button type="submit" 
-                        class="btn btn-primary"
-                        :disabled="isSubmitting">
+
+                <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
                     <span x-show="!isSubmitting">
                         <i class="fas fa-save"></i>
                         Save Item
@@ -644,147 +603,16 @@
 </div>
 
 <script>
-function addItemForm() {
-    return {
-        currentPage: 'add-item',
-        alertMessage: '',
-        alertType: '',
-        isSubmitting: false,
-        dragOver: false,
-        uploadedImages: [],
-        
-        formData: {
-            item_code: '',
-            item_name: '',
-            item_group: '',
-            description: '',
-            rental_mrp_per_day: '',
-            rental_rate_per_day: '',
-            caution_deposit: 0,
-            purchase_cost: '',
-            is_third_party_item: false,
-            owner_commission_percent: 30,
-            owner_supplier_source: ''
-        },
-        
-        discountPercentage: 0,
-        
-        newSupplier: {
-            supplier_name: '',
-            mobile_no: '',
-            email_id: '',
-            address: ''
-        },
-        
-        init() {
-            console.log('Add Item form initialized');
-        },
-        
-        handleImageUpload(event) {
-            const files = Array.from(event.target.files);
-            this.processImageFiles(files);
-        },
-        
-        handleDrop(event) {
-            this.dragOver = false;
-            const files = Array.from(event.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-            this.processImageFiles(files);
-        },
-        
-        processImageFiles(files) {
-            files.forEach(file => {
-                if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                    this.showAlert('Image size should be less than 5MB', 'alert-error');
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.uploadedImages.push({
-                        url: e.target.result,
-                        file: file,
-                        name: file.name
-                    });
-                };
-                reader.readAsDataURL(file);
-            });
-        },
-        
-        removeImage(index) {
-            this.uploadedImages.splice(index, 1);
-        },
-        
-        calculateDiscount() {
-            const mrp = parseFloat(this.formData.rental_mrp_per_day) || 0;
-            const rate = parseFloat(this.formData.rental_rate_per_day) || 0;
-            
-            if (mrp > 0 && rate > 0 && mrp > rate) {
-                this.discountPercentage = ((mrp - rate) / mrp) * 100;
-            } else {
-                this.discountPercentage = 0;
-            }
-        },
-        
-        async submitForm() {
-            if (this.isSubmitting) return;
-            
-            // Validation
-            if (!this.formData.item_code || !this.formData.item_name || !this.formData.item_group || !this.formData.rental_rate_per_day) {
-                this.showAlert('Please fill all required fields', 'alert-error');
-                return;
-            }
-            
-            if (this.formData.is_third_party_item && !this.formData.owner_supplier_source && !this.newSupplier.supplier_name) {
-                this.showAlert('Please select a supplier or provide new supplier details', 'alert-error');
-                return;
-            }
-            
-            this.isSubmitting = true;
-            this.alertMessage = '';
-            
-            try {
-                // Prepare data for submission
-                const itemData = JSON.stringify(this.formData);
-                const supplierData = (this.formData.is_third_party_item && !this.formData.owner_supplier_source) ? 
-                    JSON.stringify(this.newSupplier) : null;
-                const imageData = JSON.stringify(this.uploadedImages.map(img => ({
-                    name: img.name,
-                    content: img.url
-                })));
-                
-                // Create item with all data
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.create_rental_item',
-                    args: {
-                        item_data: itemData,
-                        new_supplier: supplierData,
-                        images: imageData
-                    }
-                });
-                
-                if (response.message.success) {
-                    this.showAlert('✅ Item created successfully!', 'alert-success');
-                    
-                    // Reset form after successful creation
-                    setTimeout(() => {
-                        this.resetForm();
-                        // Optionally redirect to item list or stay for creating another item
-                        // window.location.href = '/portal';
-                    }, 2000);
-                } else {
-                    this.showAlert(response.message.message || 'Failed to create item', 'alert-error');
-                }
-                
-            } catch (error) {
-                console.error('Error creating item:', error);
-                this.showAlert(`Error: ${error.message || 'Unknown error occurred'}`, 'alert-error');
-            } finally {
-                this.isSubmitting = false;
-            }
-        },
-        
-        resetForm() {
-            this.formData = {
+    function addItemForm() {
+        return {
+            currentPage: 'add-item',
+            alertMessage: '',
+            alertType: '',
+            isSubmitting: false,
+            dragOver: false,
+            uploadedImages: [],
+
+            formData: {
                 item_code: '',
                 item_name: '',
                 item_group: '',
@@ -795,30 +623,163 @@ function addItemForm() {
                 purchase_cost: '',
                 is_third_party_item: false,
                 owner_commission_percent: 30,
+                owner_commission_fixed: 0,
                 owner_supplier_source: ''
-            };
-            this.discountPercentage = 0;
-            this.newSupplier = {
+            },
+
+            discountPercentage: 0,
+
+            newSupplier: {
                 supplier_name: '',
                 mobile_no: '',
                 email_id: '',
                 address: ''
-            };
-            this.uploadedImages = [];
-        },
-        
-        showAlert(message, type) {
-            this.alertMessage = message;
-            this.alertType = type;
-            
-            // Auto-hide success messages
-            if (type === 'alert-success') {
-                setTimeout(() => {
-                    this.alertMessage = '';
-                }, 5000);
+            },
+
+            init() {
+                console.log('Add Item form initialized');
+            },
+
+            handleImageUpload(event) {
+                const files = Array.from(event.target.files);
+                this.processImageFiles(files);
+            },
+
+            handleDrop(event) {
+                this.dragOver = false;
+                const files = Array.from(event.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+                this.processImageFiles(files);
+            },
+
+            processImageFiles(files) {
+                files.forEach(file => {
+                    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                        this.showAlert('Image size should be less than 5MB', 'alert-error');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.uploadedImages.push({
+                            url: e.target.result,
+                            file: file,
+                            name: file.name
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            },
+
+            removeImage(index) {
+                this.uploadedImages.splice(index, 1);
+            },
+
+            calculateDiscount() {
+                const mrp = parseFloat(this.formData.rental_mrp_per_day) || 0;
+                const rate = parseFloat(this.formData.rental_rate_per_day) || 0;
+
+                if (mrp > 0 && rate > 0 && mrp > rate) {
+                    this.discountPercentage = ((mrp - rate) / mrp) * 100;
+                } else {
+                    this.discountPercentage = 0;
+                }
+            },
+
+            async submitForm() {
+                if (this.isSubmitting) return;
+
+                // Validation
+                if (!this.formData.item_code || !this.formData.item_name || !this.formData.item_group || !this.formData.rental_rate_per_day) {
+                    this.showAlert('Please fill all required fields', 'alert-error');
+                    return;
+                }
+
+                if (this.formData.is_third_party_item && !this.formData.owner_supplier_source && !this.newSupplier.supplier_name) {
+                    this.showAlert('Please select a supplier or provide new supplier details', 'alert-error');
+                    return;
+                }
+
+                this.isSubmitting = true;
+                this.alertMessage = '';
+
+                try {
+                    // Prepare data for submission
+                    const itemData = JSON.stringify(this.formData);
+                    const supplierData = (this.formData.is_third_party_item && !this.formData.owner_supplier_source) ?
+                        JSON.stringify(this.newSupplier) : null;
+                    const imageData = JSON.stringify(this.uploadedImages.map(img => ({
+                        name: img.name,
+                        content: img.url
+                    })));
+
+                    // Create item with all data
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.create_rental_item',
+                        args: {
+                            item_data: itemData,
+                            new_supplier: supplierData,
+                            images: imageData
+                        }
+                    });
+
+                    if (response.message.success) {
+                        this.showAlert('✅ Item created successfully!', 'alert-success');
+
+                        // Reset form after successful creation
+                        setTimeout(() => {
+                            this.resetForm();
+                            // Optionally redirect to item list or stay for creating another item
+                            // window.location.href = '/portal';
+                        }, 2000);
+                    } else {
+                        this.showAlert(response.message.message || 'Failed to create item', 'alert-error');
+                    }
+
+                } catch (error) {
+                    console.error('Error creating item:', error);
+                    this.showAlert(`Error: ${error.message || 'Unknown error occurred'}`, 'alert-error');
+                } finally {
+                    this.isSubmitting = false;
+                }
+            },
+
+            resetForm() {
+                this.formData = {
+                    item_code: '',
+                    item_name: '',
+                    item_group: '',
+                    description: '',
+                    rental_mrp_per_day: '',
+                    rental_rate_per_day: '',
+                    caution_deposit: 0,
+                    purchase_cost: '',
+                    is_third_party_item: false,
+                    owner_commission_percent: 30,
+                    owner_commission_fixed: 0,
+                    owner_supplier_source: ''
+                };
+                this.discountPercentage = 0;
+                this.newSupplier = {
+                    supplier_name: '',
+                    mobile_no: '',
+                    email_id: '',
+                    address: ''
+                };
+                this.uploadedImages = [];
+            },
+
+            showAlert(message, type) {
+                this.alertMessage = message;
+                this.alertType = type;
+
+                // Auto-hide success messages
+                if (type === 'alert-success') {
+                    setTimeout(() => {
+                        this.alertMessage = '';
+                    }, 5000);
+                }
             }
         }
     }
-}
 </script>
 {% endblock %}

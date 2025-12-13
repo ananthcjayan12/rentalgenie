@@ -11,330 +11,453 @@
 {% include "templates/includes/portal_styles.html" %}
 
 <style>
-/* Booking confirmation specific styles */
-.back-btn {
-    color: var(--text-primary);
-    font-size: 1.5rem;
-    text-decoration: none;
-    padding: 0.5rem;
-}
+    /* Booking confirmation specific styles */
+    .back-btn {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+        padding: 0.5rem;
+    }
 
-.header-title {
-    flex: 1;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
+    .header-title {
+        flex: 1;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
 
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
+    .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
 
-.header-title {
-    flex: 1;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
+    .header-title {
+        flex: 1;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
 
-.confirmation-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-}
-
-.success-header {
-    background: white;
-    border-radius: 12px;
-    padding: 3rem 2rem;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-}
-
-.success-icon {
-    width: 80px;
-    height: 80px;
-    background: var(--success-color);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    color: white;
-    font-size: 2rem;
-}
-
-.success-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.success-subtitle {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    margin-bottom: 1.5rem;
-}
-
-.booking-id {
-    background: #f3f0ff;
-    color: var(--primary-color);
-    padding: 0.75rem 1.5rem;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    display: inline-block;
-}
-
-.booking-details {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-}
-
-.section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.section-title i {
-    color: var(--primary-color);
-}
-
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.detail-label {
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-.detail-value {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.status-badge {
-    background: var(--success-color);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.booking-item {
-    display: flex;
-    gap: 1rem;
-    padding: 1.5rem;
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    margin-bottom: 1rem;
-}
-
-.item-image {
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    object-fit: cover;
-    background: #f5f5f5;
-}
-
-.item-details {
-    flex: 1;
-}
-
-.item-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.item-dates {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-}
-
-.item-dates i {
-    margin-right: 0.5rem;
-    color: var(--primary-color);
-    width: 16px;
-}
-
-.item-amount {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-}
-
-.address-section {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-top: 1rem;
-}
-
-.address-text {
-    color: var(--text-secondary);
-    line-height: 1.5;
-}
-
-.action-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.btn {
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s;
-    cursor: pointer;
-    border: none;
-    font-size: 1rem;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #6A1B9A;
-    transform: translateY(-1px);
-}
-
-.btn-outline {
-    background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-}
-
-.btn-outline:hover {
-    background: var(--primary-color);
-    color: white;
-}
-
-.next-steps {
-    background: #e6fffa;
-    border: 2px solid #81e6d9;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-top: 2rem;
-}
-
-.next-steps-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.next-steps ul {
-    margin: 0;
-    padding-left: 1.5rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-}
-
-.next-steps li {
-    margin-bottom: 0.5rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
     .confirmation-container {
-        margin: 1rem auto;
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
     }
-    
+
     .success-header {
-        padding: 2rem 1rem;
+        background: white;
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
     }
-    
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--success-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-size: 2rem;
+    }
+
+    .success-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .success-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .booking-id {
+        background: #f3f0ff;
+        color: var(--primary-color);
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: inline-block;
+    }
+
     .booking-details {
-        padding: 1.5rem;
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
     }
-    
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        color: var(--primary-color);
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-label {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .detail-value {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .status-badge {
+        background: var(--success-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
     .booking-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #f5f5f5;
+    }
+
+    .item-details {
+        flex: 1;
+    }
+
+    .item-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .item-dates {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-dates i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+        width: 16px;
+    }
+
+    .item-amount {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .address-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .address-text {
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        border: none;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #6A1B9A;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .btn-outline:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .next-steps {
+        background: #e6fffa;
+        border: 2px solid #81e6d9;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .next-steps-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .next-steps ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .next-steps li {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .confirmation-container {
+            margin: 1rem auto;
+        }
+
+        .success-header {
+            padding: 2rem 1rem;
+        }
+
+        .booking-details {
+            padding: 1.5rem;
+        }
+
+        .booking-item {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+
+        .detail-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-around;
+        padding: 1rem 0;
+        z-index: 1000;
+    }
+
+    .nav-item {
+        display: flex;
         flex-direction: column;
         align-items: center;
-        text-align: center;
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        transition: color 0.3s;
     }
-    
-    .action-buttons {
-        grid-template-columns: 1fr;
+
+    .nav-item.active {
+        color: var(--primary-color);
     }
-    
-    .detail-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
+
+    .nav-item i {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
     }
-}
 
-/* Bottom Navigation */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-around;
-    padding: 1rem 0;
-    z-index: 1000;
-}
+    /* Print Receipt Styles */
+    .print-btn {
+        background: #374151;
+        color: white;
+    }
 
-.nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    transition: color 0.3s;
-}
+    .print-btn:hover {
+        background: #1f2937;
+    }
 
-.nav-item.active {
-    color: var(--primary-color);
-}
+    /* Printable Receipt */
+    .receipt-container {
+        display: none;
+    }
 
-.nav-item i {
-    font-size: 1.25rem;
-    margin-bottom: 0.25rem;
-}
+    @media print {
+
+        /* Hide everything except receipt */
+        body * {
+            visibility: hidden;
+        }
+
+        .receipt-container,
+        .receipt-container * {
+            visibility: visible;
+        }
+
+        .receipt-container {
+            display: block !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            max-width: 80mm;
+            margin: 0 auto;
+            padding: 10px;
+            font-size: 12px;
+            background: white;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        /* Receipt Styling */
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #333;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .receipt-company {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .receipt-tagline {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .receipt-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            text-transform: uppercase;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 11px;
+        }
+
+        .receipt-row.total {
+            border-top: 1px dashed #333;
+            margin-top: 5px;
+            padding-top: 5px;
+            font-weight: bold;
+        }
+
+        .receipt-row.highlight {
+            background: #f5f5f5;
+            padding: 5px;
+            margin: 5px 0;
+        }
+
+        .receipt-items {
+            border-top: 1px dashed #333;
+            border-bottom: 1px dashed #333;
+            padding: 10px 0;
+            margin: 10px 0;
+        }
+
+        .receipt-item {
+            padding: 5px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+
+        .receipt-item:last-child {
+            border-bottom: none;
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 2px dashed #333;
+            font-size: 10px;
+        }
+
+        .receipt-terms {
+            font-size: 9px;
+            color: #666;
+            margin-top: 10px;
+            text-align: left;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -364,29 +487,29 @@
                 <i class="fas fa-receipt"></i>
                 Booking Details
             </h3>
-            
+
             <div class="detail-row">
                 <span class="detail-label">Booking Status</span>
                 <span class="detail-value">
                     <span class="status-badge">{{ booking.booking_status or 'Confirmed' }}</span>
                 </span>
             </div>
-            
+
             <div class="detail-row">
                 <span class="detail-label">Customer Name</span>
                 <span class="detail-value">{{ booking.customer_name }}</span>
             </div>
-            
+
             <div class="detail-row">
                 <span class="detail-label">Total Amount</span>
                 <span class="detail-value">₹{{ "{:,.0f}".format(booking.total) }}</span>
             </div>
-            
+
             <div class="detail-row">
                 <span class="detail-label">Payment Status</span>
                 <span class="detail-value">Pending (Pay on Delivery)</span>
             </div>
-            
+
             {% if delivery_address %}
             <div class="detail-row" style="border-bottom: none;">
                 <span class="detail-label">Delivery Address</span>
@@ -409,18 +532,19 @@
                 <i class="fas fa-shopping-bag"></i>
                 Booked Items ({{ booking_items|length }})
             </h3>
-            
+
             {% for item in booking_items %}
             <div class="booking-item">
-                <img src="{{ item.image or '/assets/rental_management/images/placeholder.jpg' }}" 
-                     alt="{{ item.item_name }}" class="item-image">
+                <img src="{{ item.image or '/assets/rental_management/images/placeholder.jpg' }}"
+                    alt="{{ item.item_name }}" class="item-image">
                 <div class="item-details">
                     <div class="item-name">{{ item.item_name }}</div>
                     <div class="item-dates">
                         <i class="fas fa-star"></i>Function Date: {{ formatted_dates[loop.index0].function_date }}
                     </div>
                     <div class="item-dates">
-                        <i class="fas fa-calendar"></i>Rental Period: {{ formatted_dates[loop.index0].rental_start }} to {{ formatted_dates[loop.index0].rental_end }}
+                        <i class="fas fa-calendar"></i>Rental Period: {{ formatted_dates[loop.index0].rental_start }} to
+                        {{ formatted_dates[loop.index0].rental_end }}
                     </div>
                 </div>
                 <div class="item-amount">₹{{ "{:,.0f}".format(item.amount) }}</div>
@@ -444,10 +568,14 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="action-buttons">
+        <div class="action-buttons" style="grid-template-columns: 1fr 1fr 1fr;">
+            <button onclick="window.print()" class="btn print-btn">
+                <i class="fas fa-print"></i>
+                Print Receipt
+            </button>
             <a href="/portal/bookings" class="btn btn-primary">
                 <i class="fas fa-calendar-check"></i>
-                View All Bookings
+                View Bookings
             </a>
             <a href="/portal" class="btn btn-outline">
                 <i class="fas fa-home"></i>
@@ -456,18 +584,137 @@
         </div>
     </div>
 
+    <!-- Printable Receipt (Hidden, shown only when printing) -->
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <div class="receipt-company">{{ booking.company or 'Blush & Glow' }}</div>
+            <div class="receipt-tagline">Premium Rental Services</div>
+        </div>
+
+        <div class="receipt-title">Booking Receipt</div>
+
+        <div class="receipt-row">
+            <span>Receipt No:</span>
+            <span>{{ booking.name }}</span>
+        </div>
+        <div class="receipt-row">
+            <span>Date:</span>
+            <span>{{ booking.posting_date.strftime('%d-%m-%Y') }}</span>
+        </div>
+        <div class="receipt-row">
+            <span>Customer:</span>
+            <span>{{ booking.customer_name }}</span>
+        </div>
+        {% if booking.customer_address %}
+        <div class="receipt-row">
+            <span>Contact:</span>
+            <span>{{ booking.contact_mobile or booking.contact_phone or '-' }}</span>
+        </div>
+        {% endif %}
+
+        <div class="receipt-title" style="font-size: 12px;">Rental Details</div>
+
+        <div class="receipt-row">
+            <span>Function Date:</span>
+            <span>{{ booking.function_date.strftime('%d-%m-%Y') if booking.function_date else 'N/A' }}</span>
+        </div>
+        <div class="receipt-row">
+            <span>Delivery Date:</span>
+            <span>{{ booking.rental_start_date.strftime('%d-%m-%Y') if booking.rental_start_date else 'N/A' }}</span>
+        </div>
+        <div class="receipt-row">
+            <span>Return Date:</span>
+            <span>{{ booking.rental_end_date.strftime('%d-%m-%Y') if booking.rental_end_date else 'N/A' }}</span>
+        </div>
+        <div class="receipt-row">
+            <span>Duration:</span>
+            <span>{{ total_rental_days }} day(s)</span>
+        </div>
+
+        <div class="receipt-items">
+            <div style="font-weight: bold; margin-bottom: 5px;">Items:</div>
+            {% for item in booking_items %}
+            <div class="receipt-item">
+                <div>{{ loop.index }}. {{ item.item_name }}</div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #666;">
+                    <span>Qty: {{ item.qty }}</span>
+                    <span>₹{{ "{:,.0f}".format(item.amount) }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="receipt-row">
+            <span>Subtotal:</span>
+            <span>₹{{ "{:,.0f}".format(booking.total) }}</span>
+        </div>
+        {% if booking.discount_amount and booking.discount_amount > 0 %}
+        <div class="receipt-row">
+            <span>Discount:</span>
+            <span>-₹{{ "{:,.0f}".format(booking.discount_amount) }}</span>
+        </div>
+        {% endif %}
+        {% if booking.total_taxes_and_charges and booking.total_taxes_and_charges > 0 %}
+        <div class="receipt-row">
+            <span>Taxes:</span>
+            <span>₹{{ "{:,.0f}".format(booking.total_taxes_and_charges) }}</span>
+        </div>
+        {% endif %}
+
+        <div class="receipt-row total" style="font-size: 14px;">
+            <span>GRAND TOTAL:</span>
+            <span>₹{{ "{:,.0f}".format(booking.grand_total) }}</span>
+        </div>
+
+        {% if booking.advance_amount and booking.advance_amount > 0 %}
+        <div class="receipt-row highlight">
+            <span>Advance Paid:</span>
+            <span>₹{{ "{:,.0f}".format(booking.advance_amount) }}</span>
+        </div>
+        {% endif %}
+
+        <div class="receipt-row highlight" style="font-weight: bold; font-size: 13px;">
+            <span>Balance Due:</span>
+            <span>₹{{ "{:,.0f}".format(booking.outstanding_amount or (booking.grand_total - (booking.advance_amount or
+                0))) }}</span>
+        </div>
+
+        {% if booking.caution_deposit_amount and booking.caution_deposit_amount > 0 %}
+        <div class="receipt-row">
+            <span>Caution Deposit:</span>
+            <span>₹{{ "{:,.0f}".format(booking.caution_deposit_amount) }}</span>
+        </div>
+        <div class="receipt-row" style="font-size: 10px; color: #666;">
+            <span>(Refundable on return)</span>
+            <span></span>
+        </div>
+        {% endif %}
+
+        <div class="receipt-footer">
+            <div style="margin-bottom: 5px;">Thank you for your booking!</div>
+            <div style="font-size: 9px; color: #666;">Items will be delivered 2 days before function date</div>
+        </div>
+
+        <div class="receipt-terms">
+            <strong>Terms & Conditions:</strong><br>
+            1. Items must be returned in original condition<br>
+            2. Damages will be charged from caution deposit<br>
+            3. Late returns may incur additional charges
+        </div>
+    </div>
+
     <!-- Bottom Navigation -->
     {% include "templates/includes/bottom_nav.html" %}
 </div>
 
 <script>
-function confirmationPage() {
-    return {
-        currentPage: 'bookings',
-        async init() {
-            // Any initialization if needed
+    function confirmationPage() {
+        return {
+            currentPage: 'bookings',
+            async init() {
+                // Any initialization if needed
+            }
         }
     }
-}
 </script>
 {% endblock %}

@@ -101,13 +101,23 @@ def calculate_rental_amounts(doc):
             
             if item_doc.get("is_rental_item"):
                 # Calculate commission for this item
-                commission_rate = item_doc.get("owner_commission_percentage", 0)
-                if commission_rate and item.amount:
+                # Calculate commission for this item
+                commission_fixed = flt(item_doc.get("owner_commission_fixed", 0))
+                commission_rate = flt(item_doc.get("owner_commission_percent", 0))
+                
+                item_commission = 0
+                if commission_fixed > 0:
+                    # Fixed commission: Flat amount per item (multiplied only by qty, NOT days)
+                    qty = flt(item.qty) or 1
+                    item_commission = commission_fixed * qty
+                elif commission_rate and item.amount:
                     item_commission = (item.amount * commission_rate) / 100
+                    
+                if item_commission:
                     total_commission += item_commission
                 
                 # Add to caution deposit calculation if needed
-                item_caution = item_doc.get("suggested_caution_deposit", 0)
+                item_caution = flt(item_doc.get("suggested_caution_deposit") or 0)
                 if item_caution > caution_deposit:
                     caution_deposit = item_caution
     
@@ -408,14 +418,24 @@ def create_owner_commission_liabilities(doc):
                 is_third = bool(item_doc.get("is_third_party_item"))
                 third_party_owner = item_doc.get("third_party_owner")
                 commission_pct = flt(item_doc.get("owner_commission_percent") or 0)
+                commission_fixed = flt(item_doc.get("owner_commission_fixed") or 0)
                 line_amount = flt(item.amount or 0)
 
-                print(f"[DEBUG] Line {idx} - item: {item.item_code}, resolved_item: {item_doc.name}, is_third: {is_third}, owner: {third_party_owner}, commission_pct: {commission_pct}, line_amount: {line_amount}")
+                print(f"[DEBUG] Line {idx} - item: {item.item_code}, resolved_item: {item_doc.name}, is_third: {is_third}, owner: {third_party_owner}, commission_pct: {commission_pct}, commission_fixed: {commission_fixed}, line_amount: {line_amount}")
 
-                if is_third and third_party_owner and commission_pct and line_amount:
-                    comm_amount = (line_amount * commission_pct) / 100.0
-                    supplier_commissions[third_party_owner] = supplier_commissions.get(third_party_owner, 0.0) + comm_amount
-                    print(f"[DEBUG] Accumulated commission for {third_party_owner}: {supplier_commissions[third_party_owner]}")
+                if is_third and third_party_owner:
+                    comm_amount = 0
+                    if commission_fixed > 0:
+                        # Fixed commission: Flat amount per item (multiplied only by qty, NOT by days)
+                        qty = flt(item.get("qty") or 1)
+                        comm_amount = commission_fixed * qty
+                        print(f"[DEBUG] Using fixed commission: {commission_fixed} * qty={qty} = {comm_amount}")
+                    elif commission_pct and line_amount:
+                        comm_amount = (line_amount * commission_pct) / 100.0
+                    
+                    if comm_amount:
+                        supplier_commissions[third_party_owner] = supplier_commissions.get(third_party_owner, 0.0) + comm_amount
+                        print(f"[DEBUG] Accumulated commission for {third_party_owner}: {supplier_commissions[third_party_owner]}")
 
             except Exception as e:
                 print(f"[DEBUG] Error processing line {idx} on {doc.name}: {str(e)}")

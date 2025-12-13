@@ -1801,6 +1801,7 @@ def create_rental_item(item_data, new_supplier=None, images=None):
             # Third party details
             "is_third_party_item": item_data.get('is_third_party_item', False),
             "owner_commission_percent": float(item_data.get('owner_commission_percent', 0)) if item_data.get('is_third_party_item') else 0,
+            "owner_commission_fixed": float(item_data.get('owner_commission_fixed', 0)) if item_data.get('is_third_party_item') else 0,
             "owner_supplier_source": supplier_name if item_data.get('is_third_party_item') else ""
         })
         

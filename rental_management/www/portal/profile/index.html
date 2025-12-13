@@ -11,445 +11,459 @@
 {% include "templates/includes/portal_styles.html" %}
 
 <style>
-/* Profile-specific styles */
-.back-btn {
-    color: var(--text-primary);
-    font-size: 1.5rem;
+    /* Profile-specific styles */
+    .back-btn {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+        padding: 0.5rem;
+    }
+
+    .header-title {
+        flex: 1;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
     text-decoration: none;
     padding: 0.5rem;
-}
-
-.header-title {
-    flex: 1;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-    text-decoration: none;
-    padding: 0.5rem;
-}
-
-.header-title {
-    flex: 1;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.profile-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-}
-
-/* Customer Search Mode */
-.customer-search {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-}
-
-.search-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.search-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.search-subtitle {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-}
-
-.customer-search-box {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.search-input {
-    flex: 1;
-    padding: 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 1rem;
-    outline: none;
-}
-
-.search-input:focus {
-    border-color: var(--primary-color);
-}
-
-.search-btn, .new-customer-btn {
-    padding: 1rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.search-btn {
-    background: var(--primary-color);
-    color: white;
-}
-
-.search-btn:hover {
-    background: #6A1B9A;
-}
-
-.new-customer-btn {
-    background: var(--success-color);
-    color: white;
-}
-
-.new-customer-btn:hover {
-    background: #059669;
-}
-
-.recent-customers {
-    margin-top: 2rem;
-}
-
-.section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
-}
-
-.customers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-}
-
-.customer-card {
-    background: white;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1rem;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.customer-card:hover {
-    border-color: var(--primary-color);
-    transform: translateY(-1px);
-}
-
-.customer-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.customer-info {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-}
-
-.customer-stats {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.stat-item {
-    text-align: center;
-}
-
-.stat-value {
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-/* Customer Profile View Mode */
-.customer-profile {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 2rem;
-}
-
-.profile-card {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    height: fit-content;
-}
-
-.profile-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.profile-avatar {
-    width: 80px;
-    height: 80px;
-    background: var(--primary-color);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    color: white;
-    font-size: 2rem;
-}
-
-.profile-name {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.profile-email {
-    color: var(--text-secondary);
-}
-
-.profile-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.stat-card {
-    background: var(--background);
-    padding: 1rem;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.stat-number {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary-color);
-}
-
-.stat-title {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
-}
-
-.profile-actions {
-    margin-top: 2rem;
-}
-
-.btn {
-    width: 100%;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 0.75rem;
-    transition: all 0.3s;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-outline {
-    background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-}
-
-.bookings-section {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.booking-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    margin-bottom: 1rem;
-}
-
-.booking-details h4 {
-    margin: 0 0 0.5rem 0;
-    color: var(--text-primary);
-}
-
-.booking-meta {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.booking-amount {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--primary-color);
-}
-
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-left: 1rem;
-}
-
-.status-confirmed { background: #e6fffa; color: #047857; }
-.status-delivered { background: #dbeafe; color: #1e40af; }
-.status-returned { background: #f3f4f6; color: #374151; }
-
-/* New Customer Form */
-.new-customer-form {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    margin-top: 2rem;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-label {
-    display: block;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-}
-
-.form-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 1rem;
-    outline: none;
-}
-
-.form-input:focus {
-    border-color: var(--primary-color);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .customer-profile {
-        grid-template-columns: 1fr;
     }
-    
-    .customers-grid {
-        grid-template-columns: 1fr;
+
+    .header-title {
+        flex: 1;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
     }
-    
-    .form-grid {
-        grid-template-columns: 1fr;
+
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
     }
-    
+
+    /* Customer Search Mode */
+    .customer-search {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .search-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .search-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .search-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+    }
+
     .customer-search-box {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        outline: none;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary-color);
+    }
+
+    .search-btn,
+    .new-customer-btn {
+        padding: 1rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .search-btn {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .search-btn:hover {
+        background: #6A1B9A;
+    }
+
+    .new-customer-btn {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .new-customer-btn:hover {
+        background: #059669;
+    }
+
+    .recent-customers {
+        margin-top: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .customers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    .customer-card {
+        background: white;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .customer-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-1px);
+    }
+
+    .customer-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .customer-info {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .customer-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* Customer Profile View Mode */
+    .customer-profile {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: fit-content;
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 2rem;
+    }
+
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-email {
+        color: var(--text-secondary);
+    }
+
+    .profile-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .stat-card {
+        background: var(--background);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .stat-title {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .profile-actions {
+        margin-top: 2rem;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .bookings-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .booking-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .booking-details h4 {
+        margin: 0 0 0.5rem 0;
+        color: var(--text-primary);
+    }
+
+    .booking-meta {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .booking-amount {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 1rem;
+    }
+
+    .status-confirmed {
+        background: #e6fffa;
+        color: #047857;
+    }
+
+    .status-delivered {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-returned {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    /* New Customer Form */
+    .new-customer-form {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        outline: none;
+    }
+
+    .form-input:focus {
+        border-color: var(--primary-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .customer-profile {
+            grid-template-columns: 1fr;
+        }
+
+        .customers-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .customer-search-box {
+            flex-direction: column;
+        }
+    }
+
+    /* Success Notification */
+    .success-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--success-color);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        font-weight: 600;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Return Context Indicator */
+    .return-context-indicator {
+        background: #e0f2fe;
+        border: 1px solid #0277bd;
+        color: #01579b;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-around;
+        padding: 1rem 0;
+        z-index: 1000;
+    }
+
+    .nav-item {
+        display: flex;
         flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        transition: color 0.3s;
     }
-}
 
-/* Success Notification */
-.success-notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--success-color);
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    z-index: 1000;
-    font-weight: 600;
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
+    .nav-item.active {
+        color: var(--primary-color);
     }
-    to {
-        transform: translateX(0);
-        opacity: 1;
+
+    .nav-item i {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
     }
-}
-
-/* Return Context Indicator */
-.return-context-indicator {
-    background: #e0f2fe;
-    border: 1px solid #0277bd;
-    color: #01579b;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Bottom Navigation */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-around;
-    padding: 1rem 0;
-    z-index: 1000;
-}
-
-.nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    transition: color 0.3s;
-}
-
-.nav-item.active {
-    color: var(--primary-color);
-}
-
-.nav-item i {
-    font-size: 1.25rem;
-    margin-bottom: 0.25rem;
-}
 </style>
 {% endblock %}
 
@@ -458,16 +472,17 @@
     <!-- Header -->
     <div class="portal-header">
         <div class="header-content">
-            <a href="{% if return_to == 'item' and return_item %}/portal/item?item={{ return_item }}{% else %}/portal{% endif %}" class="back-btn">
+            <a href="{% if return_to == 'item' and return_item %}/portal/item?item={{ return_item }}{% else %}/portal{% endif %}"
+                class="back-btn">
                 <i class="fas fa-arrow-left"></i>
             </a>
             <div class="header-title">
                 {% if mode == 'view' %}
-                    Customer Profile
+                Customer Profile
                 {% elif return_to == 'item' and return_item %}
-                    Select Customer for {{ return_item }}
+                Select Customer for {{ return_item }}
                 {% else %}
-                    Customer Management
+                Customer Management
                 {% endif %}
             </div>
         </div>
@@ -484,7 +499,7 @@
                 <span>Select a customer to continue booking <strong>{{ return_item }}</strong></span>
             </div>
             {% endif %}
-            
+
             <div class="search-header">
                 <h1 class="search-title">Select Customer</h1>
                 <p class="search-subtitle">
@@ -495,13 +510,10 @@
                     {% endif %}
                 </p>
             </div>
-            
+
             <div class="customer-search-box">
-                <input type="text" 
-                       x-model="searchQuery" 
-                       @input="searchCustomers()"
-                       placeholder="Search by name, phone, or email..." 
-                       class="search-input">
+                <input type="text" x-model="searchQuery" @input="searchCustomers()"
+                    placeholder="Search by name, phone, or email..." class="search-input">
                 <button @click="searchCustomers()" class="search-btn">
                     <i class="fas fa-search"></i> Search
                 </button>
@@ -529,7 +541,9 @@
                                     <div class="stat-label">Bookings</div>
                                 </div>
                                 <div class="stat-item">
-                                    <div class="stat-value" x-text="customer.last_booking_date ? new Date(customer.last_booking_date).toLocaleDateString() : 'New'"></div>
+                                    <div class="stat-value"
+                                        x-text="customer.last_booking_date ? new Date(customer.last_booking_date).toLocaleDateString() : 'New'">
+                                    </div>
                                     <div class="stat-label">Last Booking</div>
                                 </div>
                             </div>
@@ -557,7 +571,8 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Address</label>
-                            <input type="text" x-model="newCustomer.address_line1" class="form-input" placeholder="Address Line 1">
+                            <input type="text" x-model="newCustomer.address_line1" class="form-input"
+                                placeholder="Address Line 1">
                         </div>
                         <div class="form-group">
                             <label class="form-label">City</label>
@@ -572,7 +587,8 @@
                         <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem;">
                             <i class="fas fa-save"></i> Create Customer
                         </button>
-                        <button type="button" @click="showNewCustomerForm = false" class="btn btn-outline" style="width: auto; padding: 0.75rem 2rem;">
+                        <button type="button" @click="showNewCustomerForm = false" class="btn btn-outline"
+                            style="width: auto; padding: 0.75rem 2rem;">
                             Cancel
                         </button>
                     </div>
@@ -601,7 +617,8 @@
                         <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem;">
                             <i class="fas fa-save"></i> Update Customer
                         </button>
-                        <button type="button" @click="showEditCustomerForm = false" class="btn btn-outline" style="width: auto; padding: 0.75rem 2rem;">
+                        <button type="button" @click="showEditCustomerForm = false" class="btn btn-outline"
+                            style="width: auto; padding: 0.75rem 2rem;">
                             Cancel
                         </button>
                     </div>
@@ -688,17 +705,19 @@
                 <div style="margin-top: 1rem; padding: 1rem; background: var(--background); border-radius: 8px;">
                     <h4 style="margin: 0 0 0.5rem 0;">Contact Information</h4>
                     {% if customer.mobile_number %}
-                    <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-phone"></i> {{ customer.mobile_number }}</p>
+                    <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-phone"></i> {{
+                        customer.mobile_number }}</p>
                     {% endif %}
                     {% if customer.email_id %}
-                    <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-envelope"></i> {{ customer.email_id }}</p>
+                    <p style="margin: 0.25rem 0; color: var(--text-secondary);"><i class="fas fa-envelope"></i> {{
+                        customer.email_id }}</p>
                     {% endif %}
                 </div>
             </div>
 
             <div class="bookings-section">
                 <h3 class="section-title">Recent Bookings</h3>
-                
+
                 {% if customer_bookings %}
                 {% for booking in customer_bookings %}
                 <div class="booking-item" @click="viewBookingDetails('{{ booking.name }}')" style="cursor: pointer;">
@@ -707,7 +726,8 @@
                         <div class="booking-meta">
                             {{ booking.item_count }} items • {{ booking.posting_date.strftime('%d %b %Y') }}
                             {% if booking.earliest_rental_date %}
-                            • Rental: {{ booking.earliest_rental_date.strftime('%d %b') }} - {{ booking.latest_rental_date.strftime('%d %b') }}
+                            • Rental: {{ booking.earliest_rental_date.strftime('%d %b') }} - {{
+                            booking.latest_rental_date.strftime('%d %b') }}
                             {% endif %}
                         </div>
                     </div>
@@ -737,83 +757,83 @@
 
 <!-- Pass return context to JavaScript -->
 <script>
-window.returnContext = {
-    return_to: '{{ return_to or "" }}',
-    return_item: '{{ return_item or "" }}'
-};
+    window.returnContext = {
+        return_to: '{{ return_to or "" }}',
+        return_item: '{{ return_item or "" }}'
+    };
 </script>
 
 {% if mode == 'view' %}
 <script>
-// Pass customer data to JavaScript
-window.currentCustomer = {
-    name: '{{ customer.name }}',
-    customer_name: '{{ customer.customer_name }}',
-    mobile_number: '{{ customer.mobile_number or "" }}',
-    email_id: '{{ customer.email_id or "" }}'
-};
+    // Pass customer data to JavaScript
+    window.currentCustomer = {
+        name: '{{ customer.name }}',
+        customer_name: '{{ customer.customer_name }}',
+        mobile_number: '{{ customer.mobile_number or "" }}',
+        email_id: '{{ customer.email_id or "" }}'
+    };
 </script>
 {% endif %}
 
 <script>
-function profilePage() {
-    return {
-        currentPage: 'profile',
-        searchQuery: '',
-        showNewCustomerForm: false,
-        showEditCustomerForm: false,
-        searchResults: [],
-        newCustomer: {
-            customer_name: '',
-            mobile_number: '',
-            email_id: '',
-            address_line1: '',
-            city: '',
-            state: '',
-            pincode: ''
-        },
-        editCustomer: {
-            name: '',
-            customer_name: '',
-            mobile_number: '',
-            email_id: ''
-        },
-        
-        async init() {
-            // Check if we need to redirect back to an item
-            this.checkReturnNavigation();
-        },
-        
-        checkReturnNavigation() {
-            // Check URL params first
-            if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
-                // We're in customer selection mode for a specific item
-                return;
-            }
-            
-            // Check session storage for return context
-            const returnToItem = sessionStorage.getItem('returnToItem');
-            const returnUrl = sessionStorage.getItem('returnUrl');
-            
-            // If we're viewing a customer profile and have return context, redirect back
-            if (window.currentCustomer && returnToItem && returnUrl) {
-                sessionStorage.removeItem('returnToItem');
-                sessionStorage.removeItem('returnUrl');
-                
-                // Redirect back to item with customer context
-                const customerId = window.currentCustomer.name;
-                const newUrl = `/portal/item?item=${returnToItem}&customer=${encodeURIComponent(customerId)}`;
-                
-                // Show a brief success message before redirecting
-                this.showSuccessAndRedirect(newUrl);
-                return;
-            }
-        },
-        
-        showSuccessAndRedirect(url) {
-            // Create and show success notification
-            const notification = document.createElement('div');
-            notification.style.cssText = `
+    function profilePage() {
+        return {
+            currentPage: 'profile',
+            searchQuery: '',
+            showNewCustomerForm: false,
+            showEditCustomerForm: false,
+            searchResults: [],
+            newCustomer: {
+                customer_name: '',
+                mobile_number: '',
+                email_id: '',
+                address_line1: '',
+                city: '',
+                state: '',
+                pincode: ''
+            },
+            editCustomer: {
+                name: '',
+                customer_name: '',
+                mobile_number: '',
+                email_id: ''
+            },
+
+            async init() {
+                // Check if we need to redirect back to an item
+                this.checkReturnNavigation();
+            },
+
+            checkReturnNavigation() {
+                // Check URL params first
+                if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
+                    // We're in customer selection mode for a specific item
+                    return;
+                }
+
+                // Check session storage for return context
+                const returnToItem = sessionStorage.getItem('returnToItem');
+                const returnUrl = sessionStorage.getItem('returnUrl');
+
+                // If we're viewing a customer profile and have return context, redirect back
+                if (window.currentCustomer && returnToItem && returnUrl) {
+                    sessionStorage.removeItem('returnToItem');
+                    sessionStorage.removeItem('returnUrl');
+
+                    // Redirect back to item with customer context
+                    const customerId = window.currentCustomer.name;
+                    const newUrl = `/portal/item?item=${returnToItem}&customer=${encodeURIComponent(customerId)}`;
+
+                    // Show a brief success message before redirecting
+                    this.showSuccessAndRedirect(newUrl);
+                    return;
+                }
+            },
+
+            showSuccessAndRedirect(url) {
+                // Create and show success notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
@@ -825,144 +845,147 @@ function profilePage() {
                 z-index: 1000;
                 font-weight: 600;
             `;
-            notification.innerHTML = `
+                notification.innerHTML = `
                 <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
                 Customer selected! Returning to item...
             `;
-            
-            document.body.appendChild(notification);
-            
-            // Redirect after 1.5 seconds
-            setTimeout(() => {
-                window.location.href = url;
-            }, 1500);
-        },
-        
-        async searchCustomers() {
-            if (this.searchQuery.length < 2) {
-                this.searchResults = [];
-                return;
-            }
-            
-            try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.search_customers',
-                    args: {
-                        query: this.searchQuery
-                    }
-                });
-                
-                this.searchResults = response.message || [];
-                
-            } catch (error) {
-                console.log('Error searching customers:', error);
-                this.searchResults = [];
-            }
-        },
-        
-        selectCustomer(customerId) {
-            // Check if we need to return to a specific item
-            if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
-                // Redirect to item with customer context
-                window.location.href = `/portal/item?item=${window.returnContext.return_item}&customer=${encodeURIComponent(customerId)}`;
-            } else {
-                // Normal customer selection flow
-                window.location.href = `/portal/profile?customer=${encodeURIComponent(customerId)}`;
-            }
-        },
-        
-        async createCustomer() {
-            if (!this.newCustomer.customer_name || !this.newCustomer.mobile_number) {
-                alert('Customer name and mobile number are required');
-                return;
-            }
-            
-            try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.create_customer',
-                    args: this.newCustomer
-                });
-                
-                if (response.message.success) {
-                    // Check if we need to return to a specific item
-                    if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
-                        // Redirect to item with new customer context
-                        window.location.href = `/portal/item?item=${window.returnContext.return_item}&customer=${encodeURIComponent(response.message.customer.name)}`;
+
+                document.body.appendChild(notification);
+
+                // Redirect after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 1500);
+            },
+
+            async searchCustomers() {
+                if (this.searchQuery.length < 2) {
+                    this.searchResults = [];
+                    return;
+                }
+
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.search_customers',
+                        args: {
+                            query: this.searchQuery
+                        }
+                    });
+
+                    this.searchResults = response.message || [];
+
+                } catch (error) {
+                    console.log('Error searching customers:', error);
+                    this.searchResults = [];
+                }
+            },
+
+            selectCustomer(customerId) {
+                // Check if we need to return to a specific item
+                if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
+                    // Redirect to item with customer context
+                    window.location.href = `/portal/item?item=${window.returnContext.return_item}&customer=${encodeURIComponent(customerId)}`;
+                } else {
+                    // Normal customer selection flow
+                    window.location.href = `/portal/profile?customer=${encodeURIComponent(customerId)}`;
+                }
+            },
+
+            async createCustomer() {
+                if (!this.newCustomer.customer_name || !this.newCustomer.mobile_number) {
+                    alert('Customer name and mobile number are required');
+                    return;
+                }
+
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.create_customer',
+                        args: this.newCustomer
+                    });
+
+                    if (response.message.success) {
+                        // Get customer ID from response (API returns customer_id directly)
+                        const customerId = response.message.customer_id || response.message.customer?.name;
+
+                        // Check if we need to return to a specific item
+                        if (window.returnContext.return_to === 'item' && window.returnContext.return_item) {
+                            // Redirect to item with new customer context
+                            window.location.href = `/portal/item?item=${window.returnContext.return_item}&customer=${encodeURIComponent(customerId)}`;
+                        } else {
+                            // Redirect to new customer profile
+                            window.location.href = `/portal/profile?customer=${customerId}`;
+                        }
                     } else {
-                        // Redirect to new customer profile
-                        window.location.href = `/portal/profile?customer=${response.message.customer.name}`;
+                        alert('Error creating customer: ' + response.message.message);
                     }
-                } else {
-                    alert('Error creating customer: ' + response.message.message);
+
+                } catch (error) {
+                    alert('Error creating customer: ' + error.message);
                 }
-                
-            } catch (error) {
-                alert('Error creating customer: ' + error.message);
-            }
-        },
-        
-        startNewBooking() {
-            // Navigate to item browsing with customer context
-            const customerId = '{{ customer.name if customer else "" }}';
-            if (customerId) {
-                // Store customer context globally for navigation
-                window.selectedCustomer = {
-                    id: customerId,
-                    name: '{{ customer.customer_name if customer else "" }}',
-                    mobile: '{{ customer.mobile_number if customer else "" }}'
-                };
-                window.location.href = `/portal/category?customer=${encodeURIComponent(customerId)}`;
-            } else {
-                window.location.href = '/portal/category';
-            }
-        },
-        
-        async editCustomerDetails() {
-            // Load current customer data for editing
-            if (window.currentCustomer) {
-                this.editCustomer = {
-                    name: window.currentCustomer.name,
-                    customer_name: window.currentCustomer.customer_name,
-                    mobile_number: window.currentCustomer.mobile_number,
-                    email_id: window.currentCustomer.email_id
-                };
-                this.showEditCustomerForm = true;
-            }
-        },
-        
-        async updateCustomer() {
-            if (!this.editCustomer.customer_name || !this.editCustomer.mobile_number) {
-                alert('Customer name and mobile number are required');
-                return;
-            }
-            
-            try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.update_customer',
-                    args: {
-                        customer_id: this.editCustomer.name,
-                        customer_name: this.editCustomer.customer_name,
-                        mobile_number: this.editCustomer.mobile_number,
-                        email_id: this.editCustomer.email_id
+            },
+
+            startNewBooking() {
+                // Navigate to item browsing with customer context
+                const customerId = '{{ customer.name if customer else "" }}';
+                if (customerId) {
+                    // Store customer context globally for navigation
+                    window.selectedCustomer = {
+                        id: customerId,
+                        name: '{{ customer.customer_name if customer else "" }}',
+                        mobile: '{{ customer.mobile_number if customer else "" }}'
+                    };
+                    window.location.href = `/portal/category?customer=${encodeURIComponent(customerId)}`;
+                } else {
+                    window.location.href = '/portal/category';
+                }
+            },
+
+            async editCustomerDetails() {
+                // Load current customer data for editing
+                if (window.currentCustomer) {
+                    this.editCustomer = {
+                        name: window.currentCustomer.name,
+                        customer_name: window.currentCustomer.customer_name,
+                        mobile_number: window.currentCustomer.mobile_number,
+                        email_id: window.currentCustomer.email_id
+                    };
+                    this.showEditCustomerForm = true;
+                }
+            },
+
+            async updateCustomer() {
+                if (!this.editCustomer.customer_name || !this.editCustomer.mobile_number) {
+                    alert('Customer name and mobile number are required');
+                    return;
+                }
+
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.update_customer',
+                        args: {
+                            customer_id: this.editCustomer.name,
+                            customer_name: this.editCustomer.customer_name,
+                            mobile_number: this.editCustomer.mobile_number,
+                            email_id: this.editCustomer.email_id
+                        }
+                    });
+
+                    if (response.message.success) {
+                        // Reload page to show updated data
+                        window.location.reload();
+                    } else {
+                        alert('Error updating customer: ' + response.message.message);
                     }
-                });
-                
-                if (response.message.success) {
-                    // Reload page to show updated data
-                    window.location.reload();
-                } else {
-                    alert('Error updating customer: ' + response.message.message);
+
+                } catch (error) {
+                    alert('Error updating customer: ' + error.message);
                 }
-                
-            } catch (error) {
-                alert('Error updating customer: ' + error.message);
+            },
+
+            viewBookingDetails(bookingId) {
+                window.location.href = `/portal/booking-confirmation?invoice=${encodeURIComponent(bookingId)}`;
             }
-        },
-        
-        viewBookingDetails(bookingId) {
-            window.location.href = `/portal/booking-confirmation?invoice=${encodeURIComponent(bookingId)}`;
         }
     }
-}
 </script>
 {% endblock %}

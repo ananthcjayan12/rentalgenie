@@ -5,759 +5,807 @@
 {% block head_include %}
 <meta name="description" content="{{ meta_description }}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 {% include "templates/includes/portal_styles.html" %}
 
 <style>
-/* Staff-specific styles */
-
-.staff-header {
-    background: linear-gradient(135deg, var(--primary-color), #9333EA);
-    color: white;
-    padding: 1.5rem 0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.header-content {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.header-title {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.header-title h1 {
-    margin: 0;
-    font-size: 1.8rem;
-    font-weight: 700;
-}
-
-.header-nav {
-    display: flex;
-    gap: 1rem;
-}
-
-.nav-btn {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s;
-}
-
-.nav-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    color: white;
-}
-
-.nav-btn.active {
-    background: white;
-    color: var(--primary-color);
-}
-
-.dashboard-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-}
-
-/* Dashboard Stats */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    border-left: 4px solid var(--primary-color);
-    transition: transform 0.3s;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-}
-
-.stat-card.warning {
-    border-left-color: var(--warning-color);
-}
-
-.stat-card.success {
-    border-left-color: var(--success-color);
-}
-
-.stat-card.info {
-    border-left-color: var(--info-color);
-}
-
-.stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.stat-label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Dashboard Content */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
-
-.dashboard-section {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.section-header {
-    background: var(--primary-color);
-    color: white;
-    padding: 1rem 1.5rem;
-    font-weight: 600;
-}
-
-.section-content {
-    padding: 1.5rem;
-}
-
-/* Booking Items */
-.booking-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    transition: background-color 0.3s;
-}
-
-.booking-item:hover {
-    background-color: #F8F9FA;
-}
-
-.booking-item:last-child {
-    border-bottom: none;
-}
-
-.booking-info {
-    flex: 1;
-}
-
-.booking-id {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.booking-customer {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-}
-
-.booking-amount {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.booking-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.3s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-primary {
-    background: var(--primary-color) !important;
-    color: white !important;
-    border: 2px solid var(--primary-color) !important;
-}
-
-.btn-primary:hover {
-    background: #6B21A8 !important;
-    border-color: #6B21A8 !important;
-    color: white !important;
-    transform: translateY(-1px);
-}
-
-.btn-success {
-    background: var(--success-color) !important;
-    color: white !important;
-    border: 2px solid var(--success-color) !important;
-}
-
-.btn-success:hover {
-    background: #059669 !important;
-    border-color: #059669 !important;
-    color: white !important;
-    transform: translateY(-1px);
-}
-
-.btn-warning {
-    background: var(--warning-color) !important;
-    color: white !important;
-    border: 2px solid var(--warning-color) !important;
-}
-
-.btn-warning:hover {
-    background: #D97706 !important;
-    border-color: #D97706 !important;
-    color: white !important;
-    transform: translateY(-1px);
-}
-
-.btn-info {
-    background: var(--info-color) !important;
-    color: white !important;
-    border: 2px solid var(--info-color) !important;
-}
-
-.btn-info:hover {
-    background: #2563EB !important;
-    border-color: #2563EB !important;
-    color: white !important;
-    transform: translateY(-1px);
-}
-
-.btn-sm {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8rem;
-}
-
-/* Status Badges */
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-draft {
-    background: #FEF3C7;
-    color: #92400E;
-}
-
-.status-advance-collected {
-    background: #DBEAFE;
-    color: #1E40AF;
-}
-
-.status-delivered {
-    background: #D1FAE5;
-    color: #065F46;
-}
-
-.status-completed {
-    background: #F3E8FF;
-    color: #6B21A8;
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-}
-
-.empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-}
-
-/* Modal Styles */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.modal-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--text-secondary);
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 1rem;
-    transition: border-color 0.3s;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary-color);
-}
-
-.form-text {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
-}
-
-/* Alert Messages */
-.alert {
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    font-weight: 500;
-}
-
-.alert-success {
-    background: #D1FAE5;
-    color: #065F46;
-    border: 1px solid #10B981;
-}
-
-.alert-error {
-    background: #FEE2E2;
-    color: #991B1B;
-    border: 1px solid #EF4444;
-}
-
-.alert-warning {
-    background: #FEF3C7;
-    color: #92400E;
-    border: 1px solid #F59E0B;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
+    /* Modern SaaS Variables */
+    :root {
+        --bg-page: #F3F4F6;
+        --bg-card: #FFFFFF;
+        --text-main: #111827;
+        --text-muted: #6B7280;
+        --primary: #7C3AED;
+        --primary-dark: #6D28D9;
+        --primary-light: #EDE9FE;
+        --success: #10B981;
+        --success-light: #D1FAE5;
+        --warning: #F59E0B;
+        --warning-light: #FEF3C7;
+        --info: #3B82F6;
+        --info-light: #DBEAFE;
+        --danger: #EF4444;
+        --danger-light: #FEE2E2;
+        --border-subtle: #E5E7EB;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
     }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
+
+    body {
+        background-color: var(--bg-page);
+        font-family: 'Inter', sans-serif;
+        color: var(--text-main);
     }
-    
-    .header-nav {
-        flex-direction: column;
-        gap: 0.5rem;
+
+    /* Dashboard Container */
+    .dashboard-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 2rem;
     }
-    
-    .booking-item {
-        flex-direction: column;
+
+    /* Modern Header */
+    .saas-header {
+        display: flex;
+        justify-content: space-between;
         align-items: flex-start;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
         gap: 1rem;
     }
-    
-    .booking-actions {
-        width: 100%;
-        justify-content: flex-end;
+
+    .saas-title h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -0.025em;
+        margin: 0;
     }
-}
+
+    .saas-subtitle {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-saas {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background-color: white;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-main);
+        font-weight: 500;
+        font-size: 0.875rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-saas:hover {
+        background-color: #F9FAFB;
+        border-color: #D1D5DB;
+    }
+
+    .btn-saas i {
+        margin-right: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .btn-primary-saas {
+        background-color: var(--primary);
+        border-color: transparent;
+        color: white;
+    }
+
+    .btn-primary-saas:hover {
+        background-color: var(--primary-dark);
+        color: white;
+    }
+
+    .btn-primary-saas i {
+        color: white;
+    }
+
+    .btn-success-saas {
+        background-color: var(--success);
+        border-color: transparent;
+        color: white;
+    }
+
+    .btn-success-saas:hover {
+        background-color: #059669;
+        color: white;
+    }
+
+    .btn-success-saas i {
+        color: white;
+    }
+
+    .btn-warning-saas {
+        background-color: var(--warning);
+        border-color: transparent;
+        color: white;
+    }
+
+    .btn-warning-saas:hover {
+        background-color: #D97706;
+        color: white;
+    }
+
+    .btn-warning-saas i {
+        color: white;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .stat-card.active {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .stat-icon-wrapper {
+        padding: 0.5rem;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+    }
+
+    .stat-value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .filter-select,
+    .filter-input {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        font-size: 0.875rem;
+        min-width: 180px;
+        background: white;
+    }
+
+    .filter-select:focus,
+    .filter-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Card Section */
+    .card-section {
+        background: white;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #ffffff;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card-body {
+        padding: 0;
+    }
+
+    /* Orders Table */
+    .orders-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .orders-table th {
+        background-color: #F9FAFB;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .orders-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--text-main);
+        font-size: 0.875rem;
+        vertical-align: middle;
+    }
+
+    .orders-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .orders-table tr:hover {
+        background-color: #F9FAFB;
+    }
+
+    .order-id {
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .customer-name {
+        font-weight: 500;
+    }
+
+    .customer-phone {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    /* Status Badge */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-draft {
+        background: var(--warning-light);
+        color: #92400E;
+    }
+
+    .status-confirmed {
+        background: var(--info-light);
+        color: #1E40AF;
+    }
+
+    .status-out-for-rental {
+        background: var(--success-light);
+        color: #065F46;
+    }
+
+    .status-completed {
+        background: var(--primary-light);
+        color: var(--primary-dark);
+    }
+
+    /* Action Buttons */
+    .action-btns {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-subtle);
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-muted);
+    }
+
+    .btn-icon:hover {
+        background: var(--bg-page);
+        color: var(--text-main);
+    }
+
+    .btn-icon.print:hover {
+        color: var(--info);
+        border-color: var(--info);
+    }
+
+    .btn-icon.view:hover {
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .btn-icon.deliver:hover {
+        color: var(--success);
+        border-color: var(--success);
+    }
+
+    .btn-icon.return:hover {
+        color: var(--warning);
+        border-color: var(--warning);
+    }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: var(--radius-lg);
+        max-width: 500px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-md);
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-muted);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 500;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-main);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        font-size: 0.875rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Alert */
+    .alert {
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+    }
+
+    .alert-success {
+        background: var(--success-light);
+        color: #065F46;
+        border: 1px solid var(--success);
+    }
+
+    .alert-error {
+        background: var(--danger-light);
+        color: #991B1B;
+        border: 1px solid var(--danger);
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-select,
+        .filter-input {
+            width: 100%;
+        }
+
+        .orders-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .saas-header {
+            flex-direction: column;
+        }
+
+        .header-actions {
+            width: 100%;
+            flex-direction: column;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block page_content %}
-<div x-data="staffDashboard()">
-    <!-- Header -->
-    <div class="staff-header">
-        <div class="header-content">
-            <div class="header-title">
-                <i class="fas fa-tachometer-alt"></i>
-                <h1>Staff Dashboard</h1>
+<div x-data="staffDashboard()" x-init="init()">
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="saas-header">
+            <div class="saas-title">
+                <h1><i class="fas fa-tachometer-alt" style="color: var(--primary);"></i> Staff Dashboard</h1>
+                <div class="saas-subtitle">Manage bookings, deliveries, and returns</div>
             </div>
-            <div class="header-nav">
-                <a href="/portal/staff" class="nav-btn" :class="{ 'active': view === 'dashboard' }">
-                    <i class="fas fa-home"></i> Dashboard
-                </a>
-                <a href="/portal" class="nav-btn">
+
+            <div class="header-actions">
+                <a href="/portal" class="btn-saas">
                     <i class="fas fa-store"></i> Portal
                 </a>
-                <a href="/app" class="nav-btn">
+                <a href="/portal/owner-dashboard" class="btn-saas">
+                    <i class="fas fa-chart-pie"></i> Owner Dashboard
+                </a>
+                <a href="/app" class="btn-saas">
                     <i class="fas fa-cog"></i> System
                 </a>
             </div>
-        </div>
-    </div>
+        </header>
 
-    <div class="dashboard-container">
         <!-- Alert Messages -->
         <div x-show="alertMessage" x-text="alertMessage" :class="alertType" class="alert"></div>
 
-        {% if view == 'dashboard' %}
-        <!-- Dashboard View -->
+        <!-- Stats Cards - Clickable Filters -->
         <div class="stats-grid">
-            <div class="stat-card warning">
-                <div class="stat-value">{{ dashboard_stats.pending_advance or 0 }}</div>
-                <div class="stat-label">Pending Advance</div>
-            </div>
-            <div class="stat-card info">
-                <div class="stat-value">{{ dashboard_stats.pending_delivery or 0 }}</div>
-                <div class="stat-label">Pending Delivery</div>
-            </div>
-            <div class="stat-card success">
-                <div class="stat-value">{{ dashboard_stats.pending_return or 0 }}</div>
-                <div class="stat-label">Pending Returns</div>
-            </div>
-            <div class="stat-card">
+            <div class="stat-card" :class="{ 'active': statusFilter === '' }" @click="filterByStatus('')">
+                <div class="stat-header">
+                    <span class="stat-label">Total Active</span>
+                    <div class="stat-icon-wrapper"
+                        style="background-color: var(--primary-light); color: var(--primary);">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
                 <div class="stat-value">{{ dashboard_stats.total_active or 0 }}</div>
-                <div class="stat-label">Total Active</div>
-            </div>
-        </div>
-
-        <div class="dashboard-grid">
-            <!-- Pending Deliveries -->
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <i class="fas fa-truck"></i> Pending Deliveries
-                </div>
-                <div class="section-content">
-                    {% if pending_deliveries %}
-                        {% for booking in pending_deliveries %}
-                        <div class="booking-item">
-                            <div class="booking-info">
-                                <div class="booking-id">#{{ booking.name }}</div>
-                                <div class="booking-customer">{{ booking.customer_name }}</div>
-                                <div class="booking-amount">
-                                    Balance: ₹{{ "%.2f"|format(booking.balance_due or 0) }} | 
-                                    Caution: ₹{{ "%.2f"|format(booking.caution_deposit_amount or 0) }}
-                                </div>
-                            </div>
-                            <div class="booking-actions">
-                                <button @click="processDelivery('{{ booking.name }}')" class="btn btn-success btn-sm">
-                                    <i class="fas fa-check"></i> Deliver
-                                </button>
-                                <a href="/portal/staff?view=booking&booking={{ booking.name }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-truck"></i>
-                            <p>No pending deliveries</p>
-                        </div>
-                    {% endif %}
-                </div>
             </div>
 
-            <!-- Pending Returns -->
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <i class="fas fa-undo"></i> Pending Returns
-                </div>
-                <div class="section-content">
-                    {% if pending_returns %}
-                        {% for booking in pending_returns %}
-                        <div class="booking-item">
-                            <div class="booking-info">
-                                <div class="booking-id">#{{ booking.name }}</div>
-                                <div class="booking-customer">{{ booking.customer_name }}</div>
-                                <div class="booking-amount">
-                                    Caution: ₹{{ "%.2f"|format(booking.caution_deposit_collected or 0) }}
-                                </div>
-                            </div>
-                            <div class="booking-actions">
-                                <button @click="processReturn('{{ booking.name }}')" class="btn btn-warning btn-sm">
-                                    <i class="fas fa-undo"></i> Return
-                                </button>
-                                <a href="/portal/staff?view=booking&booking={{ booking.name }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-undo"></i>
-                            <p>No pending returns</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Pending Advance Collection -->
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <i class="fas fa-money-bill-wave"></i> Pending Advance Collection
-                </div>
-                <div class="section-content">
-                    {% if pending_advance %}
-                        {% for booking in pending_advance %}
-                        <div class="booking-item">
-                            <div class="booking-info">
-                                <div class="booking-id">#{{ booking.name }}</div>
-                                <div class="booking-customer">{{ booking.customer_name }}</div>
-                                <div class="booking-amount">
-                                    Total: ₹{{ "%.2f"|format(booking.total or 0) }}
-                                </div>
-                            </div>
-                            <div class="booking-actions">
-                                <button @click="collectAdvance('{{ booking.name }}')" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-money-bill-wave"></i> Collect Advance
-                                </button>
-                                <a href="/portal/staff?view=booking&booking={{ booking.name }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <p>No pending advance collection</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Bookings -->
-        <div class="dashboard-section" style="margin-top: 2rem;">
-            <div class="section-header">
-                <i class="fas fa-clock"></i> Recent Bookings
-            </div>
-            <div class="section-content">
-                {% if recent_bookings %}
-                    {% for booking in recent_bookings %}
-                    <div class="booking-item">
-                        <div class="booking-info">
-                            <div class="booking-id">#{{ booking.name }}</div>
-                            <div class="booking-customer">{{ booking.customer_name }}</div>
-                            <div class="booking-amount">
-                                Total: ₹{{ "%.2f"|format(booking.total) }} | 
-                                {{ booking.item_count }} items
-                            </div>
-                        </div>
-                        <div class="booking-actions">
-                            <span class="status-badge status-{{ booking.booking_status.lower().replace(' ', '-') }}">
-                                {{ booking.booking_status or 'Draft' }}
-                            </span>
-                            <a href="/portal/staff?view=booking&booking={{ booking.name }}" class="btn btn-info btn-sm">
-                                <i class="fas fa-eye"></i> View
-                            </a>
-                        </div>
+            <div class="stat-card" :class="{ 'active': statusFilter === 'pending_advance' }"
+                @click="filterByStatus('pending_advance')">
+                <div class="stat-header">
+                    <span class="stat-label">Pending Advance</span>
+                    <div class="stat-icon-wrapper"
+                        style="background-color: var(--warning-light); color: var(--warning);">
+                        <i class="fas fa-money-bill-wave"></i>
                     </div>
+                </div>
+                <div class="stat-value">{{ dashboard_stats.pending_advance or 0 }}</div>
+            </div>
+
+            <div class="stat-card" :class="{ 'active': statusFilter === 'pending_delivery' }"
+                @click="filterByStatus('pending_delivery')">
+                <div class="stat-header">
+                    <span class="stat-label">Ready for Delivery</span>
+                    <div class="stat-icon-wrapper" style="background-color: var(--info-light); color: var(--info);">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                </div>
+                <div class="stat-value">{{ dashboard_stats.pending_delivery or 0 }}</div>
+            </div>
+
+            <div class="stat-card" :class="{ 'active': statusFilter === 'pending_return' }"
+                @click="filterByStatus('pending_return')">
+                <div class="stat-header">
+                    <span class="stat-label">Pending Returns</span>
+                    <div class="stat-icon-wrapper"
+                        style="background-color: var(--success-light); color: var(--success);">
+                        <i class="fas fa-undo"></i>
+                    </div>
+                </div>
+                <div class="stat-value">{{ dashboard_stats.pending_return or 0 }}</div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <span class="filter-label">Status</span>
+                <select class="filter-select" x-model="statusFilter" @change="applyFilters()">
+                    <option value="">All Statuses</option>
+                    <option value="pending_advance">Pending Advance</option>
+                    <option value="pending_delivery">Confirmed (Ready for Delivery)</option>
+                    <option value="pending_return">Out for Rental</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">Owner</span>
+                <select class="filter-select" x-model="ownerFilter" @change="applyFilters()">
+                    <option value="">All Owners</option>
+                    {% for owner in all_owners %}
+                    <option value="{{ owner.name }}">{{ owner.owner_name }}</option>
                     {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-calendar"></i>
-                        <p>No recent bookings</p>
-                    </div>
-                {% endif %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">Search</span>
+                <input type="text" class="filter-input" placeholder="Customer, Order ID..." x-model="searchQuery"
+                    @input="applyFilters()">
+            </div>
+
+            <div class="filter-group" style="margin-left: auto;">
+                <span class="filter-label">&nbsp;</span>
+                <button class="btn-saas" @click="resetFilters()">
+                    <i class="fas fa-times"></i> Clear Filters
+                </button>
             </div>
         </div>
 
-        {% elif view == 'booking' and booking_summary %}
-        <!-- Booking Detail View -->
-        <div class="dashboard-section">
-            <div class="section-header">
-                <i class="fas fa-file-invoice"></i> Booking #{{ booking_id }}
-                {% if customer %}
-                    - {{ customer.customer_name }}
-                {% endif %}
+        <!-- Orders Table -->
+        <div class="card-section">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-list" style="color: var(--primary);"></i>
+                    All Orders
+                    <span style="font-weight: 400; color: var(--text-muted);"
+                        x-text="'(' + filteredOrders.length + ' results)'"></span>
+                </div>
             </div>
-            <div class="section-content">
-                <div class="booking-summary">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                        <div>
-                            <strong>Status:</strong>
-                            <span class="status-badge status-{{ (booking_summary.booking_status or 'draft').lower().replace(' ', '-') }}">
-                                {{ booking_summary.booking_status or 'Draft' }}
-                            </span>
-                        </div>
-                        <div><strong>Total Amount:</strong> ₹{{ "%.2f"|format(booking_summary.total_rental_amount) }}</div>
-                        <div><strong>Advance Paid:</strong> ₹{{ "%.2f"|format(booking_summary.advance_amount or 0) }}</div>
-                        <div><strong>Balance Due:</strong> ₹{{ "%.2f"|format(booking_summary.remaining_balance or 0) }}</div>
-                        <div><strong>Caution Deposit:</strong> ₹{{ "%.2f"|format(booking_summary.caution_deposit_due or 0) }}</div>
-                    </div>
+            <div class="card-body" style="overflow-x: auto;">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="order in filteredOrders" :key="order.name">
+                            <tr>
+                                <td>
+                                    <span class="order-id" x-text="'#' + order.name"></span>
+                                </td>
+                                <td>
+                                    <div class="customer-name" x-text="order.customer_name"></div>
+                                    <div class="customer-phone" x-text="order.mobile_number || ''"></div>
+                                </td>
+                                <td x-text="order.item_count + ' items'"></td>
+                                <td x-text="'₹' + (order.total || 0).toLocaleString()"></td>
+                                <td>
+                                    <span class="status-badge"
+                                        :class="'status-' + (order.booking_status || 'draft').toLowerCase().replace(/ /g, '-')"
+                                        x-text="order.booking_status || 'Draft'"></span>
+                                </td>
+                                <td x-text="formatDate(order.posting_date)"></td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn-icon print" @click="printInvoice(order.name)"
+                                            title="Print Invoice">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                        <a :href="'/portal/staff?view=booking&booking=' + order.name"
+                                            class="btn-icon view" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button x-show="!order.booking_status || order.booking_status === ''"
+                                            class="btn-icon" style="color: var(--primary);"
+                                            @click="collectAdvance(order.name)" title="Collect Advance">
+                                            <i class="fas fa-money-check-alt"></i>
+                                        </button>
+                                        <button x-show="order.booking_status === 'Confirmed'" class="btn-icon deliver"
+                                            @click="processDelivery(order.name)" title="Process Delivery">
+                                            <i class="fas fa-truck"></i>
+                                        </button>
+                                        <button x-show="order.booking_status === 'Out for Rental'"
+                                            class="btn-icon return" @click="processReturn(order.name)"
+                                            title="Process Return">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
 
-                    <!-- Action Buttons -->
-                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
-                        {% if not booking_summary.booking_status or booking_summary.booking_status == '' %}
-                            <button @click="collectAdvance('{{ booking_id }}')" class="btn btn-primary">
-                                <i class="fas fa-money-check-alt"></i> Collect Advance
-                            </button>
-                        {% elif booking_summary.booking_status == 'Confirmed' %}
-                            <button @click="processDelivery('{{ booking_id }}')" class="btn btn-success">
-                                <i class="fas fa-truck"></i> Process Delivery
-                            </button>
-                        {% elif booking_summary.booking_status == 'Out for Rental' %}
-                            <button @click="processReturn('{{ booking_id }}')" class="btn btn-warning">
-                                <i class="fas fa-undo"></i> Process Return
-                            </button>
-                        {% endif %}
-                        <a href="/app/sales-invoice/{{ booking_id }}" target="_blank" class="btn btn-info">
-                            <i class="fas fa-external-link-alt"></i> View in System
-                        </a>
-                        <a href="/portal/staff" class="btn btn-primary">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
-                        </a>
-                    </div>
-
-                    <!-- Items -->
-                    {% if booking_summary.booking_items %}
-                    <h3>Items</h3>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background: var(--background);">
-                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border-color);">Item</th>
-                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid var(--border-color);">Quantity</th>
-                                    <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid var(--border-color);">Rate</th>
-                                    <th style="padding: 0.75rem; text-align: right; border-bottom: 2px solid var(--border-color);">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in booking_summary.booking_items %}
-                                <tr>
-                                    <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">{{ item.item_name }}</td>
-                                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid var(--border-color);">{{ item.qty }}</td>
-                                    <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border-color);">₹{{ "%.2f"|format(item.rate) }}</td>
-                                    <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border-color);">₹{{ "%.2f"|format(item.amount) }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% endif %}
+                <div x-show="filteredOrders.length === 0" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No orders found matching your filters</p>
                 </div>
             </div>
         </div>
-        {% elif view == 'booking' %}
-        <!-- Booking Detail View - No summary found -->
-        <div class="dashboard-section">
-            <div class="section-header">
-                <i class="fas fa-exclamation-triangle"></i> Booking Not Found
-            </div>
-            <div class="section-content">
-                <div class="alert alert-warning">
-                    {% if error_message %}
-                        {{ error_message }}
-                    {% else %}
-                        Booking #{{ booking_id }} could not be loaded. It may not exist or you may not have permission to view it.
-                    {% endif %}
-                </div>
-                <a href="/portal/staff" class="btn btn-primary">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-            </div>
-        </div>
-        {% endif %}
     </div>
 
     <!-- Delivery Modal -->
-    <div class="modal" x-show="showDeliveryModal" x-cloak>
+    <div class="modal-overlay" x-show="showDeliveryModal" x-cloak @click.self="showDeliveryModal = false">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Process Delivery</h3>
+                <h3 class="modal-title"><i class="fas fa-truck" style="color: var(--success);"></i> Process Delivery
+                </h3>
                 <button @click="showDeliveryModal = false" class="modal-close">&times;</button>
             </div>
             <form @submit.prevent="confirmDelivery()">
-                <div class="form-group">
-                    <label class="form-label">Balance Amount (₹)</label>
-                    <input type="number" step="0.01" x-model="deliveryForm.balanceAmount" class="form-control" required>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Balance Amount (₹)</label>
+                        <input type="number" step="0.01" x-model="deliveryForm.balanceAmount" class="form-control"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Caution Deposit (₹)</label>
+                        <input type="number" step="0.01" x-model="deliveryForm.cautionDeposit" class="form-control"
+                            min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Mode</label>
+                        <select x-model="deliveryForm.paymentMode" class="form-control" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea x-model="deliveryForm.notes" class="form-control" rows="2"></textarea>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Caution Deposit (₹)</label>
-                    <input type="number" step="0.01" x-model="deliveryForm.cautionDeposit" class="form-control" min="0" placeholder="Enter caution deposit amount">
-                    <small class="form-text">Enter the caution deposit amount to collect (can be set as needed)</small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Payment Mode</label>
-                    <select x-model="deliveryForm.paymentMode" class="form-control" required>
-                        <option value="Cash">Cash</option>
-                        <option value="Card">Card</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Notes (Optional)</label>
-                    <textarea x-model="deliveryForm.notes" class="form-control" rows="3"></textarea>
-                </div>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" @click="showDeliveryModal = false" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" :disabled="isProcessing" class="btn btn-success">
-                        <span x-show="!isProcessing">Confirm Delivery</span>
+                <div class="modal-footer">
+                    <button type="button" @click="showDeliveryModal = false" class="btn-saas">Cancel</button>
+                    <button type="submit" :disabled="isProcessing" class="btn-saas btn-success-saas">
+                        <span x-show="!isProcessing"><i class="fas fa-check"></i> Confirm Delivery</span>
                         <span x-show="isProcessing">Processing...</span>
                     </button>
                 </div>
@@ -766,39 +814,43 @@
     </div>
 
     <!-- Return Modal -->
-    <div class="modal" x-show="showReturnModal" x-cloak>
+    <div class="modal-overlay" x-show="showReturnModal" x-cloak @click.self="showReturnModal = false">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Process Return</h3>
+                <h3 class="modal-title"><i class="fas fa-undo" style="color: var(--warning);"></i> Process Return</h3>
                 <button @click="showReturnModal = false" class="modal-close">&times;</button>
             </div>
             <form @submit.prevent="confirmReturn()">
-                <div class="form-group">
-                    <label class="form-label">Caution Deposit Refund (₹)</label>
-                    <input type="number" step="0.01" x-model="returnForm.refundAmount" class="form-control" required>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Caution Deposit Refund (₹)</label>
+                        <input type="number" step="0.01" x-model="returnForm.refundAmount" class="form-control"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Deduction Amount (₹)</label>
+                        <input type="number" step="0.01" x-model="returnForm.deductionAmount" class="form-control"
+                            min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Deduction Reason</label>
+                        <input type="text" x-model="returnForm.deductionReason" class="form-control"
+                            placeholder="e.g., Damage, Late return">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Mode</label>
+                        <select x-model="returnForm.paymentMode" class="form-control" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Deduction Amount (₹)</label>
-                    <input type="number" step="0.01" x-model="returnForm.deductionAmount" class="form-control" min="0" placeholder="0.00">
-                    <small class="form-text">Amount to deduct for damages/cleaning</small>
-                </div>
-                <div class="form-group" x-show="returnForm.deductionAmount > 0">
-                    <label class="form-label">Deduction Reason</label>
-                    <textarea x-model="returnForm.deductionReason" class="form-control" rows="2" placeholder="Reason for deduction (damage, cleaning, etc.)"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Payment Mode</label>
-                    <select x-model="returnForm.paymentMode" class="form-control" required>
-                        <option value="Cash">Cash</option>
-                        <option value="Card">Card</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" @click="showReturnModal = false" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" :disabled="isProcessing" class="btn btn-warning">
-                        <span x-show="!isProcessing">Confirm Return</span>
+                <div class="modal-footer">
+                    <button type="button" @click="showReturnModal = false" class="btn-saas">Cancel</button>
+                    <button type="submit" :disabled="isProcessing" class="btn-saas btn-warning-saas">
+                        <span x-show="!isProcessing"><i class="fas fa-check"></i> Confirm Return</span>
                         <span x-show="isProcessing">Processing...</span>
                     </button>
                 </div>
@@ -806,36 +858,34 @@
         </div>
     </div>
 
-    <!-- Advance Collection Modal -->
-    <div class="modal" x-show="showAdvanceModal" x-cloak>
+    <!-- Advance Modal -->
+    <div class="modal-overlay" x-show="showAdvanceModal" x-cloak @click.self="showAdvanceModal = false">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Collect Advance Payment</h3>
+                <h3 class="modal-title"><i class="fas fa-money-check-alt" style="color: var(--primary);"></i> Collect
+                    Advance</h3>
                 <button @click="showAdvanceModal = false" class="modal-close">&times;</button>
             </div>
             <form @submit.prevent="confirmAdvance()">
-                <div class="form-group">
-                    <label class="form-label">Total Booking Amount</label>
-                    <input type="number" step="0.01" :value="advanceForm.totalAmount" class="form-control" readonly>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Advance Amount (₹)</label>
+                        <input type="number" step="0.01" x-model="advanceForm.amount" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Mode</label>
+                        <select x-model="advanceForm.paymentMode" class="form-control" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Advance Amount (₹)</label>
-                    <input type="number" step="0.01" x-model="advanceForm.advanceAmount" class="form-control" min="0" required>
-                    <small class="form-text">Amount to collect now (optional - can be 0)</small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Payment Mode</label>
-                    <select x-model="advanceForm.paymentMode" class="form-control" required>
-                        <option value="Cash">Cash</option>
-                        <option value="Card">Card</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" @click="showAdvanceModal = false" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" :disabled="isProcessing" class="btn btn-primary">
-                        <span x-show="!isProcessing">Confirm Booking</span>
+                <div class="modal-footer">
+                    <button type="button" @click="showAdvanceModal = false" class="btn-saas">Cancel</button>
+                    <button type="submit" :disabled="isProcessing" class="btn-saas btn-primary-saas">
+                        <span x-show="!isProcessing"><i class="fas fa-check"></i> Collect Advance</span>
                         <span x-show="isProcessing">Processing...</span>
                     </button>
                 </div>
@@ -843,233 +893,212 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Nav -->
     {% include "templates/includes/bottom_nav.html" %}
 </div>
 
 <script>
-function staffDashboard() {
-    return {
-        currentPage: 'bookings',
-        view: '{{ view }}',
-        alertMessage: '',
-        alertType: 'alert-success',
-        isProcessing: false,
-        
-        // Modals
-        showDeliveryModal: false,
-        showReturnModal: false,
-        showAdvanceModal: false,
-        currentBookingId: '',
-        
-        // Forms
-        deliveryForm: {
-            balanceAmount: 0,
-            cautionDeposit: 0,
-            paymentMode: 'Cash',
-            notes: ''
-        },
-        
-        returnForm: {
-            refundAmount: 0,
-            deductionAmount: 0,
-            deductionReason: '',
-            paymentMode: 'Cash'
-        },
-        
-        advanceForm: {
-            totalAmount: 0,
-            advanceAmount: 0,
-            paymentMode: 'Cash'
-        },
-        
-        async processDelivery(bookingId) {
-            this.currentBookingId = bookingId;
-            
-            // Get booking payment summary to populate form
-            try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.get_booking_payment_summary',
-                    args: { booking_id: bookingId }
-                });
-                
-                if (response.message.success) {
-                    const summary = response.message.summary;
-                    this.deliveryForm.balanceAmount = summary.remaining_balance || 0;
-                    // Set caution deposit to current due amount, but allow staff to modify
-                    this.deliveryForm.cautionDeposit = summary.caution_deposit_due || 0;
+    // Pass data from server
+    const allOrders = {{ all_bookings | tojson if all_bookings else '[]' }};
+
+    function staffDashboard() {
+        return {
+            orders: allOrders,
+            filteredOrders: allOrders,
+            statusFilter: '',
+            ownerFilter: '',
+            searchQuery: '',
+
+            // Modals
+            showDeliveryModal: false,
+            showReturnModal: false,
+            showAdvanceModal: false,
+            currentBookingId: null,
+            isProcessing: false,
+
+            // Form data
+            deliveryForm: { balanceAmount: 0, cautionDeposit: 0, paymentMode: 'Cash', notes: '' },
+            returnForm: { refundAmount: 0, deductionAmount: 0, deductionReason: '', paymentMode: 'Cash' },
+            advanceForm: { amount: 0, paymentMode: 'Cash' },
+
+            // Alerts
+            alertMessage: '',
+            alertType: '',
+
+            init() {
+                this.applyFilters();
+            },
+
+            filterByStatus(status) {
+                this.statusFilter = status;
+                this.applyFilters();
+            },
+
+            applyFilters() {
+                let result = this.orders;
+
+                // Status filter
+                if (this.statusFilter === 'pending_advance') {
+                    result = result.filter(o => !o.booking_status || o.booking_status === '');
+                } else if (this.statusFilter === 'pending_delivery') {
+                    result = result.filter(o => o.booking_status === 'Confirmed');
+                } else if (this.statusFilter === 'pending_return') {
+                    result = result.filter(o => o.booking_status === 'Out for Rental');
+                } else if (this.statusFilter === 'completed') {
+                    result = result.filter(o => o.booking_status === 'Completed');
                 }
-            } catch (error) {
-                console.error('Error loading booking summary:', error);
-            }
-            
-            this.showDeliveryModal = true;
-        },
-        
-        async processReturn(bookingId) {
-            this.currentBookingId = bookingId;
-            
-            // Get booking payment summary to populate form
-            try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.get_booking_payment_summary',
-                    args: { booking_id: bookingId }
-                });
-                
-                if (response.message.success) {
-                    const summary = response.message.summary;
-                    this.returnForm.refundAmount = summary.remaining_caution_refund || 0;
-                    this.returnForm.deductionAmount = 0;
-                    this.returnForm.deductionReason = '';
+
+                // Owner filter
+                if (this.ownerFilter) {
+                    result = result.filter(o => o.third_party_owner === this.ownerFilter);
                 }
-            } catch (error) {
-                console.error('Error loading booking summary:', error);
-            }
-            
-            this.showReturnModal = true;
-        },
-        
-        async collectAdvance(bookingId) {
-            this.currentBookingId = bookingId;
-            
-            // Get booking details to populate form
-            try {
-                const response = await frappe.call({
-                    method: 'frappe.client.get',
-                    args: {
-                        doctype: 'Sales Invoice',
-                        name: bookingId
+
+                // Search
+                if (this.searchQuery) {
+                    const q = this.searchQuery.toLowerCase();
+                    result = result.filter(o =>
+                        (o.name && o.name.toLowerCase().includes(q)) ||
+                        (o.customer_name && o.customer_name.toLowerCase().includes(q)) ||
+                        (o.mobile_number && o.mobile_number.includes(q))
+                    );
+                }
+
+                this.filteredOrders = result;
+            },
+
+            resetFilters() {
+                this.statusFilter = '';
+                this.ownerFilter = '';
+                this.searchQuery = '';
+                this.filteredOrders = this.orders;
+            },
+
+            formatDate(dateStr) {
+                if (!dateStr) return '-';
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            },
+
+            // Print Invoice
+            printInvoice(bookingId) {
+                // Open custom print invoice page
+                window.open(`/portal/print-invoice?booking=${bookingId}`, '_blank');
+            },
+
+            // Collect Advance
+            collectAdvance(bookingId) {
+                this.currentBookingId = bookingId;
+                const order = this.orders.find(o => o.name === bookingId);
+                this.advanceForm.amount = order ? Math.round(order.total * 0.5) : 0;
+                this.showAdvanceModal = true;
+            },
+
+            async confirmAdvance() {
+                this.isProcessing = true;
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.collect_advance_payment',
+                        args: {
+                            booking_id: this.currentBookingId,
+                            advance_amount: this.advanceForm.amount,
+                            payment_mode: this.advanceForm.paymentMode
+                        }
+                    });
+
+                    if (response.message.success) {
+                        this.showAlert('Advance collected successfully!', 'alert-success');
+                        this.showAdvanceModal = false;
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        this.showAlert(response.message.message, 'alert-error');
                     }
-                });
-                
-                if (response.message) {
-                    this.advanceForm.totalAmount = response.message.total || 0;
-                    this.advanceForm.advanceAmount = 0; // Default to 0, user can enter amount
+                } catch (error) {
+                    this.showAlert('Error: ' + error.message, 'alert-error');
+                } finally {
+                    this.isProcessing = false;
                 }
-            } catch (error) {
-                console.error('Error loading booking details:', error);
-            }
-            
-            this.showAdvanceModal = true;
-        },
-        
-        async confirmDelivery() {
-            if (this.isProcessing) return;
-            
-            this.isProcessing = true;
-            this.alertMessage = '';
-            
-            try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.collect_balance_and_caution_deposit',
-                    args: {
-                        booking_id: this.currentBookingId,
-                        balance_amount: this.deliveryForm.balanceAmount,
-                        caution_deposit_amount: this.deliveryForm.cautionDeposit,
-                        payment_mode: this.deliveryForm.paymentMode
+            },
+
+            // Process Delivery
+            processDelivery(bookingId) {
+                this.currentBookingId = bookingId;
+                const order = this.orders.find(o => o.name === bookingId);
+                this.deliveryForm.balanceAmount = order ? (order.balance_due || 0) : 0;
+                this.deliveryForm.cautionDeposit = order ? (order.caution_deposit_amount || 0) : 0;
+                this.showDeliveryModal = true;
+            },
+
+            async confirmDelivery() {
+                this.isProcessing = true;
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.collect_balance_and_caution',
+                        args: {
+                            booking_id: this.currentBookingId,
+                            balance_amount: this.deliveryForm.balanceAmount,
+                            caution_deposit_amount: this.deliveryForm.cautionDeposit,
+                            payment_mode: this.deliveryForm.paymentMode
+                        }
+                    });
+
+                    if (response.message.success) {
+                        this.showAlert('Delivery processed successfully!', 'alert-success');
+                        this.showDeliveryModal = false;
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        this.showAlert(response.message.message, 'alert-error');
                     }
-                });
-                
-                if (response.message.success) {
-                    this.alertMessage = '✅ Delivery processed successfully';
-                    this.alertType = 'alert-success';
-                    this.showDeliveryModal = false;
-                    
-                    // Refresh page after short delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    this.alertMessage = response.message.message || 'Failed to process delivery';
-                    this.alertType = 'alert-error';
+                } catch (error) {
+                    this.showAlert('Error: ' + error.message, 'alert-error');
+                } finally {
+                    this.isProcessing = false;
                 }
-                
-            } catch (error) {
-                this.alertMessage = 'Error processing delivery: ' + error.message;
-                this.alertType = 'alert-error';
-            } finally {
-                this.isProcessing = false;
-            }
-        },
-        
-        async confirmReturn() {
-            if (this.isProcessing) return;
-            
-            this.isProcessing = true;
-            this.alertMessage = '';
-            
-            try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.process_item_return_and_refund',
-                    args: {
-                        booking_id: this.currentBookingId,
-                        caution_deposit_refund: this.returnForm.refundAmount,
-                        deduction_amount: this.returnForm.deductionAmount || 0,
-                        deduction_reason: this.returnForm.deductionReason || '',
-                        payment_mode: this.returnForm.paymentMode
+            },
+
+            // Process Return
+            processReturn(bookingId) {
+                this.currentBookingId = bookingId;
+                const order = this.orders.find(o => o.name === bookingId);
+                this.returnForm.refundAmount = order ? (order.caution_deposit_collected || 0) : 0;
+                this.returnForm.deductionAmount = 0;
+                this.returnForm.deductionReason = '';
+                this.showReturnModal = true;
+            },
+
+            async confirmReturn() {
+                this.isProcessing = true;
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.process_item_return_and_refund',
+                        args: {
+                            booking_id: this.currentBookingId,
+                            caution_deposit_refund: this.returnForm.refundAmount,
+                            deduction_amount: this.returnForm.deductionAmount,
+                            deduction_reason: this.returnForm.deductionReason,
+                            payment_mode: this.returnForm.paymentMode
+                        }
+                    });
+
+                    if (response.message.success) {
+                        this.showAlert('Return processed successfully!', 'alert-success');
+                        this.showReturnModal = false;
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        this.showAlert(response.message.message, 'alert-error');
                     }
-                });
-                
-                if (response.message.success) {
-                    this.alertMessage = '✅ Return processed successfully';
-                    this.alertType = 'alert-success';
-                    this.showReturnModal = false;
-                    
-                    // Refresh page after short delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    this.alertMessage = response.message.message || 'Failed to process return';
-                    this.alertType = 'alert-error';
+                } catch (error) {
+                    this.showAlert('Error: ' + error.message, 'alert-error');
+                } finally {
+                    this.isProcessing = false;
                 }
-                
-            } catch (error) {
-                this.alertMessage = 'Error processing return: ' + error.message;
-                this.alertType = 'alert-error';
-            } finally {
-                this.isProcessing = false;
-            }
-        },
-        
-        async confirmAdvance() {
-            if (this.isProcessing) return;
-            
-            this.isProcessing = true;
-            this.alertMessage = '';
-            
-            try {
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.confirm_booking_with_advance',
-                    args: {
-                        booking_id: this.currentBookingId,
-                        advance_amount: this.advanceForm.advanceAmount,
-                        payment_mode: this.advanceForm.paymentMode
-                    }
-                });
-                
-                if (response.message.success) {
-                    this.alertMessage = '✅ Booking confirmed successfully';
-                    this.alertType = 'alert-success';
-                    this.showAdvanceModal = false;
-                    
-                    // Refresh page after short delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    this.alertMessage = response.message.message || 'Failed to confirm booking';
-                    this.alertType = 'alert-error';
-                }
-                
-            } catch (error) {
-                this.alertMessage = 'Error confirming booking: ' + error.message;
-                this.alertType = 'alert-error';
-            } finally {
-                this.isProcessing = false;
+            },
+
+            showAlert(message, type) {
+                this.alertMessage = message;
+                this.alertType = type;
+                setTimeout(() => { this.alertMessage = ''; }, 5000);
             }
         }
     }
-}
 </script>
 {% endblock %}
