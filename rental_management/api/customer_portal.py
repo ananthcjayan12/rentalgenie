@@ -1912,3 +1912,445 @@ def create_rental_item(item_data, new_supplier=None, images=None):
             "success": False,
             "message": f"Error creating item: {error_msg}"
         }
+
+
+# ==========================================
+# EXCHANGE FEATURE APIs
+# ==========================================
+
+@frappe.whitelist()
+def get_booking_items_for_exchange(booking_id):
+    """Get items from a booking that can be exchanged"""
+    try:
+        booking = frappe.get_doc("Sales Invoice", booking_id)
+        
+        if not booking.is_rental_booking:
+            return {'success': False, 'message': 'Not a rental booking'}
+        
+        if booking.booking_status not in ('Confirmed', 'Out for Rental'):
+            return {'success': False, 'message': 'Booking must be Confirmed or Out for Rental to exchange items'}
+        
+        items = []
+        for item in booking.items:
+            items.append({
+                'item_code': item.item_code,
+                'item_name': item.item_name,
+                'qty': item.qty,
+                'rate': flt(item.rate),
+                'amount': flt(item.amount),
+                'description': item.description or ''
+            })
+        
+        return {
+            'success': True,
+            'booking_id': booking_id,
+            'booking_status': booking.booking_status,
+            'customer': booking.customer,
+            'customer_name': booking.customer_name,
+            'items': items,
+            'total': flt(booking.total),
+            'advance_paid': flt(booking.advance_amount or 0),
+            'balance_due': flt(booking.total) - flt(booking.advance_amount or 0),
+            'caution_deposit': flt(booking.caution_deposit_amount or 0),
+            'caution_collected': flt(booking.caution_deposit_collected or 0),
+            'rental_start_date': str(booking.rental_start_date) if booking.rental_start_date else None,
+            'rental_end_date': str(booking.rental_end_date) if booking.rental_end_date else None,
+            'function_date': str(booking.function_date) if booking.function_date else None
+        }
+        
+    except Exception as e:
+        return {'success': False, 'message': str(e)}
+
+
+@frappe.whitelist()
+def get_available_items_for_exchange(search_query='', category=''):
+    """Get available rental items for exchange"""
+    try:
+        filters = {
+            'is_rental_item': 1,
+            'disabled': 0,
+            'approval_status': 'Approved'
+        }
+        
+        if category:
+            filters['item_group'] = category
+        
+        # Build search condition
+        search_condition = ""
+        if search_query:
+            search_condition = f"AND (i.item_name LIKE '%{search_query}%' OR i.item_code LIKE '%{search_query}%')"
+        
+        category_condition = ""
+        if category:
+            category_condition = f"AND i.item_group = '{category}'"
+        
+        items = frappe.db.sql(f"""
+            SELECT 
+                i.item_code,
+                i.item_name,
+                i.item_group,
+                i.rental_rate_per_day,
+                i.image,
+                i.description
+            FROM `tabItem` i
+            WHERE i.is_rental_item = 1
+            AND i.disabled = 0
+            AND i.approval_status = 'Approved'
+            {search_condition}
+            {category_condition}
+            ORDER BY i.item_name
+            LIMIT 50
+        """, as_dict=True)
+        
+        return {
+            'success': True,
+            'items': items
+        }
+        
+    except Exception as e:
+        return {'success': False, 'message': str(e)}
+
+
+@frappe.whitelist()
+def calculate_exchange_difference(booking_id, items_to_remove, new_items):
+    """Calculate the price difference for an exchange"""
+    try:
+        if isinstance(items_to_remove, str):
+            items_to_remove = json.loads(items_to_remove)
+        if isinstance(new_items, str):
+            new_items = json.loads(new_items)
+        
+        booking = frappe.get_doc("Sales Invoice", booking_id)
+        
+        # Calculate value of items being removed
+        removed_value = 0
+        for remove_item in items_to_remove:
+            for inv_item in booking.items:
+                if inv_item.item_code == remove_item.get('item_code'):
+                    removed_value += flt(inv_item.amount)
+                    break
+        
+        # Calculate value of new items (rate is total, not per day)
+        new_value = 0
+        for new_item in new_items:
+            rate = flt(new_item.get('rate', 0))
+            qty = flt(new_item.get('qty', 1))
+            # Rate is the total rental amount, not per day
+            new_value += rate * qty
+        
+        difference = new_value - removed_value
+        
+        return {
+            'success': True,
+            'removed_value': removed_value,
+            'new_value': new_value,
+            'difference': difference,
+            'action': 'collect' if difference > 0 else 'refund' if difference < 0 else 'no_change',
+            'amount': abs(difference)
+        }
+        
+    except Exception as e:
+        return {'success': False, 'message': str(e)}
+
+
+@frappe.whitelist()
+def process_exchange(booking_id, items_to_remove, new_items, adjustment_amount=0, payment_mode="Cash"):
+    """
+    Process exchange of rental items
+    
+    For Confirmed orders: Cancel original, create new with adjusted items
+    For Out for Rental orders: Create credit note + new invoice
+    """
+    try:
+        if isinstance(items_to_remove, str):
+            items_to_remove = json.loads(items_to_remove)
+        if isinstance(new_items, str):
+            new_items = json.loads(new_items)
+        
+        adjustment_amount = flt(adjustment_amount)
+        
+        booking = frappe.get_doc("Sales Invoice", booking_id)
+        
+        if not booking.is_rental_booking:
+            return {'success': False, 'message': 'Not a rental booking'}
+        
+        if booking.booking_status == 'Confirmed':
+            return _process_confirmed_exchange(booking, items_to_remove, new_items, adjustment_amount, payment_mode)
+        elif booking.booking_status == 'Out for Rental':
+            return _process_out_for_rental_exchange(booking, items_to_remove, new_items, adjustment_amount, payment_mode)
+        else:
+            return {'success': False, 'message': f'Cannot exchange items in {booking.booking_status} status'}
+        
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(f"Exchange error: {str(e)}")
+        return {'success': False, 'message': str(e)}
+
+
+def _process_confirmed_exchange(booking, items_to_remove, new_items, adjustment_amount, payment_mode):
+    """
+    Exchange for Confirmed bookings (not yet delivered)
+    Cancel original invoice, create new one, transfer advance payment
+    """
+    try:
+        original_advance = flt(booking.advance_amount or 0)
+        original_customer = booking.customer
+        original_rental_start = booking.rental_start_date
+        original_rental_end = booking.rental_end_date
+        original_function_date = booking.function_date
+        original_caution = flt(booking.caution_deposit_amount or 0)
+        
+        # Build new items list (keep items not being removed + add new items)
+        items_to_remove_codes = [item.get('item_code') for item in items_to_remove]
+        
+        new_invoice_items = []
+        
+        # Keep items not being removed
+        for inv_item in booking.items:
+            if inv_item.item_code not in items_to_remove_codes:
+                new_invoice_items.append({
+                    'item_code': inv_item.item_code,
+                    'item_name': inv_item.item_name,
+                    'qty': inv_item.qty,
+                    'rate': inv_item.rate,
+                    'amount': inv_item.amount
+                })
+        
+        # Add new items (rate is total, not per day)
+        for new_item in new_items:
+            item_doc = frappe.get_doc("Item", new_item.get('item_code'))
+            rate = flt(new_item.get('rate') or item_doc.rental_rate_per_day or 0)
+            qty = flt(new_item.get('qty', 1))
+            new_invoice_items.append({
+                'item_code': new_item.get('item_code'),
+                'item_name': item_doc.item_name,
+                'qty': qty,
+                'rate': rate,
+                'amount': rate * qty  # Rate is total, not per day
+            })
+        
+        if not new_invoice_items:
+            return {'success': False, 'message': 'No items remaining after exchange'}
+        
+        # Cancel the original invoice
+        booking.cancel()
+        
+        # Create new invoice
+        new_invoice = frappe.new_doc("Sales Invoice")
+        new_invoice.customer = original_customer
+        new_invoice.is_rental_booking = 1
+        new_invoice.rental_start_date = original_rental_start
+        new_invoice.rental_end_date = original_rental_end
+        new_invoice.function_date = original_function_date
+        new_invoice.caution_deposit_amount = original_caution
+        new_invoice.exchange_reference = booking.name  # Link to original
+        
+        for item in new_invoice_items:
+            new_invoice.append('items', {
+                'item_code': item['item_code'],
+                'item_name': item['item_name'],
+                'qty': item['qty'],
+                'rate': item['rate'],
+                'amount': item['amount']
+            })
+        
+        new_invoice.insert(ignore_permissions=True)
+        
+        # Calculate new advance (original advance + adjustment)
+        new_advance = original_advance + adjustment_amount
+        
+        # Confirm the new booking with adjusted advance
+        new_invoice.advance_amount = new_advance
+        new_invoice.booking_status = "Confirmed"
+        new_invoice.save()
+        new_invoice.submit()
+        
+        # Create payment entry for the advance (including any adjustment)
+        if new_advance > 0:
+            create_advance_payment_entry(new_invoice, new_advance, payment_mode)
+        
+        frappe.db.commit()
+        
+        return {
+            'success': True,
+            'message': 'Exchange completed successfully',
+            'original_booking': booking.name,
+            'new_booking': new_invoice.name,
+            'original_advance': original_advance,
+            'adjustment': adjustment_amount,
+            'new_total': flt(new_invoice.total),
+            'new_advance': new_advance,
+            'new_balance_due': flt(new_invoice.total) - new_advance
+        }
+        
+    except Exception as e:
+        frappe.db.rollback()
+        raise e
+
+
+def _process_out_for_rental_exchange(booking, items_to_remove, new_items, adjustment_amount, payment_mode):
+    """
+    Exchange for Out for Rental bookings (items already with customer)
+    Create credit note for returned items, create new invoice for replacement
+    """
+    try:
+        items_to_remove_codes = [item.get('item_code') for item in items_to_remove]
+        
+        # Calculate credit amount for returned items
+        credit_amount = 0
+        credit_items = []
+        for inv_item in booking.items:
+            if inv_item.item_code in items_to_remove_codes:
+                credit_amount += flt(inv_item.amount)
+                credit_items.append({
+                    'item_code': inv_item.item_code,
+                    'item_name': inv_item.item_name,
+                    'qty': inv_item.qty,
+                    'rate': inv_item.rate,
+                    'amount': inv_item.amount
+                })
+        
+        # Create Credit Note (Return Invoice)
+        credit_note = frappe.new_doc("Sales Invoice")
+        credit_note.customer = booking.customer
+        credit_note.is_return = 1
+        credit_note.return_against = booking.name
+        credit_note.is_rental_booking = 1
+        credit_note.update_outstanding_for_self = 1
+        
+        for item in credit_items:
+            credit_note.append('items', {
+                'item_code': item['item_code'],
+                'item_name': item['item_name'],
+                'qty': -1 * item['qty'],  # Negative qty for return
+                'rate': item['rate'],
+                'amount': -1 * item['amount']  # Negative amount
+            })
+        
+        credit_note.insert(ignore_permissions=True)
+        credit_note.submit()
+        
+        # Calculate new item values (rate is total, not per day)
+        new_items_value = 0
+        new_invoice_items = []
+        for new_item in new_items:
+            item_doc = frappe.get_doc("Item", new_item.get('item_code'))
+            rate = flt(new_item.get('rate') or item_doc.rental_rate_per_day or 0)
+            qty = flt(new_item.get('qty', 1))
+            amount = rate * qty  # Rate is total, not per day
+            new_items_value += amount
+            new_invoice_items.append({
+                'item_code': new_item.get('item_code'),
+                'item_name': item_doc.item_name,
+                'qty': qty,
+                'rate': rate,
+                'amount': amount
+            })
+        
+        # Create new invoice for replacement items
+        new_invoice = frappe.new_doc("Sales Invoice")
+        new_invoice.customer = booking.customer
+        new_invoice.is_rental_booking = 1
+        new_invoice.rental_start_date = booking.rental_start_date
+        new_invoice.rental_end_date = booking.rental_end_date
+        new_invoice.function_date = booking.function_date
+        new_invoice.exchange_reference = booking.name
+        new_invoice.credit_note_reference = credit_note.name
+        
+        for item in new_invoice_items:
+            new_invoice.append('items', {
+                'item_code': item['item_code'],
+                'item_name': item['item_name'],
+                'qty': item['qty'],
+                'rate': item['rate'],
+                'amount': item['amount']
+            })
+        
+        new_invoice.insert(ignore_permissions=True)
+        
+        # Apply credit from the credit note
+        net_difference = new_items_value - credit_amount
+        
+        # Auto-confirm the new invoice since original was already out for rental
+        new_invoice.booking_status = "Out for Rental"
+        new_invoice.save()
+        new_invoice.submit()
+        
+        # Handle payment difference
+        if net_difference > 0:
+            # Customer owes more - create payment entry for additional amount
+            if adjustment_amount > 0:
+                _create_exchange_payment_entry(new_invoice, adjustment_amount, payment_mode, "Receive")
+        elif net_difference < 0:
+            # We owe customer - create refund entry
+            if adjustment_amount < 0:
+                _create_exchange_payment_entry(new_invoice, abs(adjustment_amount), payment_mode, "Pay")
+        
+        # Update original booking to mark items as partially returned
+        booking.db_set('exchange_processed', 1)
+        booking.add_comment('Comment', f'Exchange processed. Items returned: {items_to_remove_codes}. New invoice: {new_invoice.name}')
+        
+        frappe.db.commit()
+        
+        return {
+            'success': True,
+            'message': 'Exchange completed successfully',
+            'original_booking': booking.name,
+            'credit_note': credit_note.name,
+            'new_booking': new_invoice.name,
+            'credit_amount': credit_amount,
+            'new_items_value': new_items_value,
+            'net_difference': net_difference,
+            'adjustment_collected': adjustment_amount
+        }
+        
+    except Exception as e:
+        frappe.db.rollback()
+        raise e
+
+
+def _create_exchange_payment_entry(invoice, amount, payment_mode, payment_type):
+    """Create payment entry for exchange adjustment"""
+    try:
+        company = frappe.defaults.get_defaults().get("company")
+        
+        # Get default accounts
+        default_account = frappe.db.get_value("Mode of Payment Account", 
+            {"parent": payment_mode, "company": company}, "default_account")
+        
+        if not default_account:
+            default_account = frappe.db.get_value("Company", company, "default_cash_account")
+        
+        payment_entry = frappe.new_doc("Payment Entry")
+        payment_entry.payment_type = payment_type
+        payment_entry.posting_date = nowdate()
+        payment_entry.company = company
+        payment_entry.mode_of_payment = payment_mode
+        payment_entry.party_type = "Customer"
+        payment_entry.party = invoice.customer
+        payment_entry.paid_amount = flt(amount)
+        payment_entry.received_amount = flt(amount)
+        payment_entry.reference_no = f"EXC-{invoice.name}"
+        payment_entry.reference_date = nowdate()
+        payment_entry.remarks = f"Exchange adjustment for {invoice.name}"
+        
+        if payment_type == "Receive":
+            payment_entry.paid_to = default_account
+        else:
+            payment_entry.paid_from = default_account
+        
+        # Link to invoice
+        payment_entry.append("references", {
+            "reference_doctype": "Sales Invoice",
+            "reference_name": invoice.name,
+            "allocated_amount": amount
+        })
+        
+        payment_entry.insert(ignore_permissions=True)
+        payment_entry.submit()
+        
+        return payment_entry
+        
+    except Exception as e:
+        print(f"Error creating exchange payment entry: {str(e)}")
+        return None

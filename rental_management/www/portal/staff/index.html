@@ -753,6 +753,12 @@
                                             title="Process Return">
                                             <i class="fas fa-undo"></i>
                                         </button>
+                                        <button
+                                            x-show="order.booking_status === 'Confirmed' || order.booking_status === 'Out for Rental'"
+                                            class="btn-icon" style="color: #8b5cf6;"
+                                            @click="openExchangeModal(order.name)" title="Exchange Items">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -893,6 +899,151 @@
         </div>
     </div>
 
+    <!-- Exchange Modal -->
+    <div class="modal-overlay" x-show="showExchangeModal" x-cloak @click.self="showExchangeModal = false"
+        style="z-index: 1001;">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-exchange-alt" style="color: #8b5cf6;"></i> Exchange Items</h3>
+                <button @click="showExchangeModal = false" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Select items to remove -->
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: #dc2626;">
+                        <i class="fas fa-minus-circle"></i> Items to Exchange (Remove)
+                    </h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <template x-for="item in exchangeData.currentItems" :key="item.item_code">
+                            <label
+                                style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #fef2f2; border-radius: 8px; cursor: pointer;">
+                                <input type="checkbox" :value="item.item_code" @change="toggleRemoveItem(item)"
+                                    :checked="exchangeData.itemsToRemove.some(i => i.item_code === item.item_code)">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 500;" x-text="item.item_name"></div>
+                                    <div style="font-size: 0.8rem; color: #6b7280;">
+                                        Qty: <span x-text="item.qty"></span> |
+                                        Rate: ₹<span x-text="item.rate.toLocaleString()"></span> |
+                                        Amount: ₹<span x-text="item.amount.toLocaleString()"></span>
+                                    </div>
+                                </div>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Step 2: Search and add new items -->
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: #10b981;">
+                        <i class="fas fa-plus-circle"></i> New Items (Replacement)
+                    </h4>
+
+                    <!-- Search -->
+                    <div style="margin-bottom: 0.75rem; display: flex; gap: 0.5rem;">
+                        <input type="text" x-model="exchangeData.searchQuery"
+                            @input.debounce.300ms="searchExchangeItems()" @keyup.enter="searchExchangeItems()"
+                            placeholder="Search items..." class="form-control" style="flex: 1;">
+                        <button type="button" @click="searchExchangeItems()" class="btn-saas"
+                            style="padding: 0.5rem 1rem;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div x-show="exchangeData.searchResults.length > 0"
+                        style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 0.75rem;">
+                        <template x-for="item in exchangeData.searchResults" :key="item.item_code">
+                            <div @click="addNewExchangeItem(item)"
+                                style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.2s;"
+                                :style="{'background': exchangeData.newItems.some(i => i.item_code === item.item_code) ? '#d1fae5' : 'white'}">
+                                <div
+                                    style="width: 40px; height: 40px; background: #f3f4f6; border-radius: 6px; overflow: hidden;">
+                                    <img x-show="item.image" :src="item.image"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 500;" x-text="item.item_name"></div>
+                                    <div style="font-size: 0.8rem; color: #6b7280;">
+                                        ₹<span x-text="(item.rental_rate_per_day || 0).toLocaleString()"></span>/day
+                                    </div>
+                                </div>
+                                <i class="fas fa-plus" style="color: #10b981;"></i>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Selected New Items -->
+                    <div x-show="exchangeData.newItems.length > 0">
+                        <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;">Selected for exchange:
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <template x-for="item in exchangeData.newItems" :key="item.item_code">
+                                <div
+                                    style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #ecfdf5; border-radius: 8px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 500;" x-text="item.item_name"></div>
+                                        <div style="font-size: 0.8rem; color: #6b7280;">
+                                            Rate: ₹<span x-text="item.rate.toLocaleString()"></span>/day
+                                        </div>
+                                    </div>
+                                    <button @click="removeNewExchangeItem(item.item_code)"
+                                        style="background: none; border: none; color: #dc2626; cursor: pointer;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Price Difference Summary -->
+                <div x-show="exchangeData.itemsToRemove.length > 0 && exchangeData.newItems.length > 0"
+                    style="background: #f8fafc; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                    <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">Price Adjustment</h4>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Items being returned:</span>
+                        <span style="color: #dc2626;">- ₹<span
+                                x-text="exchangeData.removedValue.toLocaleString()"></span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>New items:</span>
+                        <span style="color: #10b981;">+ ₹<span
+                                x-text="exchangeData.newValue.toLocaleString()"></span></span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid #e5e7eb; font-weight: 600;">
+                        <span x-text="exchangeData.difference >= 0 ? 'Customer owes:' : 'Refund to customer:'"></span>
+                        <span :style="{'color': exchangeData.difference >= 0 ? '#dc2626' : '#10b981'}">
+                            ₹<span x-text="Math.abs(exchangeData.difference).toLocaleString()"></span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Payment Mode -->
+                <div class="form-group" x-show="exchangeData.difference !== 0">
+                    <label class="form-label">Payment Mode</label>
+                    <select x-model="exchangeData.paymentMode" class="form-control">
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" @click="showExchangeModal = false" class="btn-saas">Cancel</button>
+                <button type="button" @click="processExchange()"
+                    :disabled="isProcessing || exchangeData.itemsToRemove.length === 0 || exchangeData.newItems.length === 0"
+                    class="btn-saas"
+                    :style="{'background': (exchangeData.itemsToRemove.length === 0 || exchangeData.newItems.length === 0) ? '#9ca3af' : '#8b5cf6', 'color': 'white', 'border-color': (exchangeData.itemsToRemove.length === 0 || exchangeData.newItems.length === 0) ? '#9ca3af' : '#8b5cf6', 'cursor': (exchangeData.itemsToRemove.length === 0 || exchangeData.newItems.length === 0) ? 'not-allowed' : 'pointer'}"
+                    :title="exchangeData.itemsToRemove.length === 0 ? 'Please check an item to remove' : (exchangeData.newItems.length === 0 ? 'Please add replacement items' : 'Process the exchange')">
+                    <span x-show="!isProcessing"><i class="fas fa-exchange-alt"></i> Process Exchange</span>
+                    <span x-show="isProcessing">Processing...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Nav -->
     {% include "templates/includes/bottom_nav.html" %}
 </div>
@@ -903,6 +1054,9 @@
 
     function staffDashboard() {
         return {
+            // Navigation
+            currentPage: 'bookings',
+
             orders: allOrders,
             filteredOrders: allOrders,
             statusFilter: '',
@@ -1097,6 +1251,192 @@
                 this.alertMessage = message;
                 this.alertType = type;
                 setTimeout(() => { this.alertMessage = ''; }, 5000);
+            },
+
+            // Exchange functionality
+            showExchangeModal: false,
+            exchangeData: {
+                bookingId: null,
+                bookingStatus: '',
+                currentItems: [],
+                itemsToRemove: [],
+                newItems: [],
+                searchQuery: '',
+                searchResults: [],
+                removedValue: 0,
+                newValue: 0,
+                difference: 0,
+                paymentMode: 'Cash'
+            },
+
+            async openExchangeModal(bookingId) {
+                // Reset individual properties to maintain Alpine reactivity
+                this.exchangeData.bookingId = bookingId;
+                this.exchangeData.bookingStatus = '';
+                this.exchangeData.currentItems = [];
+                this.exchangeData.itemsToRemove = [];
+                this.exchangeData.newItems = [];
+                this.exchangeData.searchQuery = '';
+                this.exchangeData.searchResults = [];
+                this.exchangeData.removedValue = 0;
+                this.exchangeData.newValue = 0;
+                this.exchangeData.difference = 0;
+                this.exchangeData.paymentMode = 'Cash';
+
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.get_booking_items_for_exchange',
+                        args: { booking_id: bookingId }
+                    });
+
+                    if (response.message.success) {
+                        this.exchangeData.currentItems = response.message.items;
+                        this.exchangeData.bookingStatus = response.message.booking_status;
+                        this.showExchangeModal = true;
+                    } else {
+                        this.showAlert(response.message.message, 'alert-error');
+                    }
+                } catch (error) {
+                    this.showAlert('Error loading booking items: ' + error.message, 'alert-error');
+                }
+            },
+
+            toggleRemoveItem(item) {
+                const index = this.exchangeData.itemsToRemove.findIndex(i => i.item_code === item.item_code);
+                if (index >= 0) {
+                    this.exchangeData.itemsToRemove.splice(index, 1);
+                } else {
+                    this.exchangeData.itemsToRemove.push(item);
+                }
+                this.calculateExchangeDifference();
+            },
+
+            async searchExchangeItems() {
+                console.log('Search triggered, query:', this.exchangeData.searchQuery);
+
+                if (this.exchangeData.searchQuery.length < 2) {
+                    this.exchangeData.searchResults = [];
+                    return;
+                }
+
+                try {
+                    console.log('Calling API with query:', this.exchangeData.searchQuery);
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.get_available_items_for_exchange',
+                        args: { search_query: this.exchangeData.searchQuery }
+                    });
+
+                    console.log('API response:', response);
+
+                    if (response.message && response.message.success) {
+                        this.exchangeData.searchResults = response.message.items || [];
+                        console.log('Search results:', this.exchangeData.searchResults);
+                    } else {
+                        console.log('API returned error:', response.message);
+                        this.exchangeData.searchResults = [];
+                    }
+                } catch (error) {
+                    console.error('Error searching items:', error);
+                    this.exchangeData.searchResults = [];
+                }
+            },
+
+            addNewExchangeItem(item) {
+                // Check if already added
+                if (this.exchangeData.newItems.some(i => i.item_code === item.item_code)) {
+                    return;
+                }
+
+                this.exchangeData.newItems.push({
+                    item_code: item.item_code,
+                    item_name: item.item_name,
+                    rate: item.rental_rate_per_day || 0,
+                    qty: 1
+                });
+
+                this.calculateExchangeDifference();
+            },
+
+            removeNewExchangeItem(itemCode) {
+                const index = this.exchangeData.newItems.findIndex(i => i.item_code === itemCode);
+                if (index >= 0) {
+                    this.exchangeData.newItems.splice(index, 1);
+                    this.calculateExchangeDifference();
+                }
+            },
+
+            async calculateExchangeDifference() {
+                if (this.exchangeData.itemsToRemove.length === 0 || this.exchangeData.newItems.length === 0) {
+                    this.exchangeData.removedValue = 0;
+                    this.exchangeData.newValue = 0;
+                    this.exchangeData.difference = 0;
+                    return;
+                }
+
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.calculate_exchange_difference',
+                        args: {
+                            booking_id: this.exchangeData.bookingId,
+                            items_to_remove: JSON.stringify(this.exchangeData.itemsToRemove),
+                            new_items: JSON.stringify(this.exchangeData.newItems)
+                        }
+                    });
+
+                    if (response.message.success) {
+                        this.exchangeData.removedValue = response.message.removed_value;
+                        this.exchangeData.newValue = response.message.new_value;
+                        this.exchangeData.difference = response.message.difference;
+                    }
+                } catch (error) {
+                    console.error('Error calculating difference:', error);
+                }
+            },
+
+            async processExchange() {
+                console.log('processExchange called');
+                console.log('itemsToRemove:', this.exchangeData.itemsToRemove);
+                console.log('newItems:', this.exchangeData.newItems);
+
+                if (this.exchangeData.itemsToRemove.length === 0) {
+                    this.showAlert('Please select items to exchange', 'alert-error');
+                    return;
+                }
+
+                if (this.exchangeData.newItems.length === 0) {
+                    this.showAlert('Please select replacement items', 'alert-error');
+                    return;
+                }
+
+                this.isProcessing = true;
+                console.log('Calling process_exchange API...');
+
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.process_exchange',
+                        args: {
+                            booking_id: this.exchangeData.bookingId,
+                            items_to_remove: JSON.stringify(this.exchangeData.itemsToRemove),
+                            new_items: JSON.stringify(this.exchangeData.newItems),
+                            adjustment_amount: this.exchangeData.difference,
+                            payment_mode: this.exchangeData.paymentMode
+                        }
+                    });
+
+                    console.log('process_exchange response:', response);
+
+                    if (response.message && response.message.success) {
+                        this.showAlert(`Exchange completed! New booking: ${response.message.new_booking}`, 'alert-success');
+                        this.showExchangeModal = false;
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        this.showAlert(response.message.message, 'alert-error');
+                    }
+                } catch (error) {
+                    this.showAlert('Error processing exchange: ' + error.message, 'alert-error');
+                } finally {
+                    this.isProcessing = false;
+                }
             }
         }
     }
