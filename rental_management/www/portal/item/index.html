@@ -13,561 +13,774 @@
 {% include "templates/includes/portal_styles.html" %}
 
 <style>
-/* Item-specific styles */
-.back-btn {
-    color: var(--text-primary);
-    font-size: 1.5rem;
-    text-decoration: none;
-    padding: 0.5rem;
-}
-
-.header-title {
-    flex: 1;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.back-btn {
-    color: var(--text-primary);
-    font-size: 1.5rem;
-    text-decoration: none;
-    padding: 0.5rem;
-}
-
-.header-title {
-    flex: 1;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.cart-icon {
-    position: relative;
-    padding: 0.5rem;
-    color: var(--text-primary);
-    text-decoration: none;
-    font-size: 1.25rem;
-}
-
-.cart-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: var(--secondary-color);
-    color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.product-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-}
-
-.product-detail {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-}
-
-.product-gallery {
-    position: relative;
-    height: 400px;
-    background: #f5f5f5;
-}
-
-.product-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Image Carousel Styles */
-.main-image-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-.image-navigation {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 1rem;
-    pointer-events: none;
-}
-
-.nav-btn {
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    pointer-events: auto;
-}
-
-.nav-btn:hover {
-    background: rgba(0, 0, 0, 0.7);
-    transform: scale(1.1);
-}
-
-.thumbnail-strip {
-    display: flex;
-    gap: 0.5rem;
-    padding: 1rem;
-    overflow-x: auto;
-    background: white;
-}
-
-.thumbnail {
-    flex-shrink: 0;
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.thumbnail.active {
-    border-color: var(--primary-color);
-    transform: scale(1.05);
-}
-
-.thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.image-counter {
-    position: absolute;
-    bottom: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.85rem;
-}
-
-.availability-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.available {
-    background: var(--success-color);
-    color: white;
-}
-
-.unavailable {
-    background: var(--secondary-color);
-    color: white;
-}
-
-.product-info {
-    padding: 2rem;
-}
-
-.product-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.product-description {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-}
-
-.price-section {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.pricing-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.price-comparison {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.mrp-price {
-    font-size: 1.25rem;
-    color: var(--text-secondary);
-    text-decoration: line-through;
-    font-weight: 500;
-}
-
-.rental-price {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-}
-
-.discount-badge {
-    background: linear-gradient(135deg, #FF6B6B, #FF5722);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.price-label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-top: 0.25rem;
-}
-
-.booking-section {
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
-}
-
-.date-inputs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.date-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.date-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-}
-
-.date-input {
-    padding: 0.75rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 1rem;
-    outline: none;
-    transition: border-color 0.3s;
-}
-
-.date-input:focus {
-    border-color: var(--primary-color);
-}
-
-.rental-summary {
-    background: var(--background);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.summary-total {
-    font-weight: 600;
-    color: var(--text-primary);
-    border-top: 1px solid var(--border-color);
-    padding-top: 0.5rem;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-}
-
-.btn {
-    flex: 1;
-    padding: 1rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: #6A1B9A;
-    transform: translateY(-1px);
-}
-
-.btn-primary:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
-
-.btn-outline {
-    background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-}
-
-.btn-outline:hover {
-    background: var(--primary-color);
-    color: white;
-}
-
-.related-items {
-    margin-top: 3rem;
-}
-
-.items-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.item-card {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
-}
-
-.item-card:hover {
-    transform: translateY(-2px);
-}
-
-.item-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-}
-
-.item-info {
-    padding: 1rem;
-}
-
-.item-name {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.item-price {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.alert {
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-}
-
-.alert-success {
-    background: #D1FAE5;
-    color: #065F46;
-    border: 1px solid #10B981;
-}
-
-.alert-error {
-    background: #FEE2E2;
-    color: #991B1B;
-    border: 1px solid #EF4444;
-}
-
-.alert-warning {
-    background: #FEF3C7;
-    color: #92400E;
-    border: 1px solid #F59E0B;
-}
-
-.customer-selection-alert .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.customer-selection-alert .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.loading {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-/* Bottom Navigation */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    z-index: 100;
-    padding: 0.5rem 0;
-}
-
-.nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.5rem;
-    text-decoration: none;
-    color: var(--text-secondary);
-    transition: color 0.3s;
-}
-
-.nav-item i {
-    font-size: 1.25rem;
-    margin-bottom: 0.25rem;
-}
-
-.nav-item span {
-    font-size: 0.75rem;
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .date-inputs {
+    /* Item Detail Page Redesigned Styles */
+
+    /* Breadcrumb Navigation */
+    .breadcrumb-nav {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem 1rem 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .breadcrumb-nav a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .breadcrumb-nav a:hover {
+        color: var(--primary-color);
+    }
+
+    .breadcrumb-nav .separator {
+        color: var(--text-secondary);
+    }
+
+    .breadcrumb-nav .current {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    /* Product Container - Split View Layout */
+    .product-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .product-layout {
+        display: grid;
         grid-template-columns: 1fr;
+        gap: 2rem;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
-    
-    .action-buttons {
-        flex-direction: column;
+
+    @media (min-width: 768px) {
+        .product-layout {
+            grid-template-columns: 1fr 1fr;
+        }
     }
-    
+
+    /* Product Gallery Section */
+    .product-gallery {
+        position: relative;
+        background: #f8f8f8;
+    }
+
+    .main-image-container {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4/5;
+        overflow: hidden;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-navigation {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 0.75rem;
+        pointer-events: none;
+    }
+
+    .nav-btn {
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--text-primary);
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        pointer-events: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .nav-btn:hover {
+        background: white;
+        transform: scale(1.1);
+    }
+
+    /* Thumbnail Strip */
+    .thumbnail-strip {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        overflow-x: auto;
+        background: white;
+        scrollbar-width: none;
+    }
+
+    .thumbnail-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .thumbnail {
+        flex-shrink: 0;
+        width: 56px;
+        height: 56px;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .thumbnail.active {
+        border-color: var(--primary-color);
+    }
+
+    .thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Availability Badge */
+    .availability-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 10;
+    }
+
+    .available {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .unavailable {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    /* Change Customer Button */
+    .change-customer-btn {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 0.4rem 0.75rem;
+        border-radius: 20px;
+        text-decoration: none;
+        color: var(--text-primary);
+        font-size: 0.8rem;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s;
+        z-index: 10;
+    }
+
+    .change-customer-btn:hover {
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Product Info Section */
     .product-info {
         padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
     }
-    
+
+    @media (min-width: 768px) {
+        .product-info {
+            padding: 2rem;
+            justify-content: flex-start;
+        }
+    }
+
     .product-title {
         font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1.3;
     }
-    
-    .price-comparison {
-        flex-wrap: wrap;
-        gap: 0.5rem;
+
+    .product-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        font-size: 0.95rem;
+        margin: 0;
     }
-    
+
+    /* Pricing Section */
+    .price-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
     .mrp-price {
         font-size: 1.1rem;
+        color: var(--text-secondary);
+        text-decoration: line-through;
     }
-    
+
+    .price-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
     .rental-price {
-        font-size: 1.75rem;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
     }
-    
-    .discount-badge {
-        font-size: 0.8rem;
-        padding: 0.2rem 0.6rem;
-    }
-    
-    .nav-btn {
-        width: 35px;
-        height: 35px;
+
+    .price-label {
+        color: var(--text-secondary);
         font-size: 0.9rem;
     }
-    
-    .thumbnail {
-        width: 50px;
-        height: 50px;
+
+    .discount-badge {
+        background: linear-gradient(135deg, #FF6B6B, #FF5722);
+        color: white;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
     }
-    
-    .thumbnail-strip {
+
+    /* Customer Selection Alert */
+    .customer-selection-alert {
+        background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+        border: 1px solid #F59E0B;
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .customer-alert-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .customer-alert-icon {
+        width: 40px;
+        height: 40px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #F59E0B;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .customer-alert-text {
+        flex: 1;
+    }
+
+    .customer-alert-text h4 {
+        margin: 0 0 0.25rem;
+        font-size: 0.95rem;
+        color: #92400E;
+    }
+
+    .customer-alert-text p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #B45309;
+    }
+
+    .select-customer-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: white;
+        border: 2px solid #F59E0B;
+        border-radius: 8px;
+        color: #92400E;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-top: 1rem;
+        width: 100%;
+    }
+
+    .select-customer-btn:hover {
+        background: #FEF3C7;
+    }
+
+    /* Size Selector */
+    .size-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .size-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .size-options {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .size-btn {
+        width: 36px;
+        height: 36px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .size-btn:hover {
+        border-color: var(--primary-color);
+    }
+
+    .size-btn.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Quantity Selector */
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .quantity-label {
+        font-weight: 500;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .qty-btn {
+        width: 36px;
+        height: 36px;
+        background: white;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        transition: background 0.2s;
+    }
+
+    .qty-btn:hover {
+        background: var(--surface);
+    }
+
+    .qty-value {
+        width: 40px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1rem;
+        border-left: 2px solid var(--border-color);
+        border-right: 2px solid var(--border-color);
+        padding: 0.5rem 0;
+    }
+
+    /* Booking Section */
+    .booking-section {
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        background: var(--surface);
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 1rem;
+    }
+
+    .date-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 480px) {
+        .date-inputs {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .date-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .date-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.4rem;
+    }
+
+    .date-input {
+        padding: 0.65rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.3s;
+        background: white;
+    }
+
+    .date-input:focus {
+        border-color: var(--primary-color);
+    }
+
+    /* Rental Summary */
+    .rental-summary {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .summary-total {
+        font-weight: 600;
+        color: var(--text-primary);
+        border-top: 1px solid var(--border-color);
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Alert Messages */
+    .alert {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .alert-success {
+        background: #D1FAE5;
+        color: #065F46;
+        border: 1px solid #10B981;
+    }
+
+    .alert-error {
+        background: #FEE2E2;
+        color: #991B1B;
+        border: 1px solid #EF4444;
+    }
+
+    .alert-warning {
+        background: #FEF3C7;
+        color: #92400E;
+        border: 1px solid #F59E0B;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 480px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+
+    .btn {
+        flex: 1;
+        padding: 0.9rem 1.25rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #6A1B9A;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(75, 0, 130, 0.3);
+    }
+
+    .btn-primary:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .btn-outline {
+        background: white;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .btn-outline:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .loading {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    /* Add to Cart Row */
+    .add-to-cart-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        margin-top: 0.5rem;
+    }
+
+    .add-to-cart-btn {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .add-to-cart-btn:hover:not(:disabled) {
+        background: #6A1B9A;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(75, 0, 130, 0.3);
+    }
+
+    .add-to-cart-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .more-options-btn {
+        width: 44px;
+        height: 44px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+    }
+
+    .more-options-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    /* Related Items Section */
+    .related-items {
+        margin-top: 2rem;
+        padding: 0 1rem;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .related-items .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .items-scroll {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+        scrollbar-width: none;
+    }
+
+    .items-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .related-item-card {
+        flex-shrink: 0;
+        width: 160px;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .related-item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .related-item-image {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 3/4;
+        overflow: hidden;
+    }
+
+    .related-item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .related-item-badge {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+        background: var(--success-color);
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+
+    .related-item-info {
         padding: 0.75rem;
     }
-}
+
+    .related-item-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .related-item-price {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .related-item-mrp {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-decoration: line-through;
+        margin-right: 0.25rem;
+    }
+
+    /* Header Styles */
+    .back-btn {
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        text-decoration: none;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .header-title {
+        flex: 1;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .cart-icon {
+        position: relative;
+        padding: 0.5rem;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 1.2rem;
+    }
+
+    .cart-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: var(--secondary-color);
+        color: white;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 </style>
 {% endblock %}
 
@@ -576,31 +789,19 @@
     <!-- Header -->
     <header class="portal-header">
         <div class="header-content">
-            <a href="{% if customer_id %}/portal/category?customer={{ customer_id }}{% else %}/portal{% endif %}" class="back-btn">
+            <a href="{% if customer_id %}/portal/category?customer={{ customer_id }}{% else %}/portal{% endif %}"
+                class="back-btn">
                 <i class="fas fa-arrow-left"></i>
             </a>
             <div class="header-title">
                 {% if customer %}
-                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                        <div style="font-size: 0.9rem; color: var(--text-secondary);">{{ customer.customer_name }}</div>
-                        <div>{{ item.item_name }}</div>
-                    </div>
+                {{ customer.customer_name }} - {{ item.item_name }}
                 {% else %}
-                    {{ item.item_name }}
+                {{ item.item_name }}
                 {% endif %}
             </div>
             <div class="header-actions">
                 {% if customer_id %}
-                <!-- Customer info display -->
-                <div class="customer-info" style="margin-right: 1rem; text-align: right;">
-                    <div style="font-size: 0.9rem; font-weight: 600; color: var(--primary-color);">
-                        <i class="fas fa-user-check" style="margin-right: 0.25rem;"></i>
-                        {{ customer.customer_name }}
-                    </div>
-                    {% if customer.mobile_number %}
-                    <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ customer.mobile_number }}</div>
-                    {% endif %}
-                </div>
                 <a href="/portal/cart?customer={{ customer_id }}" class="cart-icon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-badge" x-show="cartCount > 0" x-text="cartCount"></span>
@@ -615,480 +816,443 @@
         </div>
     </header>
 
-    <!-- Product Detail -->
+    <!-- Breadcrumb Navigation -->
+    <nav class="breadcrumb-nav">
+        <a href="/portal">Home</a>
+        <span class="separator">›</span>
+        <span class="current">{{ item.item_name }}</span>
+    </nav>
+
+    <!-- Product Detail - Split View Layout -->
     <div class="product-container">
-        <div class="product-detail">
-            <!-- Product Gallery with Carousel -->
-            <div class="product-gallery" x-data="{ currentImage: 0 }">
+        <div class="product-layout">
+            <!-- Left: Product Gallery -->
+            <div class="product-gallery" x-data="imageGallery()">
                 <!-- Main Image Display -->
                 <div class="main-image-container">
-                    <template x-for="(image, index) in item.images" :key="index">
-                        <img :src="image" 
-                             :alt="item.item_name" 
-                             class="product-image"
-                             x-show="currentImage === index"
-                             x-transition:enter="transition ease-in-out duration-300"
-                             x-transition:enter-start="opacity-0 transform scale-95"
-                             x-transition:enter-end="opacity-100 transform scale-100">
-                    </template>
-                    
+                    {% if item.images and item.images|length > 0 %}
+                    {% for image in item.images %}
+                    <img src="{{ image }}" alt="{{ item.item_name }}" class="product-image"
+                        x-show="currentImage === {{ loop.index0 }}"
+                        x-transition:enter="transition ease-in-out duration-300" x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100" {% if loop.first %}style="display: block;" {% endif %}>
+                    {% endfor %}
+                    {% else %}
                     <!-- Fallback for no images -->
-                    <img src="/assets/rental_management/images/placeholder.jpg" 
-                         alt="{{ item.item_name }}" 
-                         class="product-image"
-                         x-show="!item.images || item.images.length === 0">
-                    
-                    <!-- Navigation arrows (only show if multiple images) -->
-                    <template x-if="item.images && item.images.length > 1">
-                        <div class="image-navigation">
-                            <button class="nav-btn prev-btn" 
-                                    @click="currentImage = currentImage > 0 ? currentImage - 1 : item.images.length - 1">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <button class="nav-btn next-btn" 
-                                    @click="currentImage = currentImage < item.images.length - 1 ? currentImage + 1 : 0">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                    </template>
-                </div>
-                
-                <!-- Thumbnail Strip (only show if multiple images) -->
-                <template x-if="item.images && item.images.length > 1">
-                    <div class="thumbnail-strip">
-                        <template x-for="(image, index) in item.images" :key="index">
-                            <div class="thumbnail" 
-                                 :class="{ 'active': currentImage === index }"
-                                 @click="currentImage = index">
-                                <img :src="image" :alt="`${item.item_name} view ${index + 1}`">
-                            </div>
-                        </template>
+                    <img src="/assets/rental_management/images/placeholder.jpg" alt="{{ item.item_name }}"
+                        class="product-image">
+                    {% endif %}
+
+                    {% if item.images and item.images|length > 1 %}
+                    <!-- Navigation arrows -->
+                    <div class="image-navigation">
+                        <button class="nav-btn" @click="prevImage()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="nav-btn" @click="nextImage()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
-                </template>
-                
-                <!-- Image Counter -->
-                <template x-if="item.images && item.images.length > 1">
-                    <div class="image-counter">
-                        <span x-text="`${currentImage + 1} / ${item.images.length}`"></span>
-                    </div>
-                </template>
-                
-                {% if customer_id %}
-                <div style="position: absolute; top: 1rem; left: 1rem;">
-                    <a :href="`/portal/profile?return_to=item&item={{ item.item_code }}`" 
-                       style="background: rgba(255,255,255,0.9); padding: 0.5rem 0.75rem; border-radius: 20px; text-decoration: none; color: var(--text-primary); font-size: 0.85rem; backdrop-filter: blur(5px);">
-                        <i class="fas fa-user-cog" style="margin-right: 0.25rem;"></i>
-                        Change Customer
+                    {% endif %}
+
+                    {% if customer_id %}
+                    <a href="/portal/profile?return_to=item&item={{ item.item_code }}" class="change-customer-btn">
+                        <i class="fas fa-user-cog"></i> Change Customer
                     </a>
+                    {% endif %}
+
+                    <div class="availability-badge {% if item.is_available %}available{% else %}unavailable{% endif %}">
+                        {{ 'Available' if item.is_available else 'Unavailable' }}
+                    </div>
+                </div>
+
+                {% if item.images and item.images|length > 1 %}
+                <!-- Thumbnail Strip -->
+                <div class="thumbnail-strip">
+                    {% for image in item.images %}
+                    <div class="thumbnail" :class="{ 'active': currentImage === {{ loop.index0 }} }"
+                        @click="currentImage = {{ loop.index0 }}">
+                        <img src="{{ image }}" alt="{{ item.item_name }} view {{ loop.index }}">
+                    </div>
+                    {% endfor %}
                 </div>
                 {% endif %}
-                
-                <div class="availability-badge" :class="item.is_available ? 'available' : 'unavailable'">
-                    <span x-text="item.is_available ? 'Available' : 'Not Available'"></span>
-                </div>
             </div>
 
-            <!-- Product Info -->
+            <!-- Right: Product Info -->
             <div class="product-info">
                 <h1 class="product-title">{{ item.item_name }}</h1>
                 <p class="product-description">{{ item.description }}</p>
 
                 <!-- Price Section -->
                 <div class="price-section">
-                    <div class="pricing-container">
-                        <!-- Show MRP with strike-through if available -->
+                    {% if item.rental_mrp_per_day and item.rental_mrp_per_day > item.rental_rate_per_day %}
+                    <!-- MRP with strike-through -->
+                    <div class="mrp-price">₹{{ item.rental_mrp_per_day }}</div>
+                    {% endif %}
+
+                    <div class="price-row">
+                        <div class="rental-price">₹{{ item.rental_rate_per_day }}</div>
+                        <span class="price-label">per day</span>
+                        {% if item.discount_percentage and item.discount_percentage > 0 %}
+                        <div class="discount-badge">
+                            {{ item.discount_percentage|int }}% OFF
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Customer Selection Alert (shown when no customer is selected) -->
+                <div x-show="!customerId" class="customer-selection-alert">
+                    <div class="customer-alert-content">
+                        <div class="customer-alert-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="customer-alert-text">
+                            <h4>Select Customer</h4>
+                            <p>Choose a customer to continue booking</p>
+                        </div>
+                    </div>
+                    <a :href="`/portal/profile?return_to=item&item=${item.item_code}`" class="select-customer-btn">
+                        <i class="fas fa-user-plus"></i>
+                        Select Customer
+                    </a>
+                </div>
+
+                <!-- Booking Section (shown when customer is selected) -->
+                <div x-show="customerId" class="booking-section">
+                    <h3 class="section-title">Select Rental Dates</h3>
+
+                    <!-- Alert Messages -->
+                    <div x-show="alertMessage" :class="alertType" class="alert" x-text="alertMessage"></div>
+
+                    <!-- Date Inputs -->
+                    <div class="date-inputs">
+                        <div class="date-group">
+                            <label class="date-label">Function Date</label>
+                            <input type="date" class="date-input" x-model="functionDate" @change="updateRentalDates()"
+                                :min="minDate">
+                        </div>
+                        <div class="date-group">
+                            <label class="date-label">Return Date</label>
+                            <input type="date" class="date-input" x-model="returnDate" @change="calculateTotal()"
+                                :min="minReturnDate">
+                        </div>
+                    </div>
+
+                    <!-- Rental Summary -->
+                    <div class="rental-summary" x-show="rentalDays > 0">
+                        <div class="summary-row">
+                            <span>Rental Period:</span>
+                            <span x-text="rentalDays + ' day(s)'"></span>
+                        </div>
+
                         <template x-if="item.rental_mrp_per_day && item.rental_mrp_per_day > item.rental_rate_per_day">
-                            <div class="price-comparison">
-                                <div class="mrp-price">₹<span x-text="item.rental_mrp_per_day"></span></div>
-                                <div class="rental-price">₹<span x-text="item.rental_rate_per_day"></span></div>
-                                <div class="discount-badge" x-show="item.discount_percentage > 0">
-                                    <span x-text="Math.round(item.discount_percentage)"></span>% OFF
-                                </div>
+                            <div class="summary-row">
+                                <span>MRP Rate:</span>
+                                <span style="text-decoration: line-through; color: var(--text-secondary);">₹<span
+                                        x-text="item.rental_mrp_per_day"></span>/day</span>
                             </div>
                         </template>
-                        
-                        <!-- Show only rental price if no MRP -->
-                        <template x-if="!item.rental_mrp_per_day || item.rental_mrp_per_day <= item.rental_rate_per_day">
-                            <div class="rental-price">₹<span x-text="item.rental_rate_per_day"></span></div>
+
+                        <div class="summary-row">
+                            <span>Our Rate:</span>
+                            <span style="color: var(--primary-color); font-weight: 600;">₹<span
+                                    x-text="item.rental_rate_per_day"></span>/day</span>
+                        </div>
+
+                        <template x-if="totalSavings > 0">
+                            <div class="summary-row" style="color: var(--success-color); font-weight: 600;">
+                                <span>You Save:</span>
+                                <span>₹<span x-text="totalSavings"></span></span>
+                            </div>
                         </template>
-                        
-                        <div class="price-label">per day</div>
+
+                        <div class="summary-row summary-total">
+                            <span>Total Amount:</span>
+                            <span x-text="'₹' + totalAmount"></span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="btn btn-outline" @click="checkAvailability()" :disabled="!canCheckAvailability"
+                            :class="{'loading': isChecking}">
+                            <span x-text="isChecking ? 'Checking...' : 'Check Availability'"></span>
+                        </button>
+                        <button class="btn btn-primary" @click="addToCart()" :disabled="!canAddToCart"
+                            :class="{'loading': isAdding}">
+                            <span x-text="isAdding ? 'Adding...' : 'Add to Cart'"></span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Booking Section -->
-                <div class="booking-section">
-                    <!-- Customer Selection Alert (shown when no customer is selected) -->
-                    <div x-show="!customerId" class="customer-selection-alert">
-                        <div class="alert alert-warning">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-plus"></i>
-                                <span>Please select a customer to continue with booking</span>
-                            </div>
-                            <div style="margin-top: 1rem;">
-                                <a :href="`/portal/profile?return_to=item&item=${item.item_code}`" 
-                                   class="btn btn-primary" 
-                                   style="background: var(--warning-color); border-color: var(--warning-color);">
-                                    <i class="fas fa-users" style="margin-right: 0.5rem;"></i>
-                                    Select Customer
-                                </a>
+                <!-- Quantity Controls and Add to Cart (for no-customer view alternative) -->
+                <template x-if="customerId && !canCheckAvailability">
+                    <div class="add-to-cart-row">
+                        <div class="quantity-selector">
+                            <span class="quantity-label"><i class="fas fa-layer-group"></i></span>
+                            <div class="quantity-controls">
+                                <button class="qty-btn" type="button">−</button>
+                                <span class="qty-value">1</span>
+                                <button class="qty-btn" type="button">+</button>
                             </div>
                         </div>
+                        <button class="more-options-btn" type="button">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
                     </div>
-
-                    <!-- Normal booking flow (shown when customer is selected) -->
-                    <div x-show="customerId">
-                        <h3 class="section-title">Select Rental Dates</h3>
-                        
-                        <!-- Alert Messages -->
-                        <div x-show="alertMessage" :class="alertType" class="alert" x-text="alertMessage"></div>
-                        
-                        <!-- Date Inputs -->
-                        <div class="date-inputs">
-                            <div class="date-group">
-                                <label class="date-label">Function Date</label>
-                                <input type="date" class="date-input" x-model="functionDate" 
-                                       @change="updateRentalDates()" :min="minDate">
-                            </div>
-                            <div class="date-group">
-                                <label class="date-label">Return Date</label>
-                                <input type="date" class="date-input" x-model="returnDate" 
-                                       @change="calculateTotal()" :min="minReturnDate">
-                            </div>
-                        </div>
-
-                        <!-- Rental Summary -->
-                        <div class="rental-summary" x-show="rentalDays > 0">
-                            <div class="summary-row">
-                                <span>Rental Period:</span>
-                                <span x-text="rentalDays + ' days'"></span>
-                            </div>
-                            
-                            <!-- Show MRP if available -->
-                            <template x-if="item.rental_mrp_per_day && item.rental_mrp_per_day > item.rental_rate_per_day">
-                                <div class="summary-row">
-                                    <span>MRP Rate per day:</span>
-                                    <span style="text-decoration: line-through; color: var(--text-secondary);">₹<span x-text="item.rental_mrp_per_day"></span></span>
-                                </div>
-                            </template>
-                            
-                            <div class="summary-row">
-                                <span>Our Rate per day:</span>
-                                <span style="color: var(--primary-color); font-weight: 600;">₹<span x-text="item.rental_rate_per_day"></span></span>
-                            </div>
-                            
-                            <!-- Show savings if applicable -->
-                            <template x-if="totalSavings > 0">
-                                <div class="summary-row" style="color: var(--success-color); font-weight: 600;">
-                                    <span>You Save:</span>
-                                    <span>₹<span x-text="totalSavings"></span></span>
-                                </div>
-                            </template>
-                            
-                            <div class="summary-row summary-total">
-                                <span>Total Amount:</span>
-                                <span x-text="'₹' + totalAmount"></span>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="action-buttons">
-                            <button class="btn btn-outline" @click="checkAvailability()" 
-                                    :disabled="!canCheckAvailability" :class="{'loading': isChecking}">
-                                <span x-text="isChecking ? 'Checking...' : 'Check Availability'"></span>
-                            </button>
-                            <button class="btn btn-primary" @click="addToCart()" 
-                                    :disabled="!canAddToCart" :class="{'loading': isAdding}">
-                                <span x-text="isAdding ? 'Adding...' : 'Add to Cart'"></span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                </template>
             </div>
         </div>
-
-        <!-- Related Items -->
-        {% if related_items %}
-        <div class="related-items">
-            <h3 class="section-title">You May Also Like</h3>
-            <div class="items-grid">
-                {% for related_item in related_items %}
-                <div class="item-card" @click="goToItem('{{ related_item.item_code }}')">
-                    <img src="{{ related_item.image or '/assets/rental_management/images/placeholder.jpg' }}" 
-                         alt="{{ related_item.item_name }}" class="item-image">
-                    <div class="item-info">
-                        <h4 class="item-name">{{ related_item.item_name }}</h4>
-                        <div class="item-pricing">
-                            {% if related_item.rental_mrp_per_day and related_item.rental_mrp_per_day > related_item.rental_rate_per_day %}
-                                <div class="price-with-discount">
-                                    <div class="mrp-small">₹{{ related_item.rental_mrp_per_day }}</div>
-                                    <div class="price-main">₹{{ related_item.rental_rate_per_day }}/day</div>
-                                    {% if related_item.discount_percentage and related_item.discount_percentage > 0 %}
-                                        <div class="discount-small">{{ "{:,.0f}".format(related_item.discount_percentage) }}% OFF</div>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <div class="item-price">₹{{ related_item.rental_rate_per_day }}/day</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
     </div>
+
+    <!-- Related Items -->
+    {% if related_items %}
+    <div class="related-items">
+        <h3 class="section-title">You May Also Like</h3>
+        <div class="items-scroll">
+            {% for related_item in related_items %}
+            <div class="related-item-card" @click="goToItem('{{ related_item.item_code }}')">
+                <div class="related-item-image">
+                    <img src="{{ related_item.image or '/assets/rental_management/images/placeholder.jpg' }}"
+                        alt="{{ related_item.item_name }}">
+                    {% if related_item.is_available %}
+                    <span class="related-item-badge">Available</span>
+                    {% endif %}
+                </div>
+                <div class="related-item-info">
+                    <h4 class="related-item-name">{{ related_item.item_name }}</h4>
+                    <div class="related-item-price">
+                        {% if related_item.rental_mrp_per_day and related_item.rental_mrp_per_day >
+                        related_item.rental_rate_per_day %}
+                        <span class="related-item-mrp">₹{{ related_item.rental_mrp_per_day }}</span>
+                        {% endif %}
+                        ₹{{ related_item.rental_rate_per_day }}/day
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Bottom Navigation -->
     {% include "templates/includes/bottom_nav.html" %}
 </div>
 
 <script>
-// Pass server-side data to JavaScript
-const itemPageData = {
-    customerId: '{{ customer_id if customer_id else "" }}',
-    cartCount: {{ cart_count if customer_id else 0 }},
-    item: {{ item | tojson }}
-};
+    // Image gallery for carousel
+    function imageGallery() {
+        return {
+            currentImage: 0,
+            totalImages: {{ item.images | length if item.images else 0 }
+    },
 
-function itemDetailApp() {
-    return {
-        currentPage: 'browse',
-        // Item data from server
-        item: itemPageData.item,
-        cartCount: itemPageData.cartCount,
-        customerId: itemPageData.customerId,
-        
-        // Form data
-        functionDate: '',
-        returnDate: '',
-        rentalDays: 0,
-        totalAmount: 0,
-        totalMRPAmount: 0,
-        totalSavings: 0,
-        
-        // State
-        isChecking: false,
-        isAdding: false,
-        isAvailable: null,
-        alertMessage: '',
-        alertType: 'alert-info',
-        
-        // Computed properties
-        get minDate() {
-            // Allow booking from tomorrow
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            return tomorrow.toISOString().split('T')[0];
-        },
-        
-        get minReturnDate() {
-            if (!this.functionDate) return this.minDate;
-            
-            // Return date should be at least 1 day after function date
-            const functionDate = new Date(this.functionDate);
-            functionDate.setDate(functionDate.getDate() + 1);
-            return functionDate.toISOString().split('T')[0];
-        },
-        
-        get canCheckAvailability() {
-            return this.functionDate && this.returnDate && this.rentalDays > 0;
-        },
-        
-        get canAddToCart() {
-            return this.customerId && this.canCheckAvailability && this.isAvailable === true;
-        },
-        
-        init() {
-            this.loadCartCount();
-            
-            // Store current item context for return navigation
-            if (!this.customerId) {
-                sessionStorage.setItem('returnToItem', itemPageData.item.item_code);
-                sessionStorage.setItem('returnUrl', window.location.href);
-            }
-            
-            // Set default function date to next week
-            const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + 7);
-            this.functionDate = nextWeek.toISOString().split('T')[0];
-            this.updateRentalDates();
-        },
-        
-        async loadCartCount() {
-            try {
-                if (this.customerId) {
-                    // Use customer-based cart API
-                    const response = await frappe.call({
-                        method: 'rental_management.api.customer_portal.get_customer_cart_items',
-                        args: {
-                            customer_id: this.customerId
-                        }
-                    });
-                    this.cartCount = response.message?.item_count || 0;
-                } else {
-                    // No customer selected - show 0 cart count
-                    this.cartCount = 0;
-                }
-            } catch (error) {
-                console.log('Error loading cart count:', error);
-            }
-        },
-        
-        updateRentalDates() {
-            if (this.functionDate) {
-                // Set rental start date to 2 days before function
-                const functionDate = new Date(this.functionDate);
-                const startDate = new Date(functionDate);
-                startDate.setDate(startDate.getDate() - 2);
-                
-                // Set return date to 1 day after function if not set
-                if (!this.returnDate) {
-                    const endDate = new Date(functionDate);
-                    endDate.setDate(endDate.getDate() + 1);
-                    this.returnDate = endDate.toISOString().split('T')[0];
-                }
-                
-                this.calculateTotal();
-            }
-        },
-        
-        calculateTotal() {
-            if (this.functionDate && this.returnDate) {
-                const functionDate = new Date(this.functionDate);
-                const returnDate = new Date(this.returnDate);
-                
-                // Calculate start date (2 days before function)
-                const startDate = new Date(functionDate);
-                startDate.setDate(startDate.getDate() - 2);
-                
-                // For function bookings, charge only 1 day regardless of rental period
-                this.rentalDays = 1;
-                this.totalAmount = this.rentalDays * this.item.rental_rate_per_day;
-                this.totalMRPAmount = this.item.rental_mrp_per_day ? (this.rentalDays * this.item.rental_mrp_per_day) : 0;
-                this.totalSavings = this.totalMRPAmount - this.totalAmount;
-                
-                // Reset availability when dates change
-                this.isAvailable = null;
-                this.alertMessage = '';
-            }
-        },
-        
-        async checkAvailability() {
-            if (!this.canCheckAvailability) return;
-            
-            this.isChecking = true;
-            this.alertMessage = '';
-            
-            try {
-                const functionDate = new Date(this.functionDate);
-                const startDate = new Date(functionDate);
-                startDate.setDate(startDate.getDate() - 2);
-                
-                // Debug logging
-                console.log('Frontend Availability Check:', {
-                    item_code: this.item.item_code,
-                    start_date: startDate.toISOString().split('T')[0],
-                    end_date: this.returnDate,
-                    function_date: this.functionDate
-                });
-                
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.check_item_availability',
-                    args: {
-                        item_code: this.item.item_code,
-                        start_date: startDate.toISOString().split('T')[0],
-                        end_date: this.returnDate
-                    }
-                });
-                
-                console.log('Availability Response:', response.message);
-                
-                this.isAvailable = response.message.is_available;
-                
-                if (this.isAvailable) {
-                    this.alertMessage = '✅ Item is available for selected dates!';
-                    this.alertType = 'alert-success';
-                } else {
-                    this.alertMessage = '❌ ' + response.message.message;
-                    this.alertType = 'alert-error';
-                }
-                
-            } catch (error) {
-                console.error('Availability check error:', error);
-                this.alertMessage = 'Error checking availability: ' + error.message;
-                this.alertType = 'alert-error';
-                this.isAvailable = false;
-            } finally {
-                this.isChecking = false;
-            }
-        },
-        
-        async addToCart() {
-            // First check if customer is selected
-            if (!this.customerId) {
-                this.alertMessage = '⚠️ Please select a customer before adding items to cart. Go back to portal home to select a customer.';
-                this.alertType = 'alert-warning';
-                return;
-            }
-            
-            if (!this.canAddToCart) return;
-            
-            this.isAdding = true;
-            
-            try {
-                const functionDate = new Date(this.functionDate);
-                const startDate = new Date(functionDate);
-                startDate.setDate(startDate.getDate() - 2);
-                
-                // Use customer-based cart API for sales staff portal
-                const apiMethod = 'rental_management.api.customer_portal.add_to_customer_cart';
-                const apiArgs = {
-                    item_code: this.item.item_code,
-                    customer_id: this.customerId,
-                    rental_start_date: startDate.toISOString().split('T')[0],
-                    rental_end_date: this.returnDate,
-                    function_date: this.functionDate,
-                    quantity: 1
-                };
-                
-                const response = await frappe.call({
-                    method: apiMethod,
-                    args: apiArgs
-                });
-                
-                if (response.message.success) {
-                    this.alertMessage = '🎉 Item added to cart successfully!';
-                    this.alertType = 'alert-success';
-                    this.cartCount = response.message.cart_count;
-                    
-                    // Redirect to cart after 2 seconds
-                    setTimeout(() => {
-                        window.location.href = `/portal/cart?customer=${encodeURIComponent(this.customerId)}`;
-                    }, 2000);
-                } else {
-                    this.alertMessage = response.message.message;
-                    this.alertType = 'alert-error';
-                }
-                
-            } catch (error) {
-                this.alertMessage = 'Error adding to cart: ' + error.message;
-                this.alertType = 'alert-error';
-            } finally {
-                this.isAdding = false;
-            }
-        },
-        
-        goToItem(itemCode) {
-            // Include customer context in item URL
-            const params = new URLSearchParams();
-            params.append('item', itemCode);
-            if (this.customerId) {
-                params.append('customer', this.customerId);
-            }
-            window.location.href = `/portal/item?${params.toString()}`;
-        }
+    nextImage() {
+        this.currentImage = this.currentImage < this.totalImages - 1 ? this.currentImage + 1 : 0;
+    },
+
+    prevImage() {
+        this.currentImage = this.currentImage > 0 ? this.currentImage - 1 : this.totalImages - 1;
+    }
     }
 }
+
+    // Pass server-side data to JavaScript
+    const itemPageData = {
+        customerId: '{{ customer_id if customer_id else "" }}',
+        cartCount: {{ cart_count if customer_id else 0 }},
+    item: { { item | tojson } }
+};
+
+    function itemDetailApp() {
+        return {
+            currentPage: 'browse',
+            // Item data from server
+            item: itemPageData.item,
+            cartCount: itemPageData.cartCount,
+            customerId: itemPageData.customerId,
+
+            // Form data
+            functionDate: '',
+            returnDate: '',
+            rentalDays: 0,
+            totalAmount: 0,
+            totalMRPAmount: 0,
+            totalSavings: 0,
+
+            // State
+            isChecking: false,
+            isAdding: false,
+            isAvailable: null,
+            alertMessage: '',
+            alertType: 'alert-info',
+
+            // Computed properties
+            get minDate() {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                return tomorrow.toISOString().split('T')[0];
+            },
+
+            get minReturnDate() {
+                if (!this.functionDate) return this.minDate;
+                const functionDate = new Date(this.functionDate);
+                functionDate.setDate(functionDate.getDate() + 1);
+                return functionDate.toISOString().split('T')[0];
+            },
+
+            get canCheckAvailability() {
+                return this.functionDate && this.returnDate && this.rentalDays > 0;
+            },
+
+            get canAddToCart() {
+                return this.customerId && this.canCheckAvailability && this.isAvailable === true;
+            },
+
+            init() {
+                this.loadCartCount();
+                if (!this.customerId) {
+                    sessionStorage.setItem('returnToItem', itemPageData.item.item_code);
+                    sessionStorage.setItem('returnUrl', window.location.href);
+                }
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                this.functionDate = nextWeek.toISOString().split('T')[0];
+                this.updateRentalDates();
+            },
+
+            async loadCartCount() {
+                try {
+                    if (this.customerId) {
+                        const response = await frappe.call({
+                            method: 'rental_management.api.customer_portal.get_customer_cart_items',
+                            args: { customer_id: this.customerId }
+                        });
+                        this.cartCount = response.message?.item_count || 0;
+                    } else {
+                        this.cartCount = 0;
+                    }
+                } catch (error) {
+                    console.log('Error loading cart count:', error);
+                }
+            },
+
+            updateRentalDates() {
+                if (this.functionDate) {
+                    const functionDate = new Date(this.functionDate);
+                    const startDate = new Date(functionDate);
+                    startDate.setDate(startDate.getDate() - 2);
+                    if (!this.returnDate) {
+                        const endDate = new Date(functionDate);
+                        endDate.setDate(endDate.getDate() + 1);
+                        this.returnDate = endDate.toISOString().split('T')[0];
+                    }
+                    this.calculateTotal();
+                }
+            },
+
+            calculateTotal() {
+                if (this.functionDate && this.returnDate) {
+                    const functionDate = new Date(this.functionDate);
+                    const returnDate = new Date(this.returnDate);
+                    const startDate = new Date(functionDate);
+                    startDate.setDate(startDate.getDate() - 2);
+                    this.rentalDays = 1;
+                    this.totalAmount = this.rentalDays * this.item.rental_rate_per_day;
+                    this.totalMRPAmount = this.item.rental_mrp_per_day ? (this.rentalDays * this.item.rental_mrp_per_day) : 0;
+                    this.totalSavings = this.totalMRPAmount - this.totalAmount;
+                    this.isAvailable = null;
+                    this.alertMessage = '';
+                }
+            },
+
+            async checkAvailability() {
+                if (!this.canCheckAvailability) return;
+                this.isChecking = true;
+                this.alertMessage = '';
+                try {
+                    const functionDate = new Date(this.functionDate);
+                    const startDate = new Date(functionDate);
+                    startDate.setDate(startDate.getDate() - 2);
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.check_item_availability',
+                        args: {
+                            item_code: this.item.item_code,
+                            start_date: startDate.toISOString().split('T')[0],
+                            end_date: this.returnDate
+                        }
+                    });
+                    this.isAvailable = response.message.is_available;
+                    if (this.isAvailable) {
+                        this.alertMessage = '✅ Item is available for selected dates!';
+                        this.alertType = 'alert-success';
+                    } else {
+                        this.alertMessage = '❌ ' + response.message.message;
+                        this.alertType = 'alert-error';
+                    }
+                } catch (error) {
+                    console.error('Availability check error:', error);
+                    this.alertMessage = 'Error checking availability: ' + error.message;
+                    this.alertType = 'alert-error';
+                    this.isAvailable = false;
+                } finally {
+                    this.isChecking = false;
+                }
+            },
+
+            async addToCart() {
+                if (!this.customerId) {
+                    this.alertMessage = '⚠️ Please select a customer before adding items to cart.';
+                    this.alertType = 'alert-warning';
+                    return;
+                }
+                if (!this.canAddToCart) return;
+                this.isAdding = true;
+                try {
+                    const functionDate = new Date(this.functionDate);
+                    const startDate = new Date(functionDate);
+                    startDate.setDate(startDate.getDate() - 2);
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.add_to_customer_cart',
+                        args: {
+                            item_code: this.item.item_code,
+                            customer_id: this.customerId,
+                            rental_start_date: startDate.toISOString().split('T')[0],
+                            rental_end_date: this.returnDate,
+                            function_date: this.functionDate,
+                            quantity: 1
+                        }
+                    });
+                    if (response.message.success) {
+                        this.alertMessage = '🎉 Item added to cart successfully!';
+                        this.alertType = 'alert-success';
+                        this.cartCount = response.message.cart_count;
+                        setTimeout(() => {
+                            window.location.href = `/portal/cart?customer=${encodeURIComponent(this.customerId)}`;
+                        }, 2000);
+                    } else {
+                        this.alertMessage = response.message.message;
+                        this.alertType = 'alert-error';
+                    }
+                } catch (error) {
+                    this.alertMessage = 'Error adding to cart: ' + error.message;
+                    this.alertType = 'alert-error';
+                } finally {
+                    this.isAdding = false;
+                }
+            },
+
+            goToItem(itemCode) {
+                const params = new URLSearchParams();
+                params.append('item', itemCode);
+                if (this.customerId) {
+                    params.append('customer', this.customerId);
+                }
+                window.location.href = `/portal/item?${params.toString()}`;
+            }
+        }
+    }
 </script>
 {% endblock %}

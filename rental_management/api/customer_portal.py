@@ -463,9 +463,7 @@ def get_customer_details(customer_id):
             SELECT 
                 si.name, si.posting_date, si.total, si.booking_status,
                 si.customer_name, si.due_date,
-                COUNT(sii.name) as item_count,
-                MIN(sii.rental_start_date) as earliest_rental_date,
-                MAX(sii.rental_end_date) as latest_rental_date
+                COUNT(sii.name) as item_count
             FROM `tabSales Invoice` si
             LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
             WHERE si.customer = %s 
@@ -1658,6 +1656,24 @@ def create_caution_deduction_entry(booking, deduction_amount, reason):
         raise
 
 @frappe.whitelist()
+def get_item_creation_context():
+    """Get context data for creating a new item"""
+    return {
+        'item_groups': frappe.db.sql("""
+            SELECT name, item_group_name
+            FROM `tabItem Group`
+            WHERE is_group = 0
+            ORDER BY item_group_name
+        """, as_dict=True),
+        'suppliers': frappe.db.sql("""
+            SELECT name, supplier_name
+            FROM `tabSupplier`
+            WHERE disabled = 0
+            ORDER BY supplier_name
+        """, as_dict=True)
+    }
+
+@frappe.whitelist()
 def create_rental_item(item_data, new_supplier=None, images=None):
     """Create a new rental item from portal"""
     try:
@@ -2291,8 +2307,10 @@ def _process_out_for_rental_exchange(booking, items_to_remove, new_items, adjust
             if adjustment_amount < 0:
                 _create_exchange_payment_entry(new_invoice, abs(adjustment_amount), payment_mode, "Pay")
         
-        # Update original booking to mark items as partially returned
-        booking.db_set('exchange_processed', 1)
+        
+        # Update original booking status to Exchanged
+        booking.db_set('booking_status', 'Exchanged')
+        # Add comment to original booking about the exchange
         booking.add_comment('Comment', f'Exchange processed. Items returned: {items_to_remove_codes}. New invoice: {new_invoice.name}')
         
         frappe.db.commit()
@@ -2359,3 +2377,336 @@ def _create_exchange_payment_entry(invoice, amount, payment_mode, payment_type):
     except Exception as e:
         print(f"Error creating exchange payment entry: {str(e)}")
         return None
+
+
+# ============================================================================
+# Staff Dashboard APIs
+# ============================================================================
+
+@frappe.whitelist()
+def get_staff_dashboard_stats():
+    """Get dashboard statistics for staff portal"""
+    try:
+        stats = {}
+        
+        # Bookings awaiting advance collection (initial status)
+        stats['pending_advance'] = frappe.db.sql("""
+            SELECT COUNT(*) as count
+            FROM `tabSales Invoice`
+            WHERE is_rental_booking = 1
+            AND (booking_status = '' OR booking_status IS NULL)
+            AND docstatus = 0
+        """, as_dict=True)[0].count
+        
+        # Bookings awaiting delivery (advance collected, balance + caution pending)
+        stats['pending_delivery'] = frappe.db.sql("""
+            SELECT COUNT(*) as count
+            FROM `tabSales Invoice`
+            WHERE is_rental_booking = 1
+            AND booking_status = 'Confirmed'
+            AND docstatus = 1
+        """, as_dict=True)[0].count
+        
+        # Bookings awaiting return (items delivered)
+        stats['pending_return'] = frappe.db.sql("""
+            SELECT COUNT(*) as count
+            FROM `tabSales Invoice`
+            WHERE is_rental_booking = 1
+            AND booking_status = 'Out for Rental'
+            AND docstatus = 1
+        """, as_dict=True)[0].count
+        
+        # Total active bookings
+        stats['total_active'] = frappe.db.sql("""
+            SELECT COUNT(*) as count
+            FROM `tabSales Invoice`
+            WHERE is_rental_booking = 1
+            AND (booking_status IN ('', 'Confirmed', 'Out for Rental') OR booking_status IS NULL)
+            AND docstatus IN (0, 1)
+        """, as_dict=True)[0].count
+        
+        return stats
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting staff dashboard stats: {str(e)}")
+        return {'pending_advance': 0, 'pending_delivery': 0, 'pending_return': 0, 'total_active': 0}
+
+
+@frappe.whitelist()
+def get_staff_all_bookings(status=None, owner=None):
+    """Get all bookings for staff dashboard with optional filters"""
+    try:
+        conditions = ["si.is_rental_booking = 1", "si.docstatus IN (0, 1)"]
+        values = []
+        
+        if status:
+            if status == 'pending':
+                conditions.append("(si.booking_status = '' OR si.booking_status IS NULL)")
+            elif status == 'confirmed':
+                conditions.append("si.booking_status = 'Confirmed'")
+            elif status == 'delivered':
+                conditions.append("si.booking_status = 'Out for Rental'")
+            elif status == 'completed':
+                conditions.append("si.booking_status IN ('Completed', 'Returned')")
+                
+        if owner:
+            conditions.append("i.third_party_owner = %s")
+            values.append(owner)
+        
+        where_clause = " AND ".join(conditions)
+        
+        bookings = frappe.db.sql(f"""
+            SELECT 
+                si.name, si.posting_date, si.total, si.booking_status,
+                si.customer_name, si.customer, si.advance_amount,
+                si.balance_amount_collected, si.caution_deposit_amount,
+                si.caution_deposit_collected, si.function_date,
+                si.rental_start_date, si.rental_end_date,
+                (si.total - COALESCE(si.advance_amount, 0)) as balance_due,
+                c.mobile_number,
+                COUNT(sii.name) as item_count
+            FROM `tabSales Invoice` si
+            LEFT JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+            LEFT JOIN `tabItem` i ON sii.item_code = i.name
+            LEFT JOIN `tabCustomer` c ON si.customer = c.name
+            WHERE {where_clause}
+            GROUP BY si.name
+            ORDER BY si.posting_date DESC, si.creation DESC
+            LIMIT 200
+        """, values, as_dict=True)
+        
+        # Convert date objects to strings for JSON serialization
+        from datetime import date, datetime
+        for booking in bookings:
+            for key, value in booking.items():
+                if isinstance(value, (date, datetime)):
+                    booking[key] = str(value)
+        
+        return bookings
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting staff bookings: {str(e)}")
+        return []
+@frappe.whitelist()
+def get_current_user_info():
+    """Get current logged in user info and roles"""
+    if frappe.session.user == 'Guest':
+        return {'is_logged_in': False}
+        
+    user = frappe.get_doc("User", frappe.session.user)
+    roles = frappe.get_roles(frappe.session.user)
+    
+    return {
+        'is_logged_in': True,
+        'user': user.name,
+        'full_name': user.full_name,
+        'email': user.email,
+        'roles': roles
+    }
+
+@frappe.whitelist()
+def get_all_owners():
+    """Get list of all owners (Admin only)"""
+    if 'System Manager' not in frappe.get_roles(frappe.session.user):
+        frappe.throw("Not authorized")
+        
+    return frappe.db.sql("""
+        SELECT name, owner_name, email, phone, default_commission_rate
+        FROM `tabThird Party Owner`
+        WHERE disabled = 0
+        ORDER BY owner_name
+    """, as_dict=True)
+
+@frappe.whitelist()
+def get_owner_dashboard_data(owner_id=None):
+    """Get all dashboard data for an owner"""
+    try:
+        # 1. Check Permissions
+        is_admin = 'System Manager' in frappe.get_roles(frappe.session.user)
+
+        # 2. Determine Owner ID
+        if not owner_id:
+            # Try to find owner linked to current user
+            owner_id = frappe.db.get_value(
+                'Third Party Owner',
+                {'email': frappe.session.user, 'disabled': 0},
+                'name'
+            )
+            
+        if not owner_id:
+            if is_admin:
+                # Admin with no owner linked - return empty success so they can select one
+                return {
+                    'success': True,
+                    'is_admin': True,
+                    'owner': None,
+                    'stats': {},
+                    'items': [],
+                    'recent_sales': [],
+                    'commission_history': []
+                }
+            return {'success': False, 'message': 'No owner profile found for this user'}
+            
+        # 2. Check Permissions
+        is_admin = 'System Manager' in frappe.get_roles(frappe.session.user)
+        if not is_admin:
+            user_owner = frappe.db.get_value(
+                'Third Party Owner',
+                {'email': frappe.session.user, 'disabled': 0},
+                'name'
+            )
+            if user_owner != owner_id:
+                return {'success': False, 'message': 'Unauthorized'}
+
+        # 3. Get Data
+        return {
+            'success': True,
+            'owner': frappe.get_doc('Third Party Owner', owner_id).as_dict(),
+            'stats': _get_owner_stats(owner_id),
+            'items': _get_owner_items(owner_id),
+            'recent_sales': _get_owner_sales(owner_id),
+            'commission_history': _get_commission_history(owner_id)
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting owner dashboard data: {str(e)}")
+        return {'success': False, 'message': str(e)}
+
+def _get_owner_stats(owner_id):
+    """Internal helper to get owner stats"""
+    try:
+        stats = {
+            'total_items': 0, 'active_items': 0, 'total_rentals': 0,
+            'total_sales_amount': 0, 'commission_earned': 0,
+            'commission_received': 0, 'commission_pending': 0
+        }
+        
+        # Items count
+        items_count = frappe.db.sql("""
+            SELECT COUNT(*) as total, SUM(CASE WHEN disabled = 0 THEN 1 ELSE 0 END) as active
+            FROM `tabItem` WHERE third_party_owner = %s
+        """, (owner_id,), as_dict=True)
+        if items_count:
+            stats['total_items'] = items_count[0].total or 0
+            stats['active_items'] = items_count[0].active or 0
+            
+        # Sales data
+        sales_data = frappe.db.sql("""
+            SELECT COUNT(DISTINCT si.name) as rentals, SUM(sii.amount) as total_amount
+            FROM `tabSales Invoice` si
+            JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+            JOIN `tabItem` i ON sii.item_code = i.name
+            WHERE i.third_party_owner = %s AND si.docstatus = 1 AND si.is_rental_booking = 1
+        """, (owner_id,), as_dict=True)
+        if sales_data and sales_data[0]:
+            stats['total_rentals'] = sales_data[0].rentals or 0
+            stats['total_sales_amount'] = flt(sales_data[0].total_amount or 0)
+            
+        # Commission logic (simplified for API)
+        commission_data = frappe.db.sql("""
+            SELECT 
+                SUM(CASE WHEN je.docstatus = 1 THEN jea.credit ELSE 0 END) as earned,
+                SUM(CASE WHEN je.docstatus = 1 AND jea.is_advance = 1 THEN jea.credit ELSE 0 END) as received
+            FROM `tabJournal Entry` je
+            JOIN `tabJournal Entry Account` jea ON je.name = jea.parent
+            WHERE jea.party_type = 'Supplier'
+            AND jea.party = (SELECT supplier_link FROM `tabThird Party Owner` WHERE name = %s)
+            AND je.docstatus = 1
+        """, (owner_id,), as_dict=True)
+        
+        if commission_data and commission_data[0]:
+            stats['commission_earned'] = flt(commission_data[0].earned or 0)
+            stats['commission_received'] = flt(commission_data[0].received or 0)
+            
+        # Calculate commission from invoices to verify/overwrite
+        commission_from_invoices = frappe.db.sql("""
+            SELECT SUM(
+                CASE 
+                    WHEN i.owner_commission_fixed > 0 THEN i.owner_commission_fixed * sii.qty
+                    WHEN i.owner_commission_percent > 0 THEN sii.amount * (i.owner_commission_percent / 100)
+                    ELSE 0
+                END
+            ) as total_commission
+            FROM `tabSales Invoice` si
+            JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+            JOIN `tabItem` i ON sii.item_code = i.name
+            WHERE i.third_party_owner = %s AND si.docstatus = 1 AND si.is_rental_booking = 1
+        """, (owner_id,), as_dict=True)
+        
+        if commission_from_invoices and commission_from_invoices[0]:
+            calculated = flt(commission_from_invoices[0].total_commission or 0)
+            if calculated > stats['commission_earned']:
+                stats['commission_earned'] = calculated
+                
+        stats['commission_pending'] = stats['commission_earned'] - stats['commission_received']
+        return stats
+    except Exception:
+        return {}
+
+def _get_owner_items(owner_id):
+    """Internal helper to get owner items"""
+    return frappe.db.sql("""
+        SELECT i.name, i.item_name, i.item_group, i.rental_rate_per_day,
+            i.disabled, i.owner_commission_percent, i.owner_commission_fixed, i.image,
+            (SELECT COUNT(*) FROM `tabSales Invoice Item` sii 
+             JOIN `tabSales Invoice` si ON sii.parent = si.name
+             WHERE sii.item_code = i.name AND si.docstatus = 1 AND si.is_rental_booking = 1) as rental_count,
+            (SELECT IFNULL(SUM(sii.amount), 0) FROM `tabSales Invoice Item` sii 
+             JOIN `tabSales Invoice` si ON sii.parent = si.name
+             WHERE sii.item_code = i.name AND si.docstatus = 1 AND si.is_rental_booking = 1) as total_revenue
+        FROM `tabItem` i
+        WHERE i.third_party_owner = %s
+        ORDER BY i.creation DESC
+    """, (owner_id,), as_dict=True)
+
+def _get_owner_sales(owner_id, limit=10):
+    """Internal helper for recent sales"""
+    sales = frappe.db.sql("""
+        SELECT si.name as invoice_id, si.posting_date, si.customer_name, si.booking_status,
+            sii.item_name, sii.qty, sii.amount,
+            i.owner_commission_percent, i.owner_commission_fixed,
+            CASE 
+                WHEN i.owner_commission_fixed > 0 THEN i.owner_commission_fixed * sii.qty
+                WHEN i.owner_commission_percent > 0 THEN sii.amount * (i.owner_commission_percent / 100)
+                ELSE 0
+            END as commission_amount
+        FROM `tabSales Invoice` si
+        JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+        JOIN `tabItem` i ON sii.item_code = i.name
+        WHERE i.third_party_owner = %s AND si.docstatus = 1 AND si.is_rental_booking = 1
+        ORDER BY si.posting_date DESC, si.creation DESC
+        LIMIT %s
+    """, (owner_id, limit), as_dict=True)
+    
+    # helper for formatting dates
+    from frappe.utils import formatdate
+    for sale in sales:
+        if sale.posting_date:
+            sale['formatted_date'] = formatdate(sale.posting_date)
+            sale['posting_date'] = str(sale.posting_date)
+            
+    return sales
+
+def _get_commission_history(owner_id, limit=10):
+    """Internal helper for commission history"""
+    supplier = frappe.db.get_value('Third Party Owner', owner_id, 'supplier_link')
+    if not supplier: return []
+    
+    history = frappe.db.sql("""
+        SELECT je.name as journal_entry, je.posting_date, je.cheque_no as reference,
+            jea.credit as amount, je.user_remark as remarks
+        FROM `tabJournal Entry` je
+        JOIN `tabJournal Entry Account` jea ON je.name = jea.parent
+        WHERE jea.party_type = 'Supplier' AND jea.party = %s
+        AND jea.credit > 0 AND je.docstatus = 1
+        ORDER BY je.posting_date DESC LIMIT %s
+    """, (supplier, limit), as_dict=True)
+    
+    from frappe.utils import formatdate
+    for h in history:
+        if h.posting_date:
+            h['formatted_date'] = formatdate(h.posting_date)
+            h['posting_date'] = str(h.posting_date)
+            
+    return history
+
