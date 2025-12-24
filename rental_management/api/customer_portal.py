@@ -228,6 +228,7 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
                 m.item_code as main_item_code,
                 m.item_name as main_item_name,
                 m.rental_rate_per_day,
+                m.rental_mrp_per_day,
                 m.rental_item_type,
                 m.current_rental_status,
                 m.is_third_party_item,
@@ -256,8 +257,12 @@ def get_rental_items(category=None, search=None, sort_by="name", filters=None, p
             # Generic image key for templates (e.g., related items)
             item['image'] = item['primary_image']
             
-            # Add discount calculation if needed
-            item['discount_percent'] = 0  # Placeholder for future discount logic
+            # Add discount calculation
+            item['rental_mrp_per_day'] = flt(item.get('rental_mrp_per_day'))
+            if item['rental_mrp_per_day'] > item['rental_rate_per_day']:
+                item['discount_percent'] = int(((item['rental_mrp_per_day'] - item['rental_rate_per_day']) / item['rental_mrp_per_day']) * 100)
+            else:
+                item['discount_percent'] = 0
             
         # Build where clause for count on main items table (no alias)
         conditions_plain = [

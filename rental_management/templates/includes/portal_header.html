@@ -2,13 +2,29 @@
 <header class="portal-header">
     <div class="header-content">
         <a href="/portal" class="logo">
-            <i class="fas fa-gem"></i> Blush & Glow
+            <i class="fas fa-gem"></i> <!-- Initial placeholder logo, can be replaced with image if available -->
+            <span>Blush & Glow</span>
         </a>
-        
+
         <div class="search-container">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" class="search-input" placeholder="Search for jewellery" 
-                   x-model="searchQuery" @input="searchItems()">
+            <input type="text" class="search-input" placeholder="Search for jewellery" x-model="searchQuery"
+                @input="searchItems()"
+                @keydown.enter="if(searchQuery.length > 0) window.location.href = `/portal/category?search=${encodeURIComponent(searchQuery)}`">
+        </div>
+
+        <div class="header-actions">
+            <button class="header-icon-btn" title="Wishlist">
+                <i class="far fa-heart"></i>
+            </button>
+            <button class="header-icon-btn" title="Cart" @click="window.location.href='/portal/cart'">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-badge" x-show="cartCount > 0" x-text="cartCount"
+                    style="position: absolute; top: 0; right: 0; background: var(--danger-color); color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center;">0</span>
+            </button>
+            <button class="header-icon-btn" title="Notifications">
+                <i class="far fa-bell"></i>
+            </button>
         </div>
     </div>
 </header>

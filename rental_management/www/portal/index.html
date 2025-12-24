@@ -27,54 +27,68 @@
                     </div>
                     {% endfor %}
                 </div>
-                
+
                 <!-- Banner Navigation Dots -->
                 <div class="banner-dots">
                     {% for banner in banners %}
-                    <button class="banner-dot" :class="{ 'active': currentSlide === {{ loop.index0 }} }" 
-                            @click="goToSlide({{ loop.index0 }})"></button>
+                    <button class="banner-dot" :class="{ 'active': currentSlide === {{ loop.index0 }} }"
+                        @click="goToSlide({{ loop.index0 }})"></button>
                     {% endfor %}
                 </div>
-                
-                <!-- Banner Navigation Arrows -->
-                <button class="banner-nav prev" @click="prevSlide()">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="banner-nav next" @click="nextSlide()">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
             </div>
         </div>
     </section>
 
-    <!-- Categories Section -->
-    <section class="categories-section">
-        <h2 class="section-title">Shop by Category</h2>
-        <div class="categories-container">
+    <!-- Quick Links (Categories) Section -->
+    <section class="quick-links-section">
+        <div class="section-header">
+            <h2 class="section-title">Shop by Category</h2>
+        </div>
+        <div class="quick-links-scroll">
             {% for category in categories %}
-            <div class="category-item" @click="goToCategory('{{ category.name }}')">
-                <div class="category-image-wrapper">
-                    <img src="{{ category.image or '/assets/rental_management/images/placeholder.jpg' }}" 
-                         alt="{{ category.label }}" class="category-image">
-                </div>
-                <h3 class="category-name">{{ category.label }}</h3>
+            <div class="quick-link-item" @click="goToCategory('{{ category.name }}')">
+                <img src="{{ category.image or '/assets/rental_management/images/placeholder.jpg' }}"
+                    alt="{{ category.label }}" class="quick-link-image">
+                <span class="quick-link-label">{{ category.label }}</span>
             </div>
             {% endfor %}
         </div>
     </section>
 
-    <!-- Trending Items Section -->
-    <section class="trending-section">
-        <h2 class="section-title">Trending Items</h2>
-        <div class="trending-carousel">
+    <!-- Trending Items Section (Grid) -->
+    <section class="product-grid-section">
+        <div class="section-header">
+            <h2 class="section-title">Trending Items</h2>
+        </div>
+        <div class="product-grid">
             {% for item in trending_items %}
-            <div class="trending-card" @click="checkAvailability('{{ item.item_code }}')">
-                <img src="{{ item.image or '/assets/rental_management/images/placeholder.jpg' }}" 
-                     alt="{{ item.item_name }}" class="trending-image">
-                <div class="availability-badge">{{ 'Available' if item.is_available else 'Booked' }}</div>
-                <div class="trending-info">
-                    <div class="trending-title">{{ item.item_name }}</div>
-                    <div class="trending-price">₹{{ item.rental_rate_per_day }}/day</div>
+            <div class="product-card" @click="checkAvailability('{{ item.item_code }}')">
+                <div class="product-image-wrapper">
+                    <img src="{{ item.image or '/assets/rental_management/images/placeholder.jpg' }}"
+                        alt="{{ item.item_name }}" class="product-image">
+
+                    {% if item.is_available %}
+                    <div class="availability-tag">Available</div>
+                    {% endif %}
+
+                    {% if item.discount_percent > 0 %}
+                    <div class="discount-badge">{{ item.discount_percent }}% OFF</div>
+                    {% endif %}
+                </div>
+
+                <div class="product-info">
+                    <div class="product-title">{{ item.item_name }}</div>
+
+                    <div class="price-container">
+                        {% if item.rental_mrp_per_day > item.rental_rate_per_day %}
+                        <span class="mrp-price">₹{{ item.rental_mrp_per_day }}</span>
+                        {% endif %}
+                        <span class="rental-price">₹{{ item.rental_rate_per_day }}</span>
+                    </div>
+
+                    <button class="add-btn" @click.stop="addToCart('{{ item.item_code }}')">
+                        Rent Now
+                    </button>
                 </div>
             </div>
             {% endfor %}
@@ -86,109 +100,87 @@
 </div>
 
 <script>
-function portalApp() {
-    return {
-        searchQuery: '',
-        cartCount: 0,
-        currentPage: 'home',
-        
-        init() {
-            this.loadCartCount();
-        },
-        
-        async loadCartCount() {
-            try {
-                if (!this.currentCustomer) {
-                    this.cartCount = 0;
-                    return;
-                }
-                
-                const response = await frappe.call({
-                    method: 'rental_management.api.customer_portal.get_customer_cart_items',
-                    args: {
-                        customer_id: this.currentCustomer
-                    }
-                });
-                this.cartCount = response.message?.item_count || 0;
-            } catch (error) {
-                console.log('Error loading cart count:', error);
-            }
-        },
-        
-        searchItems() {
-            // Debounced search implementation
-            clearTimeout(this.searchTimeout);
-            this.searchTimeout = setTimeout(() => {
-                if (this.searchQuery.length > 2) {
-                    window.location.href = `/portal/category?search=${encodeURIComponent(this.searchQuery)}`;
-                }
-            }, 500);
-        },
-        
-        goToCategory(category) {
-            window.location.href = `/portal/category?category=${encodeURIComponent(category)}`;
-        },
-        
-        checkAvailability(itemCode) {
-            window.location.href = `/portal/item?item=${encodeURIComponent(itemCode)}`;
-        },
-        
-        async addToCart(itemCode) {
-            try {
-                // For quick add, we'll need to show a date picker modal
-                // For now, redirect to item page
-                window.location.href = `/portal/item?item=${encodeURIComponent(itemCode)}`;
-            } catch (error) {
-                alert('Error adding to cart: ' + error.message);
-            }
-        }
-    }
-}
+    function portalApp() {
+        return {
+            searchQuery: '',
+            cartCount: 0,
+            currentCustomer: '{{ frappe.session.user if frappe.session.user != "Guest" else "" }}',
 
-function bannerCarousel() {
-    return {
-        currentSlide: 0,
-        totalSlides: 0,
-        autoSlideInterval: null,
-        
-        init() {
-            // Calculate total slides from DOM
-            this.totalSlides = document.querySelectorAll('.banner-slide').length;
-            if (this.totalSlides > 1) {
-                this.startAutoSlide();
-            }
-        },
-        
-        nextSlide() {
-            if (this.totalSlides <= 1) return;
-            this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
-            this.resetAutoSlide();
-        },
-        
-        prevSlide() {
-            if (this.totalSlides <= 1) return;
-            this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
-            this.resetAutoSlide();
-        },
-        
-        goToSlide(index) {
-            this.currentSlide = index;
-            this.resetAutoSlide();
-        },
-        
-        startAutoSlide() {
-            this.autoSlideInterval = setInterval(() => {
-                this.nextSlide();
-            }, 5000);
-        },
-        
-        resetAutoSlide() {
-            if (this.autoSlideInterval) {
-                clearInterval(this.autoSlideInterval);
-                this.startAutoSlide();
+            init() {
+                if (this.currentCustomer) {
+                    this.loadCartCount();
+                }
+            },
+
+            async loadCartCount() {
+                try {
+                    const response = await frappe.call({
+                        method: 'rental_management.api.customer_portal.get_customer_cart_items',
+                        args: {
+                            customer_id: this.currentCustomer
+                        }
+                    });
+                    this.cartCount = response.message?.item_count || 0;
+                } catch (error) {
+                    console.log('Error loading cart count:', error);
+                }
+            },
+
+            searchItems() {
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    if (this.searchQuery.length > 2) {
+                        // Optional: Live search logic here
+                    }
+                }, 500);
+            },
+
+            goToCategory(category) {
+                window.location.href = `/portal/category?category=${encodeURIComponent(category)}`;
+            },
+
+            checkAvailability(itemCode) {
+                window.location.href = `/portal/item?item=${encodeURIComponent(itemCode)}`;
+            },
+
+            async addToCart(itemCode) {
+                // Direct to item page for date selection
+                window.location.href = `/portal/item?item=${encodeURIComponent(itemCode)}`;
             }
         }
     }
-}
+
+    function bannerCarousel() {
+        return {
+            currentSlide: 0,
+            totalSlides: 0,
+            autoSlideInterval: null,
+
+            init() {
+                this.totalSlides = document.querySelectorAll('.banner-slide').length;
+                if (this.totalSlides > 1) {
+                    this.startAutoSlide();
+                }
+            },
+
+            goToSlide(index) {
+                this.currentSlide = index;
+                this.resetAutoSlide();
+            },
+
+            startAutoSlide() {
+                this.autoSlideInterval = setInterval(() => {
+                    this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+                }, 5000);
+            },
+
+            resetAutoSlide() {
+                if (this.autoSlideInterval) {
+                    clearInterval(this.autoSlideInterval);
+                    this.startAutoSlide();
+                }
+            }
+        }
+    }
 </script>
 {% endblock %}
